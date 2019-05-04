@@ -30,6 +30,13 @@ import umontreal.ssj.randvarmulti.MultinormalCholeskyGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
+/**
+ * TO DO: Remember to amdend representation of item value (per unit and proportional to item weight)
+ * 
+ * @author gwren
+ *
+ */
+
 public class SimulateMultiNormalReceding {
    SKPMultiNormal instance;
    private MRG32k3aL randGenerator;
