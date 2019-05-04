@@ -120,7 +120,7 @@ public class SimulateMultiNormal {
       
       System.out.println("MILP: "+milpSolutionValue);
       System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("Linearization gap: "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
+      System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }
 
 }

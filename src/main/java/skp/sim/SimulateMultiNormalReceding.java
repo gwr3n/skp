@@ -31,7 +31,7 @@ import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
 /**
- * TO DO: Remember to amdend representation of item value (per unit and proportional to item weight)
+ * TO DO: Remember to amend representation of item value (per unit and proportional to item weight)
  * 
  * @author gwren
  *

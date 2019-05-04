@@ -83,34 +83,38 @@ public class DSKPPoisson {
    double f(State state){
       return cacheValueFunction.computeIfAbsent(state, s -> {
          double val= Arrays.stream(s.getFeasibleActions())
-                           .map(x -> DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                              .limit(supportUB[s.item]-supportLB[s.item])
-                                              .map(w -> 
-                                               distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w) + ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
-                           .sum())
+                           .map(x -> (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
+                                                DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                            .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                            .map(w -> distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                      ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                            .sum())
                            .max()
                            .getAsDouble();
-         double bestBet = Arrays.stream(s.getFeasibleActions())
-                                .filter(x -> DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                                      .limit(supportUB[s.item]-supportLB[s.item])
-                                                      .map(w -> 
-                                                      (distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w) + ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))).sum() == val)
+         double bestAction = Arrays.stream(s.getFeasibleActions())
+                                .filter(x -> (
+                                      (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
+                                                 DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                             .map(w -> distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                       ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                             .sum()) == val)
                                 .findAny()
                                 .getAsDouble();
-         cacheActions.putIfAbsent(s, bestBet);
+         cacheActions.putIfAbsent(s, bestAction);
          return val;
       });
    }
 
    public static void main(String args[]) {
       
-      int nbItems = 10;
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
+      int nbItems = 5;
+      double[] expectedValues = {100,100,100,100,100};
+      double[] expectedWeights = {10,10,40,30,20};
       
       // Random variables
       
-      double truncationQuantile = 0.9999999;
+      double truncationQuantile = 0.999999999999999;
 
       PoissonDist[] distributions = IntStream.iterate(0, i -> i + 1)
                                               .limit(expectedWeights.length)
@@ -166,7 +170,11 @@ public class DSKPPoisson {
        * Run forward recursion and determine the probability of achieving the target wealth when
        * one follows an optimal policy
        */
-      System.out.println("f_1(10)="+dskp.f(initialState));
+      System.out.println("f_1("+C+")="+dskp.f(initialState));
+      /**
+       * Recover optimal action for item 1 when initial capacity at the beginning of period 1 is C.
+       */
+      System.out.println("b_1("+initialItem+")="+dskp.cacheActions.get(dskp.new State(initialItem, C)));
    }
    
 }

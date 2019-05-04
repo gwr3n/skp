@@ -67,8 +67,8 @@ public class SimulatePoisson {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
+      double[] expectedValues = {100,100,100,100,100};
+      double[] expectedWeights = {10,10,40,30,20};
       
       int capacity = 100;
       int shortageCost = 100;
@@ -80,7 +80,7 @@ public class SimulatePoisson {
       SKPPoisson instance = new SKPPoisson(expectedValues, weights, capacity, shortageCost);
       
       int partitions = 10;
-      int linearizationSamples = 50000;
+      int linearizationSamples = 10000;
       SKPPoissonMILP milp = null;
       int[] knapsack = null;
       try {
@@ -92,7 +92,7 @@ public class SimulatePoisson {
          System.exit(-1);
       }
       
-      int simulationSamples = 10000;
+      int simulationSamples = 100000;
       SimulatePoisson sim = new SimulatePoisson(instance, seed);
       double milpSolutionValue = milp.getSolutionValue();
       double milpLinearizationError = milp.getMaxLinearizationError();
@@ -101,6 +101,6 @@ public class SimulatePoisson {
       System.out.println("MILP: "+milpSolutionValue);
       System.out.println("MILP max linearization error: "+milpLinearizationError);
       System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("Linearization gap: "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
+      System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }
 }
