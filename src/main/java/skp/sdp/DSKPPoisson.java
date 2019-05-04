@@ -12,16 +12,16 @@ import umontreal.ssj.probdist.PoissonDist;
 public class DSKPPoisson {
    
    int nbItems;
-   PoissonDist[] distributions;
+   PoissonDist[] weightDistributions;
    int[] supportLB;
    int[] supportUB;
 
    public DSKPPoisson(int nbItems,
-               PoissonDist[] distributions,
+               PoissonDist[] weightDistributions,
                int[] supportLB,
                int[] supportUB) {
       this.nbItems = nbItems;
-      this.distributions = distributions;
+      this.weightDistributions = weightDistributions;
       this.supportLB = supportLB;
       this.supportUB = supportUB;
    }
@@ -86,8 +86,8 @@ public class DSKPPoisson {
                            .map(x -> (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
                                                 DoubleStream.iterate(supportLB[s.item], k -> k + 1)
                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                            .map(w -> distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                      ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                            .map(w -> weightDistributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                      ((s.item < this.nbItems - 1) ? weightDistributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
                                                             .sum())
                            .max()
                            .getAsDouble();
@@ -96,8 +96,8 @@ public class DSKPPoisson {
                                       (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
                                                  DoubleStream.iterate(supportLB[s.item], k -> k + 1)
                                                              .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                             .map(w -> distributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < this.nbItems - 1) ? distributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                             .map(w -> weightDistributions[s.item].prob((int)w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                       ((s.item < this.nbItems - 1) ? weightDistributions[s.item].prob((int)w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
                                                              .sum()) == val)
                                 .findAny()
                                 .getAsDouble();
@@ -109,31 +109,30 @@ public class DSKPPoisson {
    public static void main(String args[]) {
       
       int nbItems = 10;
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       
       // Random variables
       
       double truncationQuantile = 0.999999999999999;
 
-      PoissonDist[] distributions = IntStream.iterate(0, i -> i + 1)
-                                              .limit(expectedWeights.length)
-                                              //.mapToObj(i -> new NormalDist(expectedWeights[i],expectedWeights[i]*cv))
-                                              .mapToObj(i -> new PoissonDist(expectedWeights[i]))
-                                              .toArray(PoissonDist[]::new);
+      PoissonDist[] weightDistributions = IntStream.iterate(0, i -> i + 1)
+                                                   .limit(expectedWeights.length)
+                                                   .mapToObj(i -> new PoissonDist(expectedWeights[i]))
+                                                   .toArray(PoissonDist[]::new);
       int[] supportLB = IntStream.iterate(0, i -> i + 1)
                                     .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(distributions[i].inverseF(1-truncationQuantile)))
+                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(1-truncationQuantile)))
                                     .toArray();
       int[] supportUB = IntStream.iterate(0, i -> i + 1)
                                     .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(distributions[i].inverseF(truncationQuantile)))
+                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(truncationQuantile)))
                                     .toArray();
       
       int C = 100;
       int p = 100;
       
-      DSKPPoisson dskp = new DSKPPoisson(nbItems, distributions, supportLB, supportUB);
+      DSKPPoisson dskp = new DSKPPoisson(nbItems, weightDistributions, supportLB, supportUB);
       
       /**
        * This function returns the set of actions associated with a given state
@@ -155,7 +154,7 @@ public class DSKPPoisson {
        * Immediate value function for a given state
        */
       dskp.immediateValueFunction = (state, action, realisedWeight) -> {
-            double value = action*expectedValues[state.item];
+            double value = action*expectedValuesPerUnit[state.item]*realisedWeight;
             double cost = (state.item == nbItems - 1 ? p : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
             return value - cost;
          };

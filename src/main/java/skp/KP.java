@@ -1,20 +1,20 @@
 package skp;
 
 public class KP {
-   double[] values;
+   double[] valuesPerUnit;
    double[] weights;
    double capacity;
    double shortageCost;
    
-   public KP(double[] values, double[] weights, double capacity, double shortageCost) {
-      this.values = values;
+   public KP(double[] valuesPerUnit, double[] weights, double capacity, double shortageCost) {
+      this.valuesPerUnit = valuesPerUnit;
       this.weights = weights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
    }
    
    public int getItems() {
-      return this.values.length;
+      return this.valuesPerUnit.length;
    }
    
    public double getCapacity() {
@@ -26,7 +26,7 @@ public class KP {
    }
    
    public double[] getValues() {
-      return this.values;
+      return this.valuesPerUnit;
    }
    
    public double[] getWeights() {

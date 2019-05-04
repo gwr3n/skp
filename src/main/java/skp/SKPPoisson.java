@@ -3,20 +3,20 @@ package skp;
 import umontreal.ssj.probdist.PoissonDist;
 
 public class SKPPoisson {
-   double[] expectedValues;
+   double[] expectedValuesPerUnit;
    PoissonDist[] weights;
    int capacity;
    double shortageCost;
    
-   public SKPPoisson(double[] expectedValues, PoissonDist[] weights, int capacity, double shortageCost) {
-      this.expectedValues = expectedValues;
+   public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
+      this.expectedValuesPerUnit = expectedValuesPerUnit;
       this.weights = weights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
    }
    
    public int getItems() {
-      return this.expectedValues.length;
+      return this.expectedValuesPerUnit.length;
    }
    
    public int getCapacity() {
@@ -27,8 +27,8 @@ public class SKPPoisson {
       return this.shortageCost;
    }
    
-   public double[] getExpectedValues() {
-      return this.expectedValues;
+   public double[] getExpectedValuesPerUnit() {
+      return this.expectedValuesPerUnit;
    }
    
    public PoissonDist[] getWeights() {

@@ -12,17 +12,17 @@ import umontreal.ssj.probdist.NormalDist;
 public class DSKPNormal {
    
    int nbItems;
-   NormalDist[] distributions;
+   NormalDist[] weightDistributions;
    int[] supportLB;
    int[] supportUB;
    double d = 0.5;
    
    public DSKPNormal(int nbItems,
-                      NormalDist[] distributions,
+                      NormalDist[] weightDistributions,
                       int[] supportLB,
                       int[] supportUB) {
       this.nbItems = nbItems;
-      this.distributions = distributions;
+      this.weightDistributions = weightDistributions;
       this.supportLB = supportLB;
       this.supportUB = supportUB;
    }
@@ -87,8 +87,8 @@ public class DSKPNormal {
                            .map(x -> (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
                                                 DoubleStream.iterate(supportLB[s.item], k -> k + 1)
                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                            .map(w -> (distributions[s.item].cdf(w+d)-distributions[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
-                                                                      ((s.item < this.nbItems - 1) ? (distributions[s.item].cdf(w+d)-distributions[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                            .map(w -> (weightDistributions[s.item].cdf(w+d)-weightDistributions[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
+                                                                      ((s.item < this.nbItems - 1) ? (weightDistributions[s.item].cdf(w+d)-weightDistributions[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
                                                             .sum())
                            .max()
                            .getAsDouble();
@@ -97,8 +97,8 @@ public class DSKPNormal {
                                       (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < this.nbItems - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
                                                  DoubleStream.iterate(supportLB[s.item], k -> k + 1)
                                                              .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                             .map(w -> (distributions[s.item].cdf(w+d)-distributions[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < this.nbItems - 1) ? (distributions[s.item].cdf(w+d)-distributions[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                             .map(w -> (weightDistributions[s.item].cdf(w+d)-weightDistributions[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
+                                                                       ((s.item < this.nbItems - 1) ? (weightDistributions[s.item].cdf(w+d)-weightDistributions[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
                                                              .sum()) == val)
                                 .findAny()
                                 .getAsDouble();
@@ -110,7 +110,7 @@ public class DSKPNormal {
 public static void main(String args[]) {
       
       int nbItems = 10;
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       
@@ -118,23 +118,23 @@ public static void main(String args[]) {
       
       double truncationQuantile = 0.999999999999999;
 
-      NormalDist[] distributions = IntStream.iterate(0, i -> i + 1)
-                                             .limit(expectedWeights.length)
-                                             .mapToObj(i -> new NormalDist(expectedWeights[i],expectedWeights[i]*cv))
-                                             .toArray(NormalDist[]::new);
+      NormalDist[] weightDistributions = IntStream.iterate(0, i -> i + 1)
+                                                  .limit(expectedWeights.length)
+                                                  .mapToObj(i -> new NormalDist(expectedWeights[i],expectedWeights[i]*cv))
+                                                  .toArray(NormalDist[]::new);
       int[] supportLB = IntStream.iterate(0, i -> i + 1)
                                     .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(distributions[i].inverseF(1-truncationQuantile)))
+                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(1-truncationQuantile)))
                                     .toArray();
       int[] supportUB = IntStream.iterate(0, i -> i + 1)
                                     .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(distributions[i].inverseF(truncationQuantile)))
+                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(truncationQuantile)))
                                     .toArray();
       
       int C = 100;
       int p = 100;
       
-      DSKPNormal dskp = new DSKPNormal(nbItems, distributions, supportLB, supportUB);
+      DSKPNormal dskp = new DSKPNormal(nbItems, weightDistributions, supportLB, supportUB);
       
       /**
        * This function returns the set of actions associated with a given state
@@ -156,7 +156,7 @@ public static void main(String args[]) {
        * Immediate value function for a given state
        */
       dskp.immediateValueFunction = (state, action, realisedWeight) -> {
-            double value = action*expectedValues[state.item];
+            double value = action*expectedValuesPerUnit[state.item]*realisedWeight;
             double cost = (state.item == nbItems - 1 ? p : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
             return value - cost;
          };

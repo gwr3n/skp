@@ -38,7 +38,7 @@ public class SimulateMultiNormal {
    public double simulate(int[] knapsack, int nbSamples) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
-         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*this.instance.getWeights().getMean()[i]; 
       }
       double[][] sampleMatrix = sampleWeights(nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)
@@ -54,6 +54,7 @@ public class SimulateMultiNormal {
    public double[][] sampleWeights(int nbSamples) {
       double[] mu = this.instance.getWeights().getMean();
       double[][] sigma = this.instance.getWeights().getCovariance();
+      
       this.randGenerator.resetStartStream();
       NormalGen standardNormal = new NormalGen(this.randGenerator, 0, 1);
       MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
@@ -88,7 +89,7 @@ public class SimulateMultiNormal {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       double rho = 0.5;
@@ -99,7 +100,7 @@ public class SimulateMultiNormal {
       
       MultiNormalDist weights = new MultiNormalDist(expectedWeights, varianceCovarianceWeights);
       
-      SKPMultiNormal instance = new SKPMultiNormal(expectedValues, weights, capacity, shortageCost);
+      SKPMultiNormal instance = new SKPMultiNormal(expectedValuesPerUnit, weights, capacity, shortageCost);
       
       int partitions = 10;
       SKPMultiNormalMILP milp = null;
@@ -115,10 +116,12 @@ public class SimulateMultiNormal {
       
       SimulateMultiNormal sim = new SimulateMultiNormal(instance, seed);
       double milpSolutionValue = milp.getSolutionValue();
-      int nbSamples = 20000;
+      double milpLinearizationError = milp.getMaxLinearizationError();
+      int nbSamples = 10000;
       double simSolutionValue = sim.simulate(knapsack, nbSamples);
       
       System.out.println("MILP: "+milpSolutionValue);
+      System.out.println("MILP max linearization error: "+milpLinearizationError);
       System.out.println("Simulation: "+simSolutionValue);
       System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }

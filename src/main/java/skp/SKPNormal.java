@@ -3,20 +3,20 @@ package skp;
 import umontreal.ssj.probdist.NormalDist;
 
 public class SKPNormal {
-   double[] expectedValues;
+   double[] expectedValuesPerUnit;
    NormalDist[] weights;
    double capacity;
    double shortageCost;
    
-   public SKPNormal(double[] expectedValues, NormalDist[] weights, double capacity, double shortageCost) {
-      this.expectedValues = expectedValues;
+   public SKPNormal(double[] expectedValuesPerUnit, NormalDist[] weights, double capacity, double shortageCost) {
+      this.expectedValuesPerUnit = expectedValuesPerUnit;
       this.weights = weights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
    }
    
    public int getItems() {
-      return this.expectedValues.length;
+      return this.expectedValuesPerUnit.length;
    }
    
    public double getCapacity() {
@@ -27,8 +27,8 @@ public class SKPNormal {
       return this.shortageCost;
    }
    
-   public double[] getExpectedValues() {
-      return this.expectedValues;
+   public double[] getExpectedValuesPerUnit() {
+      return this.expectedValuesPerUnit;
    }
    
    public NormalDist[] getWeights() {

@@ -3,20 +3,20 @@ package skp;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
 public class SKPMultiNormal {
-   double[] expectedValues;
+   double[] expectedValuesPerUnit;
    MultiNormalDist weights;
    double capacity;
    double shortageCost;
    
-   public SKPMultiNormal(double[] expectedValues, MultiNormalDist weights, double capacity, double shortageCost) {
-      this.expectedValues = expectedValues;
+   public SKPMultiNormal(double[] expectedValuesPerUnit, MultiNormalDist weights, double capacity, double shortageCost) {
+      this.expectedValuesPerUnit = expectedValuesPerUnit;
       this.weights = weights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
    }
    
    public int getItems() {
-      return this.expectedValues.length;
+      return this.expectedValuesPerUnit.length;
    }
    
    public double getCapacity() {
@@ -27,8 +27,8 @@ public class SKPMultiNormal {
       return this.shortageCost;
    }
    
-   public double[] getExpectedValues() {
-      return this.expectedValues;
+   public double[] getExpectedValuesPerUnit() {
+      return this.expectedValuesPerUnit;
    }
    
    public MultiNormalDist getWeights() {

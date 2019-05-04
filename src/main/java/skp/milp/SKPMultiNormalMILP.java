@@ -25,6 +25,7 @@ public class SKPMultiNormalMILP {
    int[] knapsack;
    double solutionValue;
    private final String model = "sk_mvnormal";
+   double maxLinearizationError;
 
    public SKPMultiNormalMILP(SKPMultiNormal instance, int partitions)  throws IloException{
       this.instance = instance;
@@ -40,6 +41,10 @@ public class SKPMultiNormalMILP {
    
    public double getSolutionValue() {
       return this.solutionValue;
+   }
+   
+   public double getMaxLinearizationError() {
+      return this.maxLinearizationError;
    }
 
    private InputStream getMILPModelStream(File file){
@@ -95,6 +100,10 @@ public class SKPMultiNormalMILP {
          for(int i = 0; i < instance.getItems(); i++){
             this.knapsack[i] = (int) Math.round(cplex.getValue(opl.getElement("X").asIntVarMap().get(i+1)));
          }
+         
+         this.maxLinearizationError = this.instance.getShortageCost()*
+               cplex.getValue(opl.getElement("S").asNumVar())*
+               PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
       } else {
          System.out.println("No solution!");
          opl.end();
@@ -116,13 +125,13 @@ public class SKPMultiNormalMILP {
          IloOplDataHandler handler = getDataHandler();
 
          handler.startElement("N");
-         handler.addIntItem(instance.getExpectedValues().length);
+         handler.addIntItem(instance.getExpectedValuesPerUnit().length);
          handler.endElement();
 
          handler.startElement("expectedValues");
          handler.startArray();
-         for (int j = 0 ; j<instance.getExpectedValues().length ; j++)
-            handler.addNumItem(instance.getExpectedValues()[j]);
+         for (int j = 0 ; j<instance.getExpectedValuesPerUnit().length ; j++)
+            handler.addNumItem(instance.getExpectedValuesPerUnit()[j]*instance.getWeights().getMean()[j]);
          handler.endArray();
          handler.endElement();
 

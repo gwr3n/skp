@@ -38,7 +38,7 @@ public class SimulateNormal {
    public double simulate(int[] knapsack, int nbSamples) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
-         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*this.instance.getWeights()[i].getMean(); 
       }
       double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)
@@ -69,7 +69,7 @@ public class SimulateNormal {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       double[] standardDeviationWeights = IntStream.iterate(0, i -> i + 1)
@@ -83,7 +83,7 @@ public class SimulateNormal {
                                       .mapToObj(i -> new NormalDist(expectedWeights[i], standardDeviationWeights[i]))
                                       .toArray(NormalDist[]::new);
       
-      SKPNormal instance = new SKPNormal(expectedValues, weights, capacity, shortageCost);
+      SKPNormal instance = new SKPNormal(expectedValuesPerUnit, weights, capacity, shortageCost);
       
       int partitions = 10;
       SKPNormalMILP milp = null;
@@ -100,7 +100,7 @@ public class SimulateNormal {
       SimulateNormal sim = new SimulateNormal(instance, seed);
       double milpSolutionValue = milp.getSolutionValue();
       double milpLinearizationError = milp.getMaxLinearizationError();
-      int nbSamples = 1000;
+      int nbSamples = 10000;
       double simSolutionValue = sim.simulate(knapsack, nbSamples);
       
       System.out.println("MILP: "+milpSolutionValue);

@@ -101,15 +101,15 @@ public class SimulateMultiNormalReceding {
       double[] previousRealizations = new double[t];
       System.arraycopy(realizations, 0, previousRealizations, 0, t);
       
-      double[] expDemand = instance.getWeights().getMean();
-      
+      double[] expWeight = instance.getWeights().getMean();
       double[][] covariance = instance.getWeights().getCovariance();
       
-      int Nbperiods = expDemand.length-t;
+      int Nbperiods = expWeight.length-t;
       
-      double[] shortexpValues = new double[Nbperiods];
-      System.arraycopy(instance.getExpectedValues(), t, shortexpValues, 0, Nbperiods);
-      double[] shortexpDemand = expDemand;
+      double[] shortExpValues = new double[Nbperiods];
+      System.arraycopy(instance.getExpectedValuesPerUnit(), t, shortExpValues, 0, Nbperiods);
+      
+      double[] shortExpWeight = expWeight;
       RealMatrix conditionalCovarianceMatrix = MatrixUtils.createRealMatrix(covariance);
       RealMatrix M = conditionalCovarianceMatrix;
       double[] realizationsBuffer = realizations;
@@ -117,7 +117,7 @@ public class SimulateMultiNormalReceding {
          RealMatrix inverseM =  matrixInverse(conditionalCovarianceMatrix);
          RealMatrix reducedInverseM = createReducedMatrix(inverseM);
          conditionalCovarianceMatrix =  matrixInverse(reducedInverseM);
-         shortexpDemand = computeConditionalExpectedDemand(shortexpDemand, realizationsBuffer, M).getRow(0);
+         shortExpWeight = computeConditionalExpectedDemand(shortExpWeight, realizationsBuffer, M).getRow(0);
          double[][] realizationMatrix = new double[1][];
          realizationMatrix[0] = realizationsBuffer;
          RealMatrix reducedRealizations = MatrixUtils.createRealMatrix(realizationMatrix);
@@ -126,9 +126,8 @@ public class SimulateMultiNormalReceding {
       }
       double [][] shortCovariance = conditionalCovarianceMatrix.getData();
       
-      MultiNormalDist weights = new MultiNormalDist(shortexpDemand, shortCovariance);
-      
-      SKPMultiNormal reducedInstance = new SKPMultiNormal(shortexpValues, weights, remainingCapacity, instance.getShortageCost());
+      MultiNormalDist weights = new MultiNormalDist(shortExpWeight, shortCovariance);
+      SKPMultiNormal reducedInstance = new SKPMultiNormal(shortExpValues, weights, remainingCapacity, instance.getShortageCost());
       
       SKPMultiNormalMILP milp = null;
       int[] knapsack = null;
@@ -150,7 +149,7 @@ public class SimulateMultiNormalReceding {
       for(int i = 0; i < realizations.length; i++) {
          if(simulateOneItem(i, realizations, remainingCapacity, partitions) == 1) {
             remainingCapacity -= realizations[i];
-            knapsackValue += this.instance.getExpectedValues()[i];
+            knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*realizations[i];
          }
       }
       knapsackValue -= Math.max(-remainingCapacity*instance.getShortageCost(), 0);
@@ -164,7 +163,7 @@ public class SimulateMultiNormalReceding {
    }
    
    private double simulateOneRunEVPI(double[] realizations) {
-      KP instanceEVPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -185,7 +184,7 @@ public class SimulateMultiNormalReceding {
    }
    
    public double computeEVP() {
-      KP instanceEVP = new KP(instance.getExpectedValues(), instance.getWeights().getMean(), instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVP = new KP(instance.getExpectedValuesPerUnit(), instance.getWeights().getMean(), instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -200,7 +199,7 @@ public class SimulateMultiNormalReceding {
    }
    
    private double simulateOneRunEVwPI(double[] realizations, int selectFirstObject) {
-      KP instanceEVPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -259,7 +258,7 @@ public class SimulateMultiNormalReceding {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       double rho = 0.5;
@@ -269,7 +268,7 @@ public class SimulateMultiNormalReceding {
       int shortageCost = 100;
       
       MultiNormalDist weights = new MultiNormalDist(expectedWeights, varianceCovarianceWeights);
-      SKPMultiNormal instance = new SKPMultiNormal(expectedValues, weights, capacity, shortageCost);
+      SKPMultiNormal instance = new SKPMultiNormal(expectedValuesPerUnit, weights, capacity, shortageCost);
       
       int partitions = 10;
       int nbSamples = 20;

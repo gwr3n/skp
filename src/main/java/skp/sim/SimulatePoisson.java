@@ -36,7 +36,7 @@ public class SimulatePoisson {
    public double simulate(int[] knapsack, int nbSamples) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
-         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*this.instance.getWeights()[i].getMean(); 
       }
       double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)
@@ -67,7 +67,7 @@ public class SimulatePoisson {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       
       int capacity = 100;
@@ -77,10 +77,10 @@ public class SimulatePoisson {
                                        .mapToObj(i -> new PoissonDist(expectedWeights[i]))
                                        .toArray(PoissonDist[]::new);
       
-      SKPPoisson instance = new SKPPoisson(expectedValues, weights, capacity, shortageCost);
+      SKPPoisson instance = new SKPPoisson(expectedValuesPerUnit, weights, capacity, shortageCost);
       
-      int partitions = 10;
-      int linearizationSamples = 10000;
+      int partitions = 20;
+      int linearizationSamples = 50000;
       SKPPoissonMILP milp = null;
       int[] knapsack = null;
       try {
