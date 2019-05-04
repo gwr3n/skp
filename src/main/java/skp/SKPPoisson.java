@@ -1,18 +1,42 @@
 package skp;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
 import umontreal.ssj.probdist.PoissonDist;
 
 public class SKPPoisson {
+   String instanceID;
    double[] expectedValuesPerUnit;
-   PoissonDist[] weights;
+   double[] expectedWeights;
    int capacity;
    double shortageCost;
    
-   public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
+   public SKPPoisson(double[] expectedValuesPerUnit, double[] expectedWeights, int capacity, double shortageCost) {
       this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.weights = weights;
+      this.expectedWeights = expectedWeights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
+      
+      generateInstanceID();
+   }
+   
+   private void generateInstanceID() {
+      String intHash = ""+this.hashCode();
+      BigInteger hashCode = new BigInteger(intHash);
+      instanceID = hashCode.toString(16);
+   }
+   
+   public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
+      this.expectedValuesPerUnit = expectedValuesPerUnit;
+      this.expectedWeights =  IntStream.iterate(0, i -> i + 1).limit(weights.length)
+                                       .mapToDouble(i -> weights[i].getLambda())
+                                       .toArray();
+      this.capacity = capacity;
+      this.shortageCost = shortageCost;
+      
+      generateInstanceID();
    }
    
    public int getItems() {
@@ -32,6 +56,28 @@ public class SKPPoisson {
    }
    
    public PoissonDist[] getWeights() {
-      return this.weights;
+      return IntStream.iterate(0, i -> i + 1).limit(expectedWeights.length)
+                      .mapToObj(i -> new PoissonDist(expectedWeights[i]))
+                      .toArray(PoissonDist[]::new);
+   }
+   
+   @Override
+   public int hashCode() {
+      return Arrays.hashCode(this.expectedValuesPerUnit) +
+            Arrays.hashCode(this.expectedWeights) +
+            Double.hashCode(this.capacity) + 
+            Double.hashCode(this.shortageCost);
+   }
+   
+   @Override
+   public boolean equals(Object obj) {
+      if(obj instanceof SKPPoisson) {
+         SKPPoisson o = (SKPPoisson) obj;
+         return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
+                Arrays.equals(this.expectedWeights, o.expectedWeights) &&
+                this.capacity == o.capacity &&
+                this.shortageCost == o.shortageCost;
+      }else
+         return false;
    }
 }
