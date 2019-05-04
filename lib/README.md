@@ -1,6 +1,7 @@
 # OPL Libraries
 
-Replace the jar with the appropriate OPL jar (oplall.jar) from your OPL installation directory. 
+Include in this folder the appropriate OPL jar (oplall.jar) from your 
+OPL installation directory. 
 
 In Windows, make sure the associated DLL (oplall.dll) is also included.
 
