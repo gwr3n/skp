@@ -108,9 +108,9 @@ public class DSKPPoisson {
 
    public static void main(String args[]) {
       
-      int nbItems = 5;
-      double[] expectedValues = {100,100,100,100,100};
-      double[] expectedWeights = {10,10,40,30,20};
+      int nbItems = 10;
+      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       
       // Random variables
       

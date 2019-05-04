@@ -72,11 +72,9 @@ public class SimulateNormal {
       double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
-      double[] varianceWeights = IntStream.iterate(0, i -> i + 1)
-                                          .limit(expectedWeights.length)
-                                          .mapToDouble(i -> expectedWeights[i]*cv).toArray();
-      double[] standardDeviationWeights = Arrays.stream(varianceWeights)
-                                                .map(w -> Math.sqrt(w)).toArray();
+      double[] standardDeviationWeights = IntStream.iterate(0, i -> i + 1)
+                                                   .limit(expectedWeights.length)
+                                                   .mapToDouble(i -> expectedWeights[i]*cv).toArray();
       
       int capacity = 100;
       int shortageCost = 100;
@@ -87,7 +85,7 @@ public class SimulateNormal {
       
       SKPNormal instance = new SKPNormal(expectedValues, weights, capacity, shortageCost);
       
-      int partitions = 100;
+      int partitions = 10;
       SKPNormalMILP milp = null;
       int[] knapsack = null;
       try {

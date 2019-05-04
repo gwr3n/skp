@@ -67,8 +67,8 @@ public class SimulatePoisson {
    public static void main(String args[]) {
       long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValues = {100,100,100,100,100};
-      double[] expectedWeights = {10,10,40,30,20};
+      double[] expectedValues = {111,111,21,117,123,34,3,121,112,12};
+      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       
       int capacity = 100;
       int shortageCost = 100;

@@ -26,17 +26,14 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
             };
          return errors[partitions-1];
       }else {
-         
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new NormalDist(0,1);
          PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
          double[] probabilityMasses = new double[partitions];
          Arrays.fill(probabilityMasses, 1.0/partitions);
          double error = pwfolf.getMaxApproximationError(probabilityMasses, nbSamples);
-         System.out.println(error);
          return error;
       }
-      
    }
    
    public static double[] getProbabilities(int partitions){
