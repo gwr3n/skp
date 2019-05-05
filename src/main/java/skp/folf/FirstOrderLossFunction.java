@@ -77,7 +77,7 @@ public class FirstOrderLossFunction {
     * Charting
     */
    
-   public XYSeries getDistributionXYSeries(int nbSamples, double precision){
+   private XYSeries getDistributionXYSeries(int nbSamples, double precision){
       XYSeries series = new XYSeries("Empirical distribution");
       EmpiricalDist empDistribution = this.getEmpiricalDistribution(nbSamples);
       for(int i = 0; i < empDistribution.getN(); i++){
@@ -87,7 +87,7 @@ public class FirstOrderLossFunction {
       return series;
    }
    
-   public void plotEmpiricalDistribution(int nbSamples, double precision, boolean saveToDisk){
+   private void plotEmpiricalDistribution(int nbSamples, double precision, boolean saveToDisk){
       XYSeriesCollection xyDataset = new XYSeriesCollection(this.getDistributionXYSeries(nbSamples, precision));
       JFreeChart chart = ChartFactory.createXYLineChart("Empirical distribution", "Support", "Frequency",
              xyDataset, PlotOrientation.VERTICAL, false, true, false);
@@ -114,7 +114,7 @@ public class FirstOrderLossFunction {
       }
    }
    
-   public XYSeries getComplementaryFirstOrderLossFunctionXYSeries(double min, double max, int nbSamples, double precision){
+   protected XYSeries getComplementaryFirstOrderLossFunctionXYSeries(double min, double max, int nbSamples, double precision){
       XYSeries series = new XYSeries("Empirical complementary loss function");
       for(double x = min; x <= max; x+= precision){
          series.add(x, getComplementaryFirstOrderLossFunctionValue(x, nbSamples));
@@ -122,7 +122,7 @@ public class FirstOrderLossFunction {
       return series;
    }
    
-   public XYSeries getFirstOrderLossFunctionXYSeries(double min, double max, int nbSamples, double precision){
+   protected XYSeries getFirstOrderLossFunctionXYSeries(double min, double max, int nbSamples, double precision){
       XYSeries series = new XYSeries("Empirical loss function");
       for(double x = min; x <= max; x+= precision){
          series.add(x, getFirstOrderLossFunctionValue(x, nbSamples));
@@ -130,7 +130,7 @@ public class FirstOrderLossFunction {
       return series;
    }
    
-   public void plotEmpiricalComplementaryFirstOrderLossFunction(double min, double max, int nbSamples, double precision, boolean saveToDisk){
+   private void plotEmpiricalComplementaryFirstOrderLossFunction(double min, double max, int nbSamples, double precision, boolean saveToDisk){
       XYSeriesCollection xyDataset = new XYSeriesCollection(this.getComplementaryFirstOrderLossFunctionXYSeries(min, max, nbSamples, precision));
       JFreeChart chart = ChartFactory.createXYLineChart("Empirical Complementary First Order Loss Function", "x", "CL(x)",
              xyDataset, PlotOrientation.VERTICAL, false, true, false);
@@ -157,7 +157,7 @@ public class FirstOrderLossFunction {
       }
    }
    
-   public void plotEmpiricalFirstOrderLossFunction(double min, double max, int nbSamples, double precision, boolean saveToDisk){
+   private void plotEmpiricalFirstOrderLossFunction(double min, double max, int nbSamples, double precision, boolean saveToDisk){
       XYSeriesCollection xyDataset = new XYSeriesCollection(this.getFirstOrderLossFunctionXYSeries(min, max, nbSamples, precision));
       JFreeChart chart = ChartFactory.createXYLineChart("Empirical First Order Loss Function", "x", "L(x)",
              xyDataset, PlotOrientation.VERTICAL, false, true, false);
