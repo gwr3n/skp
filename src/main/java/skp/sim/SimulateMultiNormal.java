@@ -91,7 +91,7 @@ public class SimulateMultiNormal {
       double simSolutionValue = sim.simulate(knapsack, nbSamples);
       
       System.out.println("MILP: "+milpSolutionValue);
-      System.out.println("MILP max linearization error: "+milpLinearizationError);
+      System.out.println("MILP max linearization error: "+100*milpLinearizationError/simSolutionValue);
       System.out.println("Simulation: "+simSolutionValue);
       System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }

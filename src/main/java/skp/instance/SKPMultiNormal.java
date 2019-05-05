@@ -32,21 +32,18 @@ public class SKPMultiNormal {
    }
    
    public static double[][] calculateCovariance(double [] means, double cv, double rho){
-      double [] stdDemand =new double [means.length];
+      double[] stdDemand =new double [means.length];
       for (int i = 0; i < means.length; i ++) {
-         stdDemand[i] = cv*means[i];
+         stdDemand[i] = cv * means[i];
       }
       
-      double [][] covariance = new double [means.length][means.length];
-      
+      double[][] covariance = new double [means.length][means.length];
       for (int row=0; row<covariance.length;row++) {
          for (int col=0; col<covariance[row].length;col++) {
             if (row==col) {
                covariance[row][col]=stdDemand[row]*stdDemand[col];
-            } else if (col==row+1 | col==row-1) {
+            } else {
                covariance[row][col]=stdDemand[row]*stdDemand[col]*rho;
-            } else  {
-               covariance[row][col]=0;
             }
          }
       }
