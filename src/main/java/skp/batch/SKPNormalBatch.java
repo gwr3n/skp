@@ -22,12 +22,11 @@ import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
 import skp.SKPNormal;
-import skp.gson.GSONUtility;
 import skp.milp.SKPNormalMILP;
 import skp.milp.SKPNormalMILPSolvedInstance;
 import skp.sdp.DSKPNormal;
 import skp.sdp.DSKPNormalSolvedInstance;
-
+import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 import umontreal.ssj.randvar.UniformGen;

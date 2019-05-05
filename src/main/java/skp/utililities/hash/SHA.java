@@ -1,10 +1,10 @@
-package skp.util;
+package skp.utililities.hash;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Hash {
+public class SHA {
    private static String bytesToHex(byte[] hash) {
       StringBuffer hexString = new StringBuffer();
       for (int i = 0; i < hash.length; i++) {

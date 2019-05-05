@@ -1,4 +1,4 @@
-package skp.gson;
+package skp.utililities.gson;
 
 import java.io.FileReader;
 import java.io.FileWriter;

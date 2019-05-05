@@ -2,7 +2,7 @@ package skp;
 
 import java.util.Arrays;
 
-import skp.util.Hash;
+import skp.utililities.hash.SHA;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
 public class SKPMultiNormal {
@@ -29,7 +29,7 @@ public class SKPMultiNormal {
    
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
-      instanceID = Hash.generateSHA256(intHash);
+      instanceID = SHA.generateSHA256(intHash);
    }
    
    public String getInstanceID() {

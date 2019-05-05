@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 import com.sun.management.OperatingSystemMXBean;
 
 import skp.SKPPoisson;
-import skp.gson.GSONUtility;
+import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.PoissonDist;
 
 @SuppressWarnings("restriction")
