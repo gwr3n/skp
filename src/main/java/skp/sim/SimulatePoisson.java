@@ -69,25 +69,18 @@ public class SimulatePoisson {
    
    public static void main(String args[]) {
       
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      int capacity = 100;
-      int shortageCost = 100;
-      
-      SKPPoisson instance = new SKPPoisson(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
+      SKPPoisson instance = SKPPoisson.getTestInstance();
       
       int partitions = 10;
       int linearizationSamples = 50000;
       int simulationSamples = 100000;
       
-      SKPPoissonMILP milp = null;
       try {
-         milp = new SKPPoissonMILP(instance, partitions, linearizationSamples);
+         SKPPoissonMILP milp = new SKPPoissonMILP(instance, partitions, linearizationSamples);
          SKPPoissonMILPSolvedInstance solved = milp.solve(simulationSamples);
          System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
-         System.exit(-1);
       }
    }
 }

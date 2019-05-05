@@ -29,8 +29,6 @@ public class SKPMultiNormalMILP {
 
    public SKPMultiNormalMILP(SKPMultiNormal instance, int partitions)  throws IloException{
       this.instance = instance;
-      if(partitions > 10) 
-         throw new NullPointerException("Number of partitions should be less or equal to 10");
       this.partitions = partitions;
       this.solve(model);
    }

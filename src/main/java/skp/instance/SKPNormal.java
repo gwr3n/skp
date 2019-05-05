@@ -101,4 +101,13 @@ public class SKPNormal {
       }else
          return false;
    }
+   
+   public static SKPNormal getTestInstance() {
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
+      double cv = 0.2;
+      int capacity = 100;
+      int shortageCost = 100;
+      return new SKPNormal(expectedValuesPerUnit, expectedWeights, cv, capacity, shortageCost);
+   }
 }

@@ -19,13 +19,14 @@ import java.util.stream.IntStream;
 import ilog.concert.IloException;
 import skp.instance.SKPMultiNormal;
 import skp.milp.SKPMultiNormalMILP;
-import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalCholeskyGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
+import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulateMultiNormal {
+   private static final long[] seed = {1,2,3,4,5,6};
    SKPMultiNormal instance;
    private MRG32k3aL randGenerator;
    
@@ -57,52 +58,21 @@ public class SimulateMultiNormal {
       
       this.randGenerator.resetStartStream();
       NormalGen standardNormal = new NormalGen(this.randGenerator, 0, 1);
-      MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
+      //MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
+      MultinormalGen gen = new MultinormalPCAGen(standardNormal, mu, sigma);
       double[][] points = new double[nbSamples][this.instance.getItems()];
       for(int i = 0; i < nbSamples; i++)
          gen.nextPoint(points[i]);
       return points;
    }
    
-   public static double[][] calculateCovariance(double [] means, double cv, double rho){
-      double [] stdDemand =new double [means.length];
-      for (int i = 0; i < means.length; i ++) {
-         stdDemand[i] = cv*means[i];
-      }
-      
-      double [][] covariance = new double [means.length][means.length];
-      
-      for (int row=0; row<covariance.length;row++) {
-         for (int col=0; col<covariance[row].length;col++) {
-            if (row==col) {
-               covariance[row][col]=stdDemand[row]*stdDemand[col];
-            } else if (col==row+1 | col==row-1) {
-               covariance[row][col]=stdDemand[row]*stdDemand[col]*rho;
-            } else  {
-               covariance[row][col]=0;
-            }
-         }
-      }
-      return covariance;
-   }
+   
    
    public static void main(String args[]) {
-      long[] seed = {1,2,3,4,5,6};
       
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      double cv = 0.2;
-      double rho = 0.5;
-      double[][] varianceCovarianceWeights = calculateCovariance(expectedWeights, cv, rho);
+      SKPMultiNormal instance = SKPMultiNormal.getTestInstance();
       
-      int capacity = 100;
-      int shortageCost = 100;
-      
-      MultiNormalDist weights = new MultiNormalDist(expectedWeights, varianceCovarianceWeights);
-      
-      SKPMultiNormal instance = new SKPMultiNormal(expectedValuesPerUnit, weights, capacity, shortageCost);
-      
-      int partitions = 10;
+      int partitions = 20;
       SKPMultiNormalMILP milp = null;
       int[] knapsack = null;
       try {

@@ -27,6 +27,32 @@ public class SKPMultiNormal {
       this(expectedValuesPerUnit, weights.getMu(), weights.getCovariance(), capacity, shortageCost);
    }
    
+   public SKPMultiNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double correlationCoefficient, double capacity, double shortageCost) {
+      this(expectedValuesPerUnit, expectedWeights, calculateCovariance(expectedWeights, coefficientOfVariation, correlationCoefficient), capacity, shortageCost);
+   }
+   
+   public static double[][] calculateCovariance(double [] means, double cv, double rho){
+      double [] stdDemand =new double [means.length];
+      for (int i = 0; i < means.length; i ++) {
+         stdDemand[i] = cv*means[i];
+      }
+      
+      double [][] covariance = new double [means.length][means.length];
+      
+      for (int row=0; row<covariance.length;row++) {
+         for (int col=0; col<covariance[row].length;col++) {
+            if (row==col) {
+               covariance[row][col]=stdDemand[row]*stdDemand[col];
+            } else if (col==row+1 | col==row-1) {
+               covariance[row][col]=stdDemand[row]*stdDemand[col]*rho;
+            } else  {
+               covariance[row][col]=0;
+            }
+         }
+      }
+      return covariance;
+   }
+   
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
       instanceID = SHA.generateSHA256(intHash);
@@ -76,5 +102,15 @@ public class SKPMultiNormal {
                 this.shortageCost == o.shortageCost;
       }else
          return false;
+   }
+   
+   public static SKPMultiNormal getTestInstance() {
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
+      double cv = 0.2;
+      double rho = 0.5;
+      int capacity = 100;
+      int shortageCost = 100;
+      return new SKPMultiNormal(expectedValuesPerUnit, expectedWeights, cv, rho, capacity, shortageCost);
    }
 }

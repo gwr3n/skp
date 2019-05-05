@@ -69,26 +69,17 @@ public class SimulateNormal {
    
    public static void main(String args[]) {
       
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      double cv = 0.2;
-      
-      int capacity = 100;
-      int shortageCost = 100;
-      
-      SKPNormal instance = new SKPNormal(expectedValuesPerUnit, expectedWeights, cv, capacity, shortageCost);
+      SKPNormal instance = SKPNormal.getTestInstance();
       
       int partitions = 10;
       int simulationSamples = 100000;
       
-      SKPNormalMILP milp = null;
       try {
-         milp = new SKPNormalMILP(instance, partitions);
+         SKPNormalMILP milp = new SKPNormalMILP(instance, partitions);
          SKPNormalMILPSolvedInstance solved = milp.solve(simulationSamples);
          System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
-         System.exit(-1);
       }
    }
 }
