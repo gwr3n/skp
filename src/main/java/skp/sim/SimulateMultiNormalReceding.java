@@ -20,83 +20,26 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
 import ilog.concert.IloException;
+
 import skp.instance.KP;
 import skp.instance.SKPMultiNormal;
 import skp.milp.KPMILP;
 import skp.milp.SKPMultiNormalMILP;
+
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
-import umontreal.ssj.randvarmulti.MultinormalCholeskyGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
-/**
- * TO DO: Remember to amend representation of item value (per unit and proportional to item weight)
- * 
- * @author gwren
- *
- */
-
-public class SimulateMultiNormalReceding {
-   private static final long[] seed = {1,2,3,4,5,6};
+public class SimulateMultiNormalReceding  extends Simulate {
+   
    SKPMultiNormal instance;
-   private MRG32k3aL randGenerator;
    
    public SimulateMultiNormalReceding(SKPMultiNormal instance, long[] seed) {
       this.randGenerator = new MRG32k3aL();
       this.randGenerator.setSeed(seed);
       this.instance = instance;
-   }
-   
-   private static RealMatrix matrixInverse(RealMatrix m) {
-      RealMatrix pInverse = new LUDecomposition(m).getSolver().getInverse();
-      return pInverse;
-   }
-   
-   private static RealMatrix createReducedMatrix(RealMatrix m) {
-      double[][] matrix = new double[m.getRowDimension()-1][m.getColumnDimension()-1];
-      for(int i = 1; i < m.getRowDimension(); i++) {
-         for(int j = 1; j < m.getColumnDimension(); j++) {
-            matrix[i-1][j-1]=m.getEntry(i, j);
-         }
-      }
-      RealMatrix n = MatrixUtils.createRealMatrix(matrix);
-      return n;  
-   }
-   
-   private static RealMatrix computeConditionalExpectedDemand(double [] expDemand, double [] realizationDemand, RealMatrix m) {
-      RealMatrix d1 =null;
-      RealMatrix d2 =null;
-      RealMatrix sigma21 =null;
-      RealMatrix sigma11Inv =null;
-      RealMatrix zeta1 =null;
-      
-      
-      double[][] ed1 = new double[1][];
-      ed1[0] = expDemand;
-      RealMatrix ed1Matrix = MatrixUtils.createRealMatrix(ed1); 
-      d1=ed1Matrix.getSubMatrix(0, 0, 0, 0).transpose(); //d1
-      
-   
-      double[][] ed2 = new double[1][];
-      ed2[0] = expDemand;
-      RealMatrix ed2Matrix = MatrixUtils.createRealMatrix(ed2); 
-      d2=ed2Matrix.getSubMatrix(0, 0, 1, expDemand.length - 1).transpose(); //d2
-      
-      sigma21 = m.getSubMatrix(1, m.getRowDimension() - 1, 0, 0);
-      
-      sigma11Inv = matrixInverse(m.getSubMatrix(0, 0, 0, 0));
-      
-      double[][] realisedDemand = new double[1][];
-      realisedDemand[0] = realizationDemand;
-      RealMatrix realisedDemandMatrix = MatrixUtils.createRealMatrix(realisedDemand); 
-      zeta1 = realisedDemandMatrix.getSubMatrix(0, 0, 0, 0).transpose();
-      
-      
-      RealMatrix results = d2.add(sigma21.multiply(sigma11Inv.multiply(zeta1.subtract(d1))));      
-      
-        return results.transpose();    
    }
    
    private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions) {
@@ -116,10 +59,10 @@ public class SimulateMultiNormalReceding {
       RealMatrix M = conditionalCovarianceMatrix;
       double[] realizationsBuffer = realizations;
       for(int k = 0; k < t; k++) {
-         RealMatrix inverseM =  matrixInverse(conditionalCovarianceMatrix);
-         RealMatrix reducedInverseM = createReducedMatrix(inverseM);
-         conditionalCovarianceMatrix =  matrixInverse(reducedInverseM);
-         shortExpWeight = computeConditionalExpectedDemand(shortExpWeight, realizationsBuffer, M).getRow(0);
+         RealMatrix inverseM =  MatrixAlgebra.matrixInverse(conditionalCovarianceMatrix);
+         RealMatrix reducedInverseM = MatrixAlgebra.createReducedMatrix(inverseM);
+         conditionalCovarianceMatrix =  MatrixAlgebra.matrixInverse(reducedInverseM);
+         shortExpWeight = MatrixAlgebra.computeConditionalExpectedDemand(shortExpWeight, realizationsBuffer, M).getRow(0);
          double[][] realizationMatrix = new double[1][];
          realizationMatrix[0] = realizationsBuffer;
          RealMatrix reducedRealizations = MatrixUtils.createRealMatrix(realizationMatrix);
@@ -236,28 +179,6 @@ public class SimulateMultiNormalReceding {
       return points;
    }
    
-   private static double[][] calculateCovariance(double [] means, double cv, double rho){
-      double [] stdDemand =new double [means.length];
-      for (int i = 0; i < means.length; i ++) {
-         stdDemand[i] = cv*means[i];
-      }
-      
-      double [][] covariance = new double [means.length][means.length];
-      
-      for (int row=0; row<covariance.length;row++) {
-         for (int col=0; col<covariance[row].length;col++) {
-            if (row==col) {
-               covariance[row][col]=stdDemand[row]*stdDemand[col];
-            } else if (col==row+1 | col==row-1) {
-               covariance[row][col]=stdDemand[row]*stdDemand[col]*rho;
-            } else  {
-               covariance[row][col]=0;
-            }
-         }
-      }
-      return covariance;
-   }
-   
    public static void main(String args[]) {
 
       SKPMultiNormal instance = SKPMultiNormal.getTestInstance();
@@ -276,6 +197,59 @@ public class SimulateMultiNormalReceding {
       System.out.println("EVPI: "+simEVPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwP on items 2-n: "+EVwP);
+   }
+   
+   private static class MatrixAlgebra {
+      
+      private static RealMatrix matrixInverse(RealMatrix m) {
+         RealMatrix pInverse = new LUDecomposition(m).getSolver().getInverse();
+         return pInverse;
+      }
+      
+      private static RealMatrix createReducedMatrix(RealMatrix m) {
+         double[][] matrix = new double[m.getRowDimension()-1][m.getColumnDimension()-1];
+         for(int i = 1; i < m.getRowDimension(); i++) {
+            for(int j = 1; j < m.getColumnDimension(); j++) {
+               matrix[i-1][j-1]=m.getEntry(i, j);
+            }
+         }
+         RealMatrix n = MatrixUtils.createRealMatrix(matrix);
+         return n;  
+      }
+      
+      private static RealMatrix computeConditionalExpectedDemand(double [] expDemand, double [] realizationDemand, RealMatrix m) {
+         RealMatrix d1 =null;
+         RealMatrix d2 =null;
+         RealMatrix sigma21 =null;
+         RealMatrix sigma11Inv =null;
+         RealMatrix zeta1 =null;
+         
+         
+         double[][] ed1 = new double[1][];
+         ed1[0] = expDemand;
+         RealMatrix ed1Matrix = MatrixUtils.createRealMatrix(ed1); 
+         d1=ed1Matrix.getSubMatrix(0, 0, 0, 0).transpose(); //d1
+         
+      
+         double[][] ed2 = new double[1][];
+         ed2[0] = expDemand;
+         RealMatrix ed2Matrix = MatrixUtils.createRealMatrix(ed2); 
+         d2=ed2Matrix.getSubMatrix(0, 0, 1, expDemand.length - 1).transpose(); //d2
+         
+         sigma21 = m.getSubMatrix(1, m.getRowDimension() - 1, 0, 0);
+         
+         sigma11Inv = matrixInverse(m.getSubMatrix(0, 0, 0, 0));
+         
+         double[][] realisedDemand = new double[1][];
+         realisedDemand[0] = realizationDemand;
+         RealMatrix realisedDemandMatrix = MatrixUtils.createRealMatrix(realisedDemand); 
+         zeta1 = realisedDemandMatrix.getSubMatrix(0, 0, 0, 0).transpose();
+         
+         
+         RealMatrix results = d2.add(sigma21.multiply(sigma11Inv.multiply(zeta1.subtract(d1))));      
+         
+           return results.transpose();    
+      }
    }
 }
 

@@ -3,23 +3,17 @@ package skp.instance;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import skp.utililities.hash.SHA;
 import umontreal.ssj.probdist.NormalDist;
 
-public class SKPNormal {
-   String instanceID;
-   double[] expectedValuesPerUnit;
-   double[] expectedWeights;
+public class SKPNormal extends SKP {
+
    double[] stdWeights;
    double capacity;
-   double shortageCost;
    
    public SKPNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[] stdWeights, double capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights = expectedWeights;
+      super(expectedValuesPerUnit, expectedWeights, shortageCost);
       this.stdWeights = stdWeights;
       this.capacity = capacity;
-      this.shortageCost = shortageCost;
       
       generateInstanceID();
    }
@@ -49,29 +43,8 @@ public class SKPNormal {
             shortageCost);
    }
    
-   private void generateInstanceID() {
-      String intHash = ""+this.hashCode();
-      instanceID = SHA.generateSHA256(intHash);
-   }
-   
-   public String getInstanceID() {
-      return this.instanceID;
-   }
-   
-   public int getItems() {
-      return this.expectedValuesPerUnit.length;
-   }
-   
    public double getCapacity() {
       return this.capacity;
-   }
-   
-   public double getShortageCost() {
-      return this.shortageCost;
-   }
-   
-   public double[] getExpectedValuesPerUnit() {
-      return this.expectedValuesPerUnit;
    }
    
    public NormalDist[] getWeights() {

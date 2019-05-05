@@ -3,59 +3,32 @@ package skp.instance;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import skp.utililities.hash.SHA;
 import umontreal.ssj.probdist.PoissonDist;
 
-public class SKPPoisson {
-   String instanceID;
-   double[] expectedValuesPerUnit;
-   double[] expectedWeights;
-   int capacity;
-   double shortageCost;
+public class SKPPoisson extends SKP {
+   
+   protected int capacity;
    
    public SKPPoisson(double[] expectedValuesPerUnit, double[] expectedWeights, int capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights = expectedWeights;
+      super(expectedValuesPerUnit, expectedWeights, shortageCost);
       this.capacity = capacity;
-      this.shortageCost = shortageCost;
       
       generateInstanceID();
-   }
-   
-   private void generateInstanceID() {
-      String intHash = ""+this.hashCode();
-      instanceID = SHA.generateSHA256(intHash);
    }
    
    public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights =  IntStream.iterate(0, i -> i + 1).limit(weights.length)
-                                       .mapToDouble(i -> weights[i].getLambda())
-                                       .toArray();
+      super(expectedValuesPerUnit, 
+            IntStream.iterate(0, i -> i + 1).limit(weights.length)
+                     .mapToDouble(i -> weights[i].getLambda())
+                     .toArray(), 
+            shortageCost);
       this.capacity = capacity;
-      this.shortageCost = shortageCost;
       
       generateInstanceID();
-   }
-   
-   public String getInstanceID() {
-      return this.instanceID;
-   }
-   
-   public int getItems() {
-      return this.expectedValuesPerUnit.length;
    }
    
    public int getCapacity() {
       return this.capacity;
-   }
-   
-   public double getShortageCost() {
-      return this.shortageCost;
-   }
-   
-   public double[] getExpectedValuesPerUnit() {
-      return this.expectedValuesPerUnit;
    }
    
    public PoissonDist[] getWeights() {

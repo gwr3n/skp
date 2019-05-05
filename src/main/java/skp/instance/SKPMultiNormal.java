@@ -2,23 +2,17 @@ package skp.instance;
 
 import java.util.Arrays;
 
-import skp.utililities.hash.SHA;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
-public class SKPMultiNormal {
-   String instanceID;
-   double[] expectedValuesPerUnit;
-   double[] expectedWeights;
+public class SKPMultiNormal extends SKP {
+
    double[][] covarianceWeights;
    double capacity;
-   double shortageCost;
    
    public SKPMultiNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[][] covarianceWeights, double capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights = expectedWeights;
+      super(expectedValuesPerUnit, expectedWeights, shortageCost);
       this.covarianceWeights = covarianceWeights;
       this.capacity = capacity;
-      this.shortageCost = shortageCost;
       
       generateInstanceID();
    }
@@ -50,29 +44,8 @@ public class SKPMultiNormal {
       return covariance;
    }
    
-   private void generateInstanceID() {
-      String intHash = ""+this.hashCode();
-      instanceID = SHA.generateSHA256(intHash);
-   }
-   
-   public String getInstanceID() {
-      return this.instanceID;
-   }
-   
-   public int getItems() {
-      return this.expectedValuesPerUnit.length;
-   }
-   
    public double getCapacity() {
       return this.capacity;
-   }
-   
-   public double getShortageCost() {
-      return this.shortageCost;
-   }
-   
-   public double[] getExpectedValuesPerUnit() {
-      return this.expectedValuesPerUnit;
    }
    
    public MultiNormalDist getWeights() {

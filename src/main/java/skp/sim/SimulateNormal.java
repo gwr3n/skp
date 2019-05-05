@@ -25,10 +25,9 @@ import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
-public class SimulateNormal {
-   private static final long[] seed = {1,2,3,4,5,6};
+public class SimulateNormal extends Simulate {
+   
    SKPNormal instance;
-   private MRG32k3aL randGenerator;
    
    public SimulateNormal(SKPNormal instance) {
       this.randGenerator = new MRG32k3aL();

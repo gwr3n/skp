@@ -20,15 +20,13 @@ import ilog.concert.IloException;
 import skp.instance.SKPMultiNormal;
 import skp.milp.SKPMultiNormalMILP;
 import umontreal.ssj.randvar.NormalGen;
-import umontreal.ssj.randvarmulti.MultinormalCholeskyGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
-public class SimulateMultiNormal {
-   private static final long[] seed = {1,2,3,4,5,6};
+public class SimulateMultiNormal  extends Simulate {
+   
    SKPMultiNormal instance;
-   private MRG32k3aL randGenerator;
    
    public SimulateMultiNormal(SKPMultiNormal instance, long[] seed) {
       this.randGenerator = new MRG32k3aL();
