@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
-import skp.SKPMultiNormal;
+import skp.instance.SKPMultiNormal;
 import skp.milp.SKPMultiNormalMILP;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;

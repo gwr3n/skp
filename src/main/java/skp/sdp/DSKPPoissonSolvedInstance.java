@@ -1,6 +1,6 @@
 package skp.sdp;
 
-import skp.SKPPoisson;
+import skp.instance.SKPPoisson;
 
 public class DSKPPoissonSolvedInstance {
    public SKPPoisson instance;

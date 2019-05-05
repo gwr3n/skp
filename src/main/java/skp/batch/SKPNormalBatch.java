@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
-import skp.SKPNormal;
+import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
 import skp.milp.SKPNormalMILPSolvedInstance;
 import skp.sdp.DSKPNormal;

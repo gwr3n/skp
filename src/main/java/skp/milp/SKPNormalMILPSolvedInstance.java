@@ -1,6 +1,6 @@
 package skp.milp;
 
-import skp.SKPNormal;
+import skp.instance.SKPNormal;
 
 public class SKPNormalMILPSolvedInstance {
    public SKPNormal instance;

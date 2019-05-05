@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 import com.sun.management.OperatingSystemMXBean;
 
-import skp.SKPNormal;
+import skp.instance.SKPNormal;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 

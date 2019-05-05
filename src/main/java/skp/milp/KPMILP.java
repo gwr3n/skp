@@ -16,7 +16,7 @@ import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
 import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
-import skp.KP;
+import skp.instance.KP;
 
 public class KPMILP {
    KP instance;

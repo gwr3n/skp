@@ -1,6 +1,6 @@
 package skp.sdp;
 
-import skp.SKPNormal;
+import skp.instance.SKPNormal;
 
 public class DSKPNormalSolvedInstance {
    public SKPNormal instance;

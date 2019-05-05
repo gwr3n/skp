@@ -1,41 +1,35 @@
-package skp;
+package skp.instance;
 
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import skp.utililities.hash.SHA;
-import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdistmulti.MultiNormalDist;
 
-public class SKPPoisson {
+public class SKPMultiNormal {
    String instanceID;
    double[] expectedValuesPerUnit;
    double[] expectedWeights;
-   int capacity;
+   double[][] covarianceWeights;
+   double capacity;
    double shortageCost;
    
-   public SKPPoisson(double[] expectedValuesPerUnit, double[] expectedWeights, int capacity, double shortageCost) {
+   public SKPMultiNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[][] covarianceWeights, double capacity, double shortageCost) {
       this.expectedValuesPerUnit = expectedValuesPerUnit;
       this.expectedWeights = expectedWeights;
+      this.covarianceWeights = covarianceWeights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
       
       generateInstanceID();
+   }
+   
+   public SKPMultiNormal(double[] expectedValuesPerUnit, MultiNormalDist weights, double capacity, double shortageCost) {
+      this(expectedValuesPerUnit, weights.getMu(), weights.getCovariance(), capacity, shortageCost);
    }
    
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
       instanceID = SHA.generateSHA256(intHash);
-   }
-   
-   public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights =  IntStream.iterate(0, i -> i + 1).limit(weights.length)
-                                       .mapToDouble(i -> weights[i].getLambda())
-                                       .toArray();
-      this.capacity = capacity;
-      this.shortageCost = shortageCost;
-      
-      generateInstanceID();
    }
    
    public String getInstanceID() {
@@ -46,7 +40,7 @@ public class SKPPoisson {
       return this.expectedValuesPerUnit.length;
    }
    
-   public int getCapacity() {
+   public double getCapacity() {
       return this.capacity;
    }
    
@@ -58,26 +52,26 @@ public class SKPPoisson {
       return this.expectedValuesPerUnit;
    }
    
-   public PoissonDist[] getWeights() {
-      return IntStream.iterate(0, i -> i + 1).limit(expectedWeights.length)
-                      .mapToObj(i -> new PoissonDist(expectedWeights[i]))
-                      .toArray(PoissonDist[]::new);
+   public MultiNormalDist getWeights() {
+      return new MultiNormalDist(this.expectedWeights, this.covarianceWeights);
    }
    
    @Override
    public int hashCode() {
       return Arrays.hashCode(this.expectedValuesPerUnit) +
             Arrays.hashCode(this.expectedWeights) +
+            Arrays.deepHashCode(this.covarianceWeights) +
             Double.hashCode(this.capacity) + 
             Double.hashCode(this.shortageCost);
    }
    
    @Override
    public boolean equals(Object obj) {
-      if(obj instanceof SKPPoisson) {
-         SKPPoisson o = (SKPPoisson) obj;
+      if(obj instanceof SKPMultiNormal) {
+         SKPMultiNormal o = (SKPMultiNormal) obj;
          return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
                 Arrays.equals(this.expectedWeights, o.expectedWeights) &&
+                Arrays.deepEquals(this.covarianceWeights, o.covarianceWeights) &&
                 this.capacity == o.capacity &&
                 this.shortageCost == o.shortageCost;
       }else

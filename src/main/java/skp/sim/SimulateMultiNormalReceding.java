@@ -20,8 +20,8 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
 import ilog.concert.IloException;
-import skp.KP;
-import skp.SKPMultiNormal;
+import skp.instance.KP;
+import skp.instance.SKPMultiNormal;
 import skp.milp.KPMILP;
 import skp.milp.SKPMultiNormalMILP;
 import umontreal.ssj.probdistmulti.MultiNormalDist;

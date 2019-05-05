@@ -16,8 +16,8 @@ import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
 import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
-import skp.SKPNormal;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
+import skp.instance.SKPNormal;
 import skp.sim.SimulateNormal;
 
 public class SKPNormalMILP {

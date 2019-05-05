@@ -1,6 +1,6 @@
 package skp.milp;
 
-import skp.SKPPoisson;
+import skp.instance.SKPPoisson;
 
 public class SKPPoissonMILPSolvedInstance {
    public SKPPoisson instance;

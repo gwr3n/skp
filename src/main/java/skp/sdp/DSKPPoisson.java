@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 import com.sun.management.OperatingSystemMXBean;
 
-import skp.SKPPoisson;
+import skp.instance.SKPPoisson;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.PoissonDist;
 

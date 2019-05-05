@@ -16,8 +16,8 @@ import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
 import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
-import skp.SKPMultiNormal;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
+import skp.instance.SKPMultiNormal;
 
 public class SKPMultiNormalMILP {
    SKPMultiNormal instance;
