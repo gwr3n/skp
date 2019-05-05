@@ -19,17 +19,19 @@ import java.util.stream.IntStream;
 import ilog.concert.IloException;
 
 import skp.SKPNormal;
+import skp.gson.GSONUtility;
 import skp.milp.SKPNormalMILP;
-
+import skp.milp.SKPNormalMILPSolvedInstance;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulateNormal {
+   private static final long[] seed = {1,2,3,4,5,6};
    SKPNormal instance;
    private MRG32k3aL randGenerator;
    
-   public SimulateNormal(SKPNormal instance, long[] seed) {
+   public SimulateNormal(SKPNormal instance) {
       this.randGenerator = new MRG32k3aL();
       this.randGenerator.setSeed(seed);
       this.instance = instance;
@@ -67,45 +69,27 @@ public class SimulateNormal {
    }
    
    public static void main(String args[]) {
-      long[] seed = {1,2,3,4,5,6};
       
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
-      double[] standardDeviationWeights = IntStream.iterate(0, i -> i + 1)
-                                                   .limit(expectedWeights.length)
-                                                   .mapToDouble(i -> expectedWeights[i]*cv).toArray();
       
       int capacity = 100;
       int shortageCost = 100;
       
-      NormalDist[] weights = IntStream.iterate(0, i -> i + 1).limit(expectedWeights.length)
-                                      .mapToObj(i -> new NormalDist(expectedWeights[i], standardDeviationWeights[i]))
-                                      .toArray(NormalDist[]::new);
-      
-      SKPNormal instance = new SKPNormal(expectedValuesPerUnit, weights, capacity, shortageCost);
+      SKPNormal instance = new SKPNormal(expectedValuesPerUnit, expectedWeights, cv, capacity, shortageCost);
       
       int partitions = 10;
+      int simulationSamples = 100000;
+      
       SKPNormalMILP milp = null;
-      int[] knapsack = null;
       try {
          milp = new SKPNormalMILP(instance, partitions);
-         knapsack = milp.getKnapsack();
-         System.out.println("Knapsack: "+Arrays.toString(knapsack));
+         SKPNormalMILPSolvedInstance solved = milp.solve(simulationSamples);
+         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);
       }
-      
-      SimulateNormal sim = new SimulateNormal(instance, seed);
-      double milpSolutionValue = milp.getSolutionValue();
-      double milpLinearizationError = milp.getMaxLinearizationError();
-      int nbSamples = 10000;
-      double simSolutionValue = sim.simulate(knapsack, nbSamples);
-      
-      System.out.println("MILP: "+milpSolutionValue);
-      System.out.println("MILP max linearization error: "+milpLinearizationError);
-      System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }
 }

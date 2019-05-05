@@ -13,9 +13,9 @@ import com.sun.management.OperatingSystemMXBean;
 
 import skp.SKPPoisson;
 import skp.gson.GSONUtility;
-import skp.sdp.DSKPNormal.State;
 import umontreal.ssj.probdist.PoissonDist;
 
+@SuppressWarnings("restriction")
 public class DSKPPoisson {
    
    int nbItems;
@@ -24,7 +24,6 @@ public class DSKPPoisson {
    int[] supportLB;
    int[] supportUB;
    
-   @SuppressWarnings("restriction")
    protected OperatingSystemMXBean osMBean;
    protected long nanoBefore;
    protected long nanoAfter;

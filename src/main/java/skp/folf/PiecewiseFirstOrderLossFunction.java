@@ -311,7 +311,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
     */
    
    public static void main(String[] args){
-      testPiecewiseFirstOrderLossFunction();
+      //testPiecewiseFirstOrderLossFunction();
       //printLinearizationParameters();
       //generatePoissonPiecewiseTables();
    }

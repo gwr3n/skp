@@ -15,6 +15,7 @@ import skp.SKPNormal;
 import skp.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 
+@SuppressWarnings("restriction")
 public class DSKPNormal {
    
    int nbItems;
@@ -24,7 +25,6 @@ public class DSKPNormal {
    int[] supportUB;
    double d = 0.5;
    
-   @SuppressWarnings("restriction")
    protected OperatingSystemMXBean osMBean;
    protected long nanoBefore;
    protected long nanoAfter;

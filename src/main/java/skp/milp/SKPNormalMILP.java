@@ -18,32 +18,44 @@ import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
 import skp.SKPNormal;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
+import skp.sim.SimulateNormal;
 
 public class SKPNormalMILP {
-
    SKPNormal instance;
+   
    int partitions;
-   int[] knapsack;
-   double solutionValue;
+   int linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
+   
+   int[] optimalKnapsack;
+   double milpSolutionValue;
+   double milpOptimalityGap;
    private final String model = "sk_normal";
-   double maxLinearizationError;
+   double milpMaxLinearizationError;
+   
+   double cplexSolutionTimeMs;
+   int simplexIterations;
+   int exploredNodes;
 
    public SKPNormalMILP(SKPNormal instance, int partitions) throws IloException{
       this.instance = instance;
       this.partitions = partitions;
-      this.solve(model);
+      this.solveMILP(model);
    }
    
-   public int[] getKnapsack() {
-      return this.knapsack;
+   public int[] getOptimalKnapsack() {
+      return this.optimalKnapsack;
    }
    
-   public double getSolutionValue() {
-      return this.solutionValue;
+   public double getMILPSolutionValue() {
+      return this.milpSolutionValue;
    }
    
-   public double getMaxLinearizationError() {
-      return this.maxLinearizationError;
+   public double getMILPOptimalityGap() {
+      return this.milpOptimalityGap;
+   }
+   
+   public double getMILPMaxLinearizationError() {
+      return this.milpMaxLinearizationError;
    }
 
    private InputStream getMILPModelStream(File file){
@@ -55,8 +67,36 @@ public class SKPNormalMILP {
       }
       return is;
    }
+   
+   public SKPNormalMILPSolvedInstance solve(int simulationRuns) throws IloException {
+      this.solveMILP(model);
+      
+      SimulateNormal sim = new SimulateNormal(instance);
+      double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
+      
+      double milpMaxLinearizationError = 100*this.getMILPMaxLinearizationError()/simulatedSolutionValue;
+      double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
+      
+      SKPNormalMILPSolvedInstance solvedInstance = new SKPNormalMILPSolvedInstance(
+            instance,
+            this.getOptimalKnapsack(),
+            simulatedSolutionValue,
+            simulationRuns,
+            this.getMILPSolutionValue(),
+            this.getMILPOptimalityGap(),
+            this.partitions,
+            this.linearizationSamples,
+            milpMaxLinearizationError,
+            simulatedLinearizationError,
+            cplexSolutionTimeMs,
+            simplexIterations,
+            exploredNodes
+            );
+      
+      return solvedInstance;
+   }
 
-   public void solve(String model_name) throws IloException{
+   private void solveMILP(String model_name) throws IloException{
       IloOplFactory.setDebugMode(false);
       IloOplFactory oplF = new IloOplFactory();
       IloOplErrorHandler errHandler = oplF.createOplErrorHandler(System.out);
@@ -92,18 +132,20 @@ public class SKPNormalMILP {
       boolean status =  cplex.solve();
       double end = cplex.getCplexImpl().getCplexTime();
       if ( status ) {   
-         this.solutionValue = cplex.getObjValue();
-         @SuppressWarnings("unused")
-         double time = end - start;
+         this.milpSolutionValue = cplex.getObjValue();
+         this.milpOptimalityGap = cplex.getMIPRelativeGap();
+         cplexSolutionTimeMs = (end - start)*1000;
+         simplexIterations = cplex.getNiterations();
+         exploredNodes = cplex.getNnodes();
          
-         this.knapsack = new int[instance.getItems()];
+         this.optimalKnapsack = new int[instance.getItems()];
          for(int i = 0; i < instance.getItems(); i++){
-            this.knapsack[i] = (int) Math.round(cplex.getValue(opl.getElement("X").asIntVarMap().get(i+1)));
+            this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(opl.getElement("X").asIntVarMap().get(i+1)));
          }
          
-         this.maxLinearizationError = this.instance.getShortageCost()*
-                                      cplex.getValue(opl.getElement("S").asNumVar())*
-                                      PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
+         this.milpMaxLinearizationError = this.instance.getShortageCost()*
+                                          cplex.getValue(opl.getElement("S").asNumVar())*
+                                          PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
       } else {
          System.out.println("No solution!");
          opl.end();

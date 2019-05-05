@@ -8,7 +8,11 @@ import umontreal.ssj.probdist.NormalDist;
 public final class PiecewiseStandardNormalFirstOrderLossFunction {
    
    private static long[] seed = {1,2,3,4,5,6};
-   private static int nbSamples = 100000;
+   private static int linearizationSamples = 100000;
+   
+   public static int getLinearizationSamples() {
+      return linearizationSamples;
+   }
    
    public static double getError(int partitions){
       if(partitions <= 10) {
@@ -31,7 +35,7 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
          PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
          double[] probabilityMasses = new double[partitions];
          Arrays.fill(probabilityMasses, 1.0/partitions);
-         double error = pwfolf.getMaxApproximationError(probabilityMasses, nbSamples);
+         double error = pwfolf.getMaxApproximationError(probabilityMasses, linearizationSamples);
          return error;
       }
    }
@@ -96,7 +100,7 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
             PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
             double[] probabilityMasses = new double[partitions];
             Arrays.fill(probabilityMasses, 1.0/partitions);
-            double[] means = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+            double[] means = pwfolf.getConditionalExpectations(probabilityMasses, linearizationSamples);
             return means;
          }
       }

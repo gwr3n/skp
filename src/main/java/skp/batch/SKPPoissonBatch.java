@@ -27,6 +27,7 @@ import skp.milp.SKPPoissonMILP;
 import skp.milp.SKPPoissonMILPSolvedInstance;
 import skp.sdp.DSKPPoisson;
 import skp.sdp.DSKPPoissonSolvedInstance;
+
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 import umontreal.ssj.randvar.UniformGen;
@@ -38,7 +39,7 @@ public class SKPPoissonBatch {
    static final private MRG32k3aL randGenerator = new MRG32k3aL();
    
    public static void main(String args[]) {
-      String batchFileName = "scrap/instances.json";
+      String batchFileName = "scrap/poisson_instances.json";
       generateBatch(1, 100, batchFileName);
       
       try {
@@ -57,13 +58,13 @@ public class SKPPoissonBatch {
    public static void solveMILP(String fileName) throws IloException {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedInstancesMILP.json";
+      String fileNameSolved = "scrap/solvedPoissonInstancesMILP.json";
       SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedInstancesMILP.csv";
+      String fileNameSolvedCSV = "scrap/solvedPoissonInstancesMILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -132,13 +133,13 @@ public class SKPPoissonBatch {
    public static void solveDSKP(String fileName) {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedInstancesDSKP.json";
+      String fileNameSolved = "scrap/solvedPoissonInstancesDSKP.json";
       DSKPPoissonSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedInstancesDSKP.csv";
+      String fileNameSolvedCSV = "scrap/solvedPoissonInstancesDSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -187,8 +188,7 @@ public class SKPPoissonBatch {
     */
    
    public static void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPPoissonBatch batch = new SKPPoissonBatch();
-      SKPPoisson[] instances = batch.generateInstances(numberOfInstances, instanceSize);
+      SKPPoisson[] instances = SKPPoissonBatch.generateInstances(numberOfInstances, instanceSize);
       GSONUtility.<SKPPoisson[]>saveInstanceToGSON(instances, fileName);
    }
    
@@ -197,7 +197,7 @@ public class SKPPoissonBatch {
       return instances;
    }
    
-   private SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
+   private static SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
