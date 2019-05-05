@@ -19,36 +19,48 @@ import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
 import skp.SKPPoisson;
 import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.sim.SimulatePoisson;
 
 public class SKPPoissonMILP {
    SKPPoisson instance;
+   
    int partitions;
-   int nbSamples;
    double[] probabilityMasses;
+   int linearizationSamples;
+   
    int[] knapsack;
-   double solutionValue;
+   double milpSolutionValue;
+   double milpOptimalityGap;
    private final String model = "sk_poisson";
-   double maxLinearizationError;
+   double milpMaxLinearizationError;
+   
+   double cplexSolutionTimeMs;
+   int simplexIterations;
+   int exploredNodes;
    
    public SKPPoissonMILP(SKPPoisson instance, int partitions, int linearizationSamples) throws IloException{
       this.instance = instance;
       this.partitions = partitions;
-      this.nbSamples = linearizationSamples;
+      this.linearizationSamples = linearizationSamples;
       this.probabilityMasses = new double[partitions];
       Arrays.fill(this.probabilityMasses, 1.0/partitions);
-      this.solve(model);
+      
    }
    
-   public int[] getKnapsack() {
+   public int[] getOptimalKnapsack() {
       return this.knapsack;
    }
    
-   public double getSolutionValue() {
-      return this.solutionValue;
+   public double getMILPSolutionValue() {
+      return this.milpSolutionValue;
    }
    
-   public double getMaxLinearizationError() {
-      return this.maxLinearizationError;
+   public double getMILPOptimalityGap() {
+      return this.milpOptimalityGap;
+   }
+   
+   public double getMILPMaxLinearizationError() {
+      return this.milpMaxLinearizationError;
    }
    
    private InputStream getMILPModelStream(File file){
@@ -61,7 +73,35 @@ public class SKPPoissonMILP {
       return is;
    }
    
-   public void solve(String model_name) throws IloException{
+   public SKPPoissonMILPSolvedInstance solve(int simulationRuns) throws IloException {
+      this.solveMILP(model);
+      
+      SimulatePoisson sim = new SimulatePoisson(instance);
+      double simulatedSolutionValue = sim.simulate(knapsack, simulationRuns);
+      
+      double milpMaxLinearizationError = 100*this.getMILPMaxLinearizationError()/simulatedSolutionValue;
+      double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
+      
+      SKPPoissonMILPSolvedInstance solvedInstance = new SKPPoissonMILPSolvedInstance(
+            instance,
+            this.getOptimalKnapsack(),
+            simulatedSolutionValue,
+            simulationRuns,
+            this.getMILPSolutionValue(),
+            this.getMILPOptimalityGap(),
+            this.partitions,
+            this.linearizationSamples,
+            milpMaxLinearizationError,
+            simulatedLinearizationError,
+            cplexSolutionTimeMs,
+            simplexIterations,
+            exploredNodes
+            );
+      
+      return solvedInstance;
+   }
+   
+   private void solveMILP(String model_name) throws IloException{
       IloOplFactory.setDebugMode(false);
       IloOplFactory oplF = new IloOplFactory();
       IloOplErrorHandler errHandler = oplF.createOplErrorHandler(System.out);
@@ -97,17 +137,19 @@ public class SKPPoissonMILP {
       boolean status =  cplex.solve();
       double end = cplex.getCplexImpl().getCplexTime();
       if ( status ) {   
-         this.solutionValue = cplex.getObjValue();
-         @SuppressWarnings("unused")
-         double time = end - start;
+         this.milpSolutionValue = cplex.getObjValue();
+         this.milpOptimalityGap = cplex.getMIPRelativeGap();
+         cplexSolutionTimeMs = (end - start)*1000;
+         simplexIterations = cplex.getNiterations();
+         exploredNodes = cplex.getNnodes();
          
          this.knapsack = new int[instance.getItems()];
          for(int i = 0; i < instance.getItems(); i++){
             this.knapsack[i] = (int) Math.round(cplex.getValue(opl.getElement("X").asIntVarMap().get(i+1)));
          }
          
-         double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, nbSamples);
-         this.maxLinearizationError = this.instance.getShortageCost()*
+         double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
+         this.milpMaxLinearizationError = this.instance.getShortageCost()*
                                       errors[(int)Math.round(cplex.getValue(opl.getElement("M").asNumVar()))];
       } else {
          System.out.println("No solution!");
@@ -115,8 +157,7 @@ public class SKPPoissonMILP {
          oplF.end();//
          errHandler.end();
          cplex.end();
-         System.gc();
-         
+         System.gc(); 
       } 
    }
 
@@ -159,7 +200,7 @@ public class SKPPoissonMILP {
          handler.addIntItem(partitions);
          handler.endElement();
          
-         int maxWeight = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFMaxWeight(instance.getCapacity(), probabilityMasses, nbSamples);
+         int maxWeight = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFMaxWeight(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("maxWeight");
          handler.addIntItem(maxWeight);
          handler.endElement();
@@ -171,7 +212,7 @@ public class SKPPoissonMILP {
          handler.endArray();
          handler.endElement();
 
-         double[][] means = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(instance.getCapacity(), probabilityMasses, nbSamples);
+         double[][] means = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("means");
          handler.startArray();
          for (int i = 0 ; i < maxWeight + 1; i++){
@@ -184,7 +225,7 @@ public class SKPPoissonMILP {
          handler.endArray();
          handler.endElement();
 
-         double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, nbSamples);
+         double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("error");
          handler.startArray();
          for (int j = 0 ; j<errors.length ; j++)

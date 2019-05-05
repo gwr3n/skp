@@ -1,8 +1,8 @@
 package skp;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
+import skp.util.Hash;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
 public class SKPMultiNormal {
@@ -24,19 +24,16 @@ public class SKPMultiNormal {
    }
    
    public SKPMultiNormal(double[] expectedValuesPerUnit, MultiNormalDist weights, double capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights = weights.getMu();
-      this.covarianceWeights = weights.getCovariance();
-      this.capacity = capacity;
-      this.shortageCost = shortageCost;
-      
-      generateInstanceID();
+      this(expectedValuesPerUnit, weights.getMu(), weights.getCovariance(), capacity, shortageCost);
    }
    
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
-      BigInteger hashCode = new BigInteger(intHash);
-      instanceID = hashCode.toString(16);
+      instanceID = Hash.generateSHA256(intHash);
+   }
+   
+   public String getInstanceID() {
+      return this.instanceID;
    }
    
    public int getItems() {

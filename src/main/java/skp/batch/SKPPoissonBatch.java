@@ -1,16 +1,32 @@
+/**
+ * To run from Mac OS
+ * 
+ * -Djava.library.path=/Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * 
+ * Environment variable
+ * 
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * 
+ * @author gwren
+ *
+ */
+
 package skp.batch;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import com.google.gson.stream.JsonReader;
-
+import ilog.concert.IloException;
 import skp.SKPPoisson;
+import skp.gson.GSONUtility;
+import skp.milp.SKPPoissonMILP;
+import skp.milp.SKPPoissonMILPSolvedInstance;
+import skp.sdp.DSKPPoisson;
+import skp.sdp.DSKPPoissonSolvedInstance;
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 import umontreal.ssj.randvar.UniformGen;
@@ -18,122 +34,180 @@ import umontreal.ssj.randvar.UniformIntGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
 public class SKPPoissonBatch {
-   long[] seed = {1,2,3,4,5,6};
-   private MRG32k3aL randGenerator;
-   
-   public SKPPoissonBatch(){
-      this.randGenerator = new MRG32k3aL();
-      this.randGenerator.setSeed(seed);
-   }
+   static final long[] seed = {1,2,3,4,5,6};
+   static final private MRG32k3aL randGenerator = new MRG32k3aL();
    
    public static void main(String args[]) {
-      testMultipleInstances();
+      String batchFileName = "scrap/instances.json";
+      generateBatch(1, 100, batchFileName);
+      
+      try {
+         solveMILP(batchFileName);
+      } catch (IloException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+      solveDSKP(batchFileName);
    }
    
    /*
-    * Multiple instances
+    * MILP
     */
    
-   public static void testMultipleInstances() {
-      SKPPoissonBatch batch = new SKPPoissonBatch();
-      int numberOfInstances = 10;
-      int instanceSize = 5;
-      SKPPoisson[] instances = batch.generateInstances(numberOfInstances, instanceSize);
-      String fileName = "scrap/instances.json";
-      saveInstanceArrayToGSON(instances, fileName);
-      SKPPoisson[] newInstances = retrieveInstanceArray(fileName);
-      assert(Arrays.deepEquals(instances, newInstances));
+   public static void solveMILP(String fileName) throws IloException {
+      SKPPoisson[] batch = retrieveBatch(fileName);
+      
+      String fileNameSolved = "scrap/solvedInstancesMILP.json";
+      SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved);
+      
+      solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
+      System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      
+      String fileNameSolvedCSV = "scrap/solvedInstancesMILP.csv";
+      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   public SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
-      SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
-                                        .limit(numberOfInstances)
-                                        .mapToObj(i -> new SKPPoisson(
-                                              (new RandomVariateGen(this.randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(this.randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
-                                              UniformIntGen.nextInt(this.randGenerator, 50, 150),
-                                              UniformGen.nextDouble(this.randGenerator, 50, 150)))
-                                        .toArray(SKPPoisson[]::new);
+   private static void storeSolvedBatchToCSV(SKPPoissonMILPSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValuesPerUnit, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "simulationRuns, milpSolutionValue, simulationRuns, milpOptimalityGap, piecewisePartitions, "
+            + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
+            + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
+      String body = "";
+      
+      for(SKPPoissonMILPSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.simulationRuns + ", " +
+                 s.milpSolutionValue + ", " +
+                 s.simulationRuns + ", " +
+                 s.milpOptimalityGap + ", " +
+                 s.piecewisePartitions + ", " +
+                 s.piecewiseSamples + ", " +
+                 s.milpMaxLinearizationError + ", " +
+                 s.simulatedLinearizationError + ", " +
+                 s.cplexSolutionTimeMs + ", " +
+                 s.simplexIterations + ", " +
+                 s.exploredNodes +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
+   
+   private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName) throws IloException {
+      int partitions = 10;
+      int linearizationSamples = 50000;
+      int simulationRuns = 100000;
+      
+      ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
+      for(SKPPoisson instance : instances) {
+         solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
+         GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);
+   }
+   
+   private static SKPPoissonMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
+      SKPPoissonMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPPoissonMILPSolvedInstance[]>retrieveInstance(fileName, SKPPoissonMILPSolvedInstance[].class);
+      return solvedInstances;
+   }
+   
+   /*
+    * DSKP
+    */
+   
+   public static void solveDSKP(String fileName) {
+      SKPPoisson[] batch = retrieveBatch(fileName);
+      
+      String fileNameSolved = "scrap/solvedInstancesDSKP.json";
+      DSKPPoissonSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
+      
+      solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
+      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      
+      String fileNameSolvedCSV = "scrap/solvedInstancesDSKP.csv";
+      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+   }
+   
+   private static void storeSolvedBatchToCSV(DSKPPoissonSolvedInstance[] instances, String fileName) {
+      String header = "instanceID, expectedValuesPerUnit, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String body = "";
+      
+      for(DSKPPoissonSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 s.solutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.statesExplored +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
+   
+   private static DSKPPoissonSolvedInstance[] solveBatchDSKP(SKPPoisson[] instances, String fileName) {
+      double truncationQuantile = 0.999999999999999;
+      ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
+      for(SKPPoisson instance : instances) {
+         solved.add(new DSKPPoisson(instance, truncationQuantile).solve());
+         GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);
+   }
+   
+   private static DSKPPoissonSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
+      DSKPPoissonSolvedInstance[] solvedInstances = GSONUtility.<DSKPPoissonSolvedInstance[]>retrieveInstance(fileName, DSKPPoissonSolvedInstance[].class);
+      return solvedInstances;
+   }
+   
+   /**
+    * Generate a batch of instances
+    */
+   
+   public static void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
+      SKPPoissonBatch batch = new SKPPoissonBatch();
+      SKPPoisson[] instances = batch.generateInstances(numberOfInstances, instanceSize);
+      GSONUtility.<SKPPoisson[]>saveInstanceToGSON(instances, fileName);
+   }
+   
+   public static SKPPoisson[] retrieveBatch(String fileName) {
+      SKPPoisson[] instances = GSONUtility.<SKPPoisson[]>retrieveInstance(fileName, SKPPoisson[].class);
       return instances;
    }
    
-   static void saveInstanceArrayToGSON(SKPPoisson[] instance, String fileName){
-      Gson gson = new Gson();
-      try {
-         FileWriter fw = new FileWriter(fileName);
-         gson.toJson(instance, fw);
-         fw.close();
-      } catch (JsonIOException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch (IOException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-   
-   static SKPPoisson[] retrieveInstanceArray(String fileName){
-      Gson gson = new Gson();
-      JsonReader reader;
-      try {
-         FileReader fr = new FileReader(fileName);
-         reader = new JsonReader(fr);
-         SKPPoisson[] instances = gson.fromJson(reader, SKPPoisson[].class);
-         fr.close();
-         return instances;
-      } catch (IOException e) {
-         e.printStackTrace();
-         return null;
-      }
-   }
-   
-   /*
-    * Single instance
-    */
-   
-   static void testSingleInstance() {
-      SKPPoisson instance = generateInstance();
-      String fileName = "scrap/instance.json";
-      SKPPoissonBatch.saveInstanceToGSON(instance, fileName);
-      SKPPoisson newInstance = retrieveInstance(fileName);
-      assert(newInstance.equals(instance));
-   }
-   
-   static SKPPoisson generateInstance(){
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
-      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      int capacity = 100;
-      int shortageCost = 100;
-      return new SKPPoisson(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
-   }
-   
-   static void saveInstanceToGSON(SKPPoisson instance, String fileName){
-      Gson gson = new Gson();
-      try {
-         FileWriter fw = new FileWriter(fileName);
-         gson.toJson(instance, fw);
-         fw.close();
-      } catch (JsonIOException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch (IOException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-   
-   static SKPPoisson retrieveInstance(String fileName){
-      Gson gson = new Gson();
-      JsonReader reader;
-      try {
-         FileReader fr = new FileReader(fileName);
-         reader = new JsonReader(fr);
-         SKPPoisson instance = gson.fromJson(reader, SKPPoisson.class);
-         fr.close();
-         return instance;
-      } catch (IOException e) {
-         e.printStackTrace();
-         return null;
-      }
-   }
+   private SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
+      randGenerator.setSeed(seed);
+      randGenerator.resetStartStream();
+      SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
+                                        .limit(numberOfInstances)
+                                        .mapToObj(i -> new SKPPoisson(
+                                              (new RandomVariateGen(randGenerator, new UniformDist(0.1,10))).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
+                                              UniformIntGen.nextInt(randGenerator, 100, 200),
+                                              UniformGen.nextDouble(randGenerator, 50, 150)))
+                                        .toArray(SKPPoisson[]::new);
+      return instances;
+   }   
 }

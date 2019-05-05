@@ -1,5 +1,7 @@
 package skp.sdp;
 
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,23 +9,91 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import com.sun.management.OperatingSystemMXBean;
+
+import skp.SKPPoisson;
+import skp.gson.GSONUtility;
+import skp.sdp.DSKPNormal.State;
 import umontreal.ssj.probdist.PoissonDist;
 
 public class DSKPPoisson {
    
    int nbItems;
+   SKPPoisson instance;
    PoissonDist[] weightDistributions;
    int[] supportLB;
    int[] supportUB;
+   
+   @SuppressWarnings("restriction")
+   protected OperatingSystemMXBean osMBean;
+   protected long nanoBefore;
+   protected long nanoAfter;
 
-   public DSKPPoisson(int nbItems,
-               PoissonDist[] weightDistributions,
-               int[] supportLB,
-               int[] supportUB) {
-      this.nbItems = nbItems;
-      this.weightDistributions = weightDistributions;
-      this.supportLB = supportLB;
-      this.supportUB = supportUB;
+   public DSKPPoisson(SKPPoisson instance, double truncationQuantile) {
+      this.instance = instance;
+      this.nbItems = instance.getItems();
+      this.weightDistributions = instance.getWeights();
+      supportLB = IntStream.iterate(0, i -> i + 1)
+                           .limit(instance.getWeights().length)
+                           .map(i -> (int)Math.round(weightDistributions[i].inverseF(1-truncationQuantile)))
+                           .toArray();
+      supportUB = IntStream.iterate(0, i -> i + 1)
+                           .limit(instance.getWeights().length)
+                           .map(i -> (int)Math.round(weightDistributions[i].inverseF(truncationQuantile)))
+                           .toArray();
+      
+      initialiseFunctionalInterfaces();
+   }
+   
+   public void initialiseFunctionalInterfaces() {
+      /**
+       * This function returns the set of actions associated with a given state
+       */
+      this.actionGenerator = state ->{
+         return DoubleStream.iterate(0, num -> num + 1)
+                            .limit(2)
+                            .toArray();
+      };
+      
+      /**
+       * State transition function; given a state, an action and a random outcome, the function
+       * returns the future state
+       */
+      this.stateTransition = (state, realisedWeight) -> 
+      this.new State(state.item + 1, state.remainingCapacity - realisedWeight);
+      
+      /**
+       * Immediate value function for a given state
+       */
+      this.immediateValueFunction = (state, action, realisedWeight) -> {
+            double value = action*instance.getExpectedValuesPerUnit()[state.item]*realisedWeight;
+            double cost = (state.item == nbItems - 1 ? instance.getShortageCost() : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
+            return value - cost;
+         };
+   }
+   
+   public DSKPPoissonSolvedInstance solve() {
+      /**
+       * Initial problem conditions
+       */
+      int initialItem = 0;
+      State initialState = this.new State(initialItem, instance.getCapacity());
+      
+      try {
+         osMBean = ManagementFactory.newPlatformMXBeanProxy(
+               ManagementFactory.getPlatformMBeanServer(), ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+         nanoBefore = System.nanoTime();
+      } catch (IOException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+      
+      double solutionValue = this.f(initialState);
+      this.nanoAfter = System.nanoTime();
+      long solutionTimeMs = (int) Math.ceil(((this.nanoAfter-this.nanoBefore)*Math.pow(10, -6)));
+      long statesExplored = this.cacheValueFunction.size();
+      
+      return new DSKPPoissonSolvedInstance(instance, solutionValue, solutionTimeMs, statesExplored);
    }
    
    class State{
@@ -107,73 +177,17 @@ public class DSKPPoisson {
    }
 
    public static void main(String args[]) {
-      
-      int nbItems = 10;
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      
-      // Random variables
-      
-      double truncationQuantile = 0.999999999999999;
-
-      PoissonDist[] weightDistributions = IntStream.iterate(0, i -> i + 1)
-                                                   .limit(expectedWeights.length)
-                                                   .mapToObj(i -> new PoissonDist(expectedWeights[i]))
-                                                   .toArray(PoissonDist[]::new);
-      int[] supportLB = IntStream.iterate(0, i -> i + 1)
-                                    .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(1-truncationQuantile)))
-                                    .toArray();
-      int[] supportUB = IntStream.iterate(0, i -> i + 1)
-                                    .limit(expectedWeights.length)
-                                    .map(i -> (int)Math.round(weightDistributions[i].inverseF(truncationQuantile)))
-                                    .toArray();
-      
       int C = 100;
       int p = 100;
+
+      SKPPoisson instance = new SKPPoisson(expectedValuesPerUnit, expectedWeights, C, p);
       
-      DSKPPoisson dskp = new DSKPPoisson(nbItems, weightDistributions, supportLB, supportUB);
+      double truncationQuantile = 0.999999999999999;
       
-      /**
-       * This function returns the set of actions associated with a given state
-       */
-      dskp.actionGenerator = state ->{
-         return DoubleStream.iterate(0, num -> num + 1)
-                            .limit(2)
-                            .toArray();
-      };
+      DSKPPoisson dskp = new DSKPPoisson(instance, truncationQuantile);
       
-      /**
-       * State transition function; given a state, an action and a random outcome, the function
-       * returns the future state
-       */
-      dskp.stateTransition = (state, realisedWeight) -> 
-         dskp.new State(state.item + 1, state.remainingCapacity - realisedWeight);
-      
-      /**
-       * Immediate value function for a given state
-       */
-      dskp.immediateValueFunction = (state, action, realisedWeight) -> {
-            double value = action*expectedValuesPerUnit[state.item]*realisedWeight;
-            double cost = (state.item == nbItems - 1 ? p : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
-            return value - cost;
-         };
-      
-      /**
-       * Initial problem conditions
-       */
-      int initialItem = 0;
-      State initialState = dskp.new State(initialItem, C);
-      
-      /**
-       * Run forward recursion and determine the probability of achieving the target wealth when
-       * one follows an optimal policy
-       */
-      System.out.println("f_1("+C+")="+dskp.f(initialState));
-      /**
-       * Recover optimal action for item 1 when initial capacity at the beginning of period 1 is C.
-       */
-      System.out.println("b_1("+initialItem+")="+dskp.cacheActions.get(dskp.new State(initialItem, C)));
+      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance>printInstanceAsGSON(dskp.solve()));
    }
-   
 }

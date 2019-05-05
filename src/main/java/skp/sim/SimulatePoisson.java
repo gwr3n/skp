@@ -18,16 +18,19 @@ import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
 import skp.SKPPoisson;
+import skp.gson.GSONUtility;
 import skp.milp.SKPPoissonMILP;
+import skp.milp.SKPPoissonMILPSolvedInstance;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulatePoisson {
+   private static final long[] seed = {1,2,3,4,5,6};
    SKPPoisson instance;
    private MRG32k3aL randGenerator;
    
-   public SimulatePoisson(SKPPoisson instance, long[] seed) {
+   public SimulatePoisson(SKPPoisson instance) {
       this.randGenerator = new MRG32k3aL();
       this.randGenerator.setSeed(seed);
       this.instance = instance;
@@ -65,42 +68,26 @@ public class SimulatePoisson {
    }
    
    public static void main(String args[]) {
-      long[] seed = {1,2,3,4,5,6};
       
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
-      
       int capacity = 100;
       int shortageCost = 100;
       
-      PoissonDist[] weights = IntStream.iterate(0, i -> i + 1).limit(expectedWeights.length)
-                                       .mapToObj(i -> new PoissonDist(expectedWeights[i]))
-                                       .toArray(PoissonDist[]::new);
+      SKPPoisson instance = new SKPPoisson(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
       
-      SKPPoisson instance = new SKPPoisson(expectedValuesPerUnit, weights, capacity, shortageCost);
-      
-      int partitions = 20;
+      int partitions = 10;
       int linearizationSamples = 50000;
+      int simulationSamples = 100000;
+      
       SKPPoissonMILP milp = null;
-      int[] knapsack = null;
       try {
          milp = new SKPPoissonMILP(instance, partitions, linearizationSamples);
-         knapsack = milp.getKnapsack();
-         System.out.println("Knapsack: "+Arrays.toString(knapsack));
+         SKPPoissonMILPSolvedInstance solved = milp.solve(simulationSamples);
+         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);
       }
-      
-      int simulationSamples = 100000;
-      SimulatePoisson sim = new SimulatePoisson(instance, seed);
-      double milpSolutionValue = milp.getSolutionValue();
-      double milpLinearizationError = milp.getMaxLinearizationError();
-      double simSolutionValue = sim.simulate(knapsack, simulationSamples);
-      
-      System.out.println("MILP: "+milpSolutionValue);
-      System.out.println("MILP max linearization error: "+milpLinearizationError);
-      System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }
 }

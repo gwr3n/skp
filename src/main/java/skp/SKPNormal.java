@@ -1,9 +1,9 @@
 package skp;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import skp.util.Hash;
 import umontreal.ssj.probdist.NormalDist;
 
 public class SKPNormal {
@@ -24,26 +24,38 @@ public class SKPNormal {
       generateInstanceID();
    }
    
+   public SKPNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double capacity, double shortageCost) {
+      this(expectedValuesPerUnit, 
+            expectedWeights,
+            IntStream.iterate(0, i -> i + 1)
+                     .limit(expectedWeights.length)
+                     .mapToDouble(i -> expectedWeights[i]*coefficientOfVariation)
+                     .toArray(),
+            capacity, 
+            shortageCost);
+   }
+   
    public SKPNormal(double[] expectedValuesPerUnit, NormalDist[] weights, double capacity, double shortageCost) {
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
-      this.expectedWeights = IntStream.iterate(0, i -> i + 1)
-                                      .limit(weights.length)
-                                      .mapToDouble(i -> weights[i].getMean())
-                                      .toArray();
-      this.stdWeights = IntStream.iterate(0, i -> i + 1)
-                                 .limit(weights.length)
-                                 .mapToDouble(i -> weights[i].getSigma())
-                                 .toArray();
-      this.capacity = capacity;
-      this.shortageCost = shortageCost;
-      
-      generateInstanceID();
+      this(expectedValuesPerUnit,
+            IntStream.iterate(0, i -> i + 1)
+                     .limit(weights.length)
+                     .mapToDouble(i -> weights[i].getMean())
+                     .toArray(),
+            IntStream.iterate(0, i -> i + 1)
+                     .limit(weights.length)
+                     .mapToDouble(i -> weights[i].getSigma())
+                     .toArray(),
+            capacity,
+            shortageCost);
    }
    
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
-      BigInteger hashCode = new BigInteger(intHash);
-      instanceID = hashCode.toString(16);
+      instanceID = Hash.generateSHA256(intHash);
+   }
+   
+   public String getInstanceID() {
+      return this.instanceID;
    }
    
    public int getItems() {

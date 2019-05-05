@@ -1,7 +1,8 @@
 package skp;
 
-import java.math.BigInteger;
 import java.util.Arrays;
+
+import skp.util.Hash;
 
 public class KP {
    String instanceID;
@@ -21,8 +22,11 @@ public class KP {
    
    private void generateInstanceID() {
       String intHash = ""+this.hashCode();
-      BigInteger hashCode = new BigInteger(intHash);
-      instanceID = hashCode.toString(16);
+      instanceID = Hash.generateSHA256(intHash);
+   }
+   
+   public String getInstanceID() {
+      return this.instanceID;
    }
    
    public int getItems() {
