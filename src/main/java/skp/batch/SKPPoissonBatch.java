@@ -82,6 +82,15 @@ public class SKPPoissonBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
+   private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {      
+      ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
+      for(SKPPoisson instance : instances) {
+         solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
+         GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);
+   }
+
    private static void storeSolvedBatchToCSV(SKPPoissonMILPSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, "
@@ -122,15 +131,6 @@ public class SKPPoissonBatch extends SKPBatch {
       }
    }
    
-   private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {      
-      ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
-      for(SKPPoisson instance : instances) {
-         solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
-         GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);
-   }
-   
    private static SKPPoissonMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPPoissonMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPPoissonMILPSolvedInstance[]>retrieveInstance(fileName, SKPPoissonMILPSolvedInstance[].class);
       return solvedInstances;
@@ -153,6 +153,16 @@ public class SKPPoissonBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
+   private static DSKPPoissonSolvedInstance[] solveBatchDSKP(SKPPoisson[] instances, String fileName) {
+      double truncationQuantile = 0.999999999999999;
+      ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
+      for(SKPPoisson instance : instances) {
+         solved.add(new DSKPPoisson(instance, truncationQuantile).solve());
+         GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);
+   }
+
    private static void storeSolvedBatchToCSV(DSKPPoissonSolvedInstance[] instances, String fileName) {
       String header = "instanceID, expectedValuesPerUnit, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
@@ -176,16 +186,6 @@ public class SKPPoissonBatch extends SKPBatch {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-   }
-   
-   private static DSKPPoissonSolvedInstance[] solveBatchDSKP(SKPPoisson[] instances, String fileName) {
-      double truncationQuantile = 0.999999999999999;
-      ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
-      for(SKPPoisson instance : instances) {
-         solved.add(new DSKPPoisson(instance, truncationQuantile).solve());
-         GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);
    }
    
    private static DSKPPoissonSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {

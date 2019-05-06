@@ -51,7 +51,7 @@ public class SimulateMultinormal extends Simulate {
       return knapsackValue;
    }
    
-   public double[][] sampleWeights(int nbSamples) {
+   private double[][] sampleWeights(int nbSamples) {
       double[] mu = this.instance.getWeights().getMean();
       double[][] sigma = this.instance.getWeights().getCovariance();
       

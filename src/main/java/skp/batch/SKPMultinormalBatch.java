@@ -64,6 +64,15 @@ public class SKPMultinormalBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
+   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+      ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
+         GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
+   }
+
    private static void storeSolvedBatchToCSV(SKPMultinormalMILPSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, "
@@ -105,15 +114,6 @@ public class SKPMultinormalBatch extends SKPBatch {
       }
    }
    
-   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
-      ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
-      for(SKPMultinormal instance : instances) {
-         solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
-         GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
-   }
-   
    private static SKPMultinormalMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPMultinormalMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalMILPSolvedInstance[]>retrieveInstance(fileName, SKPMultinormalMILPSolvedInstance[].class);
       return solvedInstances;
@@ -149,7 +149,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return instances;
    }
    
-   private static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {
+   public static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
       String strDate = dateFormat.format(date);

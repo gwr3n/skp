@@ -80,6 +80,15 @@ public class SKPNormalBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
+   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+      ArrayList<SKPNormalMILPSolvedInstance>solved = new ArrayList<SKPNormalMILPSolvedInstance>();
+      for(SKPNormal instance : instances) {
+         solved.add(new SKPNormalMILP(instance, partitions).solve(simulationRuns));
+         GSONUtility.<SKPNormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPNormalMILPSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPNormalMILPSolvedInstance[solved.size()]);
+   }
+
    private static void storeSolvedBatchToCSV(SKPNormalMILPSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, "
@@ -121,15 +130,6 @@ public class SKPNormalBatch extends SKPBatch {
       }
    }
    
-   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
-      ArrayList<SKPNormalMILPSolvedInstance>solved = new ArrayList<SKPNormalMILPSolvedInstance>();
-      for(SKPNormal instance : instances) {
-         solved.add(new SKPNormalMILP(instance, partitions).solve(simulationRuns));
-         GSONUtility.<SKPNormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPNormalMILPSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new SKPNormalMILPSolvedInstance[solved.size()]);
-   }
-   
    private static SKPNormalMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPNormalMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPNormalMILPSolvedInstance[]>retrieveInstance(fileName, SKPNormalMILPSolvedInstance[].class);
       return solvedInstances;
@@ -152,6 +152,16 @@ public class SKPNormalBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
+   private static DSKPNormalSolvedInstance[] solveBatchDSKP(SKPNormal[] instances, String fileName) {
+      double truncationQuantile = 0.999999999999999;
+      ArrayList<DSKPNormalSolvedInstance>solved = new ArrayList<DSKPNormalSolvedInstance>();
+      for(SKPNormal instance : instances) {
+         solved.add(new DSKPNormal(instance, truncationQuantile).solve());
+         GSONUtility.<DSKPNormalSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPNormalSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new DSKPNormalSolvedInstance[solved.size()]);
+   }
+
    private static void storeSolvedBatchToCSV(DSKPNormalSolvedInstance[] instances, String fileName) {
       String header = "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
@@ -176,16 +186,6 @@ public class SKPNormalBatch extends SKPBatch {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-   }
-   
-   private static DSKPNormalSolvedInstance[] solveBatchDSKP(SKPNormal[] instances, String fileName) {
-      double truncationQuantile = 0.999999999999999;
-      ArrayList<DSKPNormalSolvedInstance>solved = new ArrayList<DSKPNormalSolvedInstance>();
-      for(SKPNormal instance : instances) {
-         solved.add(new DSKPNormal(instance, truncationQuantile).solve());
-         GSONUtility.<DSKPNormalSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPNormalSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new DSKPNormalSolvedInstance[solved.size()]);
    }
    
    private static DSKPNormalSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
@@ -222,7 +222,7 @@ public class SKPNormalBatch extends SKPBatch {
       return instances;
    }
 
-   private static void storeBatchAsOPLDataFiles(SKPNormal[] instances, String OPLDataFileZipArchive, int partitions) {
+   public static void storeBatchAsOPLDataFiles(SKPNormal[] instances, String OPLDataFileZipArchive, int partitions) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
       String strDate = dateFormat.format(date);
