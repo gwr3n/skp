@@ -23,15 +23,12 @@ import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulatePoisson extends Simulate {
    
    SKPPoisson instance;
    
    public SimulatePoisson(SKPPoisson instance) {
-      this.randGenerator = new MRG32k3aL();
-      this.randGenerator.setSeed(seed);
       this.instance = instance;
    }
    

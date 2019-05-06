@@ -23,15 +23,12 @@ import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulateNormal extends Simulate {
    
    SKPNormal instance;
    
    public SimulateNormal(SKPNormal instance) {
-      this.randGenerator = new MRG32k3aL();
-      this.randGenerator.setSeed(seed);
       this.instance = instance;
    }
    

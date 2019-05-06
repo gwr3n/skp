@@ -26,15 +26,12 @@ import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulateMultiNormal extends Simulate {
    
    SKPMultiNormal instance;
    
    public SimulateMultiNormal(SKPMultiNormal instance) {
-      this.randGenerator = new MRG32k3aL();
-      this.randGenerator.setSeed(seed);
       this.instance = instance;
    }
    

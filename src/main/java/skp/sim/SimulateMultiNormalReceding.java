@@ -30,15 +30,12 @@ import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
 public class SimulateMultiNormalReceding  extends Simulate {
    
    SKPMultiNormal instance;
    
    public SimulateMultiNormalReceding(SKPMultiNormal instance, long[] seed) {
-      this.randGenerator = new MRG32k3aL();
-      this.randGenerator.setSeed(seed);
       this.instance = instance;
    }
    
