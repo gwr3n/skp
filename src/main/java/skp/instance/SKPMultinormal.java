@@ -4,12 +4,12 @@ import java.util.Arrays;
 
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
-public class SKPMultiNormal extends SKP {
+public class SKPMultinormal extends SKP {
 
    double[][] covarianceWeights;
    double capacity;
    
-   public SKPMultiNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[][] covarianceWeights, double capacity, double shortageCost) {
+   public SKPMultinormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[][] covarianceWeights, double capacity, double shortageCost) {
       super(expectedValuesPerUnit, expectedWeights, shortageCost);
       this.covarianceWeights = covarianceWeights;
       this.capacity = capacity;
@@ -17,11 +17,11 @@ public class SKPMultiNormal extends SKP {
       generateInstanceID();
    }
    
-   public SKPMultiNormal(double[] expectedValuesPerUnit, MultiNormalDist weights, double capacity, double shortageCost) {
+   public SKPMultinormal(double[] expectedValuesPerUnit, MultiNormalDist weights, double capacity, double shortageCost) {
       this(expectedValuesPerUnit, weights.getMu(), weights.getCovariance(), capacity, shortageCost);
    }
    
-   public SKPMultiNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double correlationCoefficient, double capacity, double shortageCost) {
+   public SKPMultinormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double correlationCoefficient, double capacity, double shortageCost) {
       this(expectedValuesPerUnit, expectedWeights, calculateCovariance(expectedWeights, coefficientOfVariation, correlationCoefficient), capacity, shortageCost);
    }
    
@@ -63,8 +63,8 @@ public class SKPMultiNormal extends SKP {
    
    @Override
    public boolean equals(Object obj) {
-      if(obj instanceof SKPMultiNormal) {
-         SKPMultiNormal o = (SKPMultiNormal) obj;
+      if(obj instanceof SKPMultinormal) {
+         SKPMultinormal o = (SKPMultinormal) obj;
          return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
                 Arrays.equals(this.expectedWeights, o.expectedWeights) &&
                 Arrays.deepEquals(this.covarianceWeights, o.covarianceWeights) &&
@@ -74,13 +74,13 @@ public class SKPMultiNormal extends SKP {
          return false;
    }
    
-   public static SKPMultiNormal getTestInstance() {
+   public static SKPMultinormal getTestInstance() {
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       double rho = 0.5;
       int capacity = 100;
       int shortageCost = 100;
-      return new SKPMultiNormal(expectedValuesPerUnit, expectedWeights, cv, rho, capacity, shortageCost);
+      return new SKPMultinormal(expectedValuesPerUnit, expectedWeights, cv, rho, capacity, shortageCost);
    }
 }

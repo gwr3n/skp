@@ -18,8 +18,8 @@ import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
 
-import skp.instance.SKPMultiNormal;
-import skp.milp.SKPMultiNormalMILP;
+import skp.instance.SKPMultinormal;
+import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
@@ -27,11 +27,11 @@ import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 
-public class SimulateMultiNormal extends Simulate {
+public class SimulateMultinormal extends Simulate {
    
-   SKPMultiNormal instance;
+   SKPMultinormal instance;
    
-   public SimulateMultiNormal(SKPMultiNormal instance) {
+   public SimulateMultinormal(SKPMultinormal instance) {
       this.instance = instance;
    }
    
@@ -66,13 +66,13 @@ public class SimulateMultiNormal extends Simulate {
    
    public static void main(String args[]) {
       
-      SKPMultiNormal instance = SKPMultiNormal.getTestInstance();
+      SKPMultinormal instance = SKPMultinormal.getTestInstance();
       
       int partitions = 20;
       int simulationRuns = 10000;
       
       try {
-         SKPMultiNormalMILP milp = new SKPMultiNormalMILP(instance, partitions);
+         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions);
          SKPMultinormalMILPSolvedInstance solved = milp.solve(simulationRuns);
          System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {

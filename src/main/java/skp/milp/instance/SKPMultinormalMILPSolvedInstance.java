@@ -1,9 +1,9 @@
 package skp.milp.instance;
 
-import skp.instance.SKPMultiNormal;
+import skp.instance.SKPMultinormal;
 
 public class SKPMultinormalMILPSolvedInstance {
-   public SKPMultiNormal instance;
+   public SKPMultinormal instance;
    public int[] optimalKnapsack;
    public double simulatedSolutionValue;
    public int simulationRuns;
@@ -18,7 +18,7 @@ public class SKPMultinormalMILPSolvedInstance {
    public int exploredNodes;
    
    public SKPMultinormalMILPSolvedInstance(
-         SKPMultiNormal instance,
+         SKPMultinormal instance,
          int[] optimalKnapsack,
          double simulatedSolutionValue,
          int simulationRuns,

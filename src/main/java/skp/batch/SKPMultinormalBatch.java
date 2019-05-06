@@ -17,8 +17,8 @@ import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
-import skp.instance.SKPMultiNormal;
-import skp.milp.SKPMultiNormalMILP;
+import skp.instance.SKPMultinormal;
+import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
@@ -52,7 +52,7 @@ public class SKPMultinormalBatch extends SKPBatch {
     */   
    
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
-      SKPMultiNormal[] batch = retrieveBatch(fileName);
+      SKPMultinormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "scrap/solvedMultiNormalInstancesMILP.json";
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
@@ -105,10 +105,10 @@ public class SKPMultinormalBatch extends SKPBatch {
       }
    }
    
-   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultiNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
       ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
-      for(SKPMultiNormal instance : instances) {
-         solved.add(new SKPMultiNormalMILP(instance, partitions).solve(simulationRuns));
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
          GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
@@ -124,32 +124,32 @@ public class SKPMultinormalBatch extends SKPBatch {
     */
    
    public static void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultiNormal[] instances = SKPMultinormalBatch.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultiNormal[]>saveInstanceToGSON(instances, fileName);
+      SKPMultinormal[] instances = SKPMultinormalBatch.generateInstances(numberOfInstances, instanceSize);
+      GSONUtility.<SKPMultinormal[]>saveInstanceToGSON(instances, fileName);
    }
    
-   public static SKPMultiNormal[] retrieveBatch(String fileName) {
-      SKPMultiNormal[] instances = GSONUtility.<SKPMultiNormal[]>retrieveInstance(fileName, SKPMultiNormal[].class);
+   public static SKPMultinormal[] retrieveBatch(String fileName) {
+      SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveInstance(fileName, SKPMultinormal[].class);
       return instances;
    }
    
-   private static SKPMultiNormal[] generateInstances(int numberOfInstances, int instanceSize){
+   private static SKPMultinormal[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
-      SKPMultiNormal[] instances = IntStream.iterate(0, i -> i + 1)
+      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
                                             .limit(numberOfInstances)
-                                            .mapToObj(i -> new SKPMultiNormal(
+                                            .mapToObj(i -> new SKPMultinormal(
                                                   (new RandomVariateGen(randGenerator, new UniformDist(0.1,10))).nextArrayOfDouble(instanceSize),
                                                   (new RandomVariateGen(randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
                                                   UniformGen.nextDouble(randGenerator, 0.1, 0.5),
                                                   UniformGen.nextDouble(randGenerator, 0, 1),
                                                   UniformIntGen.nextInt(randGenerator, 100, 200),
                                                   UniformGen.nextDouble(randGenerator, 50, 150)))
-                                            .toArray(SKPMultiNormal[]::new);
+                                            .toArray(SKPMultinormal[]::new);
       return instances;
    }
    
-   private static void storeBatchAsOPLDataFiles(SKPMultiNormal[] instances, String OPLDataFileZipArchive, int partitions) {
+   private static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
       String strDate = dateFormat.format(date);
@@ -164,7 +164,7 @@ public class SKPMultinormalBatch extends SKPBatch {
          File zipFile = new File(OPLDataFileZipArchive);
          ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
 
-         for(SKPMultiNormal s : instances) {
+         for(SKPMultinormal s : instances) {
             String body = "";
             body += 
                   "N = "+s.getItems()+";\n"+

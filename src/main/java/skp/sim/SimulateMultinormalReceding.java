@@ -22,20 +22,20 @@ import org.apache.commons.math3.linear.RealMatrix;
 import ilog.concert.IloException;
 
 import skp.instance.KP;
-import skp.instance.SKPMultiNormal;
+import skp.instance.SKPMultinormal;
 import skp.milp.KPMILP;
-import skp.milp.SKPMultiNormalMILP;
+import skp.milp.SKPMultinormalMILP;
 
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 
-public class SimulateMultiNormalReceding  extends Simulate {
+public class SimulateMultinormalReceding  extends Simulate {
    
-   SKPMultiNormal instance;
+   SKPMultinormal instance;
    
-   public SimulateMultiNormalReceding(SKPMultiNormal instance, long[] seed) {
+   public SimulateMultinormalReceding(SKPMultinormal instance, long[] seed) {
       this.instance = instance;
    }
    
@@ -69,12 +69,12 @@ public class SimulateMultiNormalReceding  extends Simulate {
       double [][] shortCovariance = conditionalCovarianceMatrix.getData();
       
       MultiNormalDist weights = new MultiNormalDist(shortExpWeight, shortCovariance);
-      SKPMultiNormal reducedInstance = new SKPMultiNormal(shortExpValues, weights, remainingCapacity, instance.getShortageCost());
+      SKPMultinormal reducedInstance = new SKPMultinormal(shortExpValues, weights, remainingCapacity, instance.getShortageCost());
       
-      SKPMultiNormalMILP milp = null;
+      SKPMultinormalMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPMultiNormalMILP(reducedInstance, partitions);
+         milp = new SKPMultinormalMILP(reducedInstance, partitions);
          knapsack = milp.getOptimalKnapsack();
          System.out.println("Knapsack: "+Arrays.toString(knapsack));
       } catch (IloException e) {
@@ -178,12 +178,12 @@ public class SimulateMultiNormalReceding  extends Simulate {
    
    public static void main(String args[]) {
 
-      SKPMultiNormal instance = SKPMultiNormal.getTestInstance();
+      SKPMultinormal instance = SKPMultinormal.getTestInstance();
       
       int partitions = 10;
       int nbSamples = 20;
       
-      SimulateMultiNormalReceding sim = new SimulateMultiNormalReceding(instance, seed);
+      SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, seed);
       
       double simSolutionValue = sim.simulate(nbSamples, partitions);
       double simEVPI = sim.simulateEVPI(nbSamples);

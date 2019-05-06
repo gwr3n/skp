@@ -8,14 +8,14 @@ import ilog.opl.IloOplDataSource;
 import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplModel;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
-import skp.instance.SKPMultiNormal;
+import skp.instance.SKPMultinormal;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
-import skp.sim.SimulateMultiNormal;
+import skp.sim.SimulateMultinormal;
 
-public class SKPMultiNormalMILP extends SKPMILP{
-   SKPMultiNormal instance;
+public class SKPMultinormalMILP extends SKPMILP{
+   SKPMultinormal instance;
 
-   public SKPMultiNormalMILP(SKPMultiNormal instance, int partitions)  throws IloException{
+   public SKPMultinormalMILP(SKPMultinormal instance, int partitions)  throws IloException{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
@@ -23,7 +23,7 @@ public class SKPMultiNormalMILP extends SKPMILP{
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
-      return new SKPMultiNormalMILP.MyData(oplF);
+      return new SKPMultinormalMILP.MyData(oplF);
    }
    
    void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException{
@@ -35,7 +35,7 @@ public class SKPMultiNormalMILP extends SKPMILP{
    public SKPMultinormalMILPSolvedInstance solve(int simulationRuns) throws IloException {
       this.solveMILP(model, instance);
       
-      SimulateMultiNormal sim = new SimulateMultiNormal(instance);
+      SimulateMultinormal sim = new SimulateMultinormal(instance);
       double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
       
       double milpMaxLinearizationError = 100*this.getMILPMaxLinearizationError()/simulatedSolutionValue;
