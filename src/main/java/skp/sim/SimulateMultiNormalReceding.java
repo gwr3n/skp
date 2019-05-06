@@ -78,7 +78,7 @@ public class SimulateMultiNormalReceding  extends Simulate {
       int[] knapsack = null;
       try {
          milp = new SKPMultiNormalMILP(reducedInstance, partitions);
-         knapsack = milp.getKnapsack();
+         knapsack = milp.getOptimalKnapsack();
          System.out.println("Knapsack: "+Arrays.toString(knapsack));
       } catch (IloException e) {
          e.printStackTrace();

@@ -17,18 +17,22 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
+
 import skp.instance.SKPMultiNormal;
 import skp.milp.SKPMultiNormalMILP;
+import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
+import skp.utililities.gson.GSONUtility;
+
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 import umontreal.ssj.rng.MRG32k3aL;
 
-public class SimulateMultiNormal  extends Simulate {
+public class SimulateMultiNormal extends Simulate {
    
    SKPMultiNormal instance;
    
-   public SimulateMultiNormal(SKPMultiNormal instance, long[] seed) {
+   public SimulateMultiNormal(SKPMultiNormal instance) {
       this.randGenerator = new MRG32k3aL();
       this.randGenerator.setSeed(seed);
       this.instance = instance;
@@ -56,7 +60,6 @@ public class SimulateMultiNormal  extends Simulate {
       
       this.randGenerator.resetStartStream();
       NormalGen standardNormal = new NormalGen(this.randGenerator, 0, 1);
-      //MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
       MultinormalGen gen = new MultinormalPCAGen(standardNormal, mu, sigma);
       double[][] points = new double[nbSamples][this.instance.getItems()];
       for(int i = 0; i < nbSamples; i++)
@@ -64,34 +67,21 @@ public class SimulateMultiNormal  extends Simulate {
       return points;
    }
    
-   
-   
    public static void main(String args[]) {
       
       SKPMultiNormal instance = SKPMultiNormal.getTestInstance();
       
       int partitions = 20;
-      SKPMultiNormalMILP milp = null;
-      int[] knapsack = null;
+      int simulationRuns = 10000;
+      
       try {
-         milp = new SKPMultiNormalMILP(instance, partitions);
-         knapsack = milp.getKnapsack();
-         System.out.println("Knapsack: "+Arrays.toString(knapsack));
+         SKPMultiNormalMILP milp = new SKPMultiNormalMILP(instance, partitions);
+         SKPMultinormalMILPSolvedInstance solved = milp.solve(simulationRuns);
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsGSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);
       }
-      
-      SimulateMultiNormal sim = new SimulateMultiNormal(instance, seed);
-      double milpSolutionValue = milp.getSolutionValue();
-      double milpLinearizationError = milp.getMaxLinearizationError();
-      int nbSamples = 10000;
-      double simSolutionValue = sim.simulate(knapsack, nbSamples);
-      
-      System.out.println("MILP: "+milpSolutionValue);
-      System.out.println("MILP max linearization error: "+100*milpLinearizationError/simSolutionValue);
-      System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("Linearization gap (%): "+100*(simSolutionValue-milpSolutionValue)/simSolutionValue);
    }
 
 }

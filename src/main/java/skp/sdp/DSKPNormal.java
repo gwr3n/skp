@@ -9,6 +9,7 @@ import java.util.stream.IntStream;
 import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKPNormal;
+import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
 @SuppressWarnings("restriction")

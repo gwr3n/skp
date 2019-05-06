@@ -15,34 +15,47 @@ package skp.batch;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
+import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
-import skp.milp.SKPNormalMILPSolvedInstance;
+import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.sdp.DSKPNormal;
-import skp.sdp.DSKPNormalSolvedInstance;
+import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.randvar.UniformIntGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
-public class SKPNormalBatch {
-   static final long[] seed = {1,2,3,4,5,6};
-   static final private MRG32k3aL randGenerator = new MRG32k3aL();
+public class SKPNormalBatch extends SKPBatch {
 
    public static void main(String args[]) {
       String batchFileName = "scrap/normal_instances.json";
-      generateBatch(1, 100, batchFileName);
+      int instances = 10;
+      int instanceSize = 10;
+      generateBatch(instances, instanceSize, batchFileName);
       
+      int partitions = 10;
+      String OPLDataFileZipArchive = "scrap/normal_instances_opl.zip";
+      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, 10);
+      
+      int simulationRuns = 100000;
       try {
-         solveMILP(batchFileName);
+         solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
@@ -54,16 +67,16 @@ public class SKPNormalBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPNormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "scrap/solvedNormalInstancesMILP.json";
-      SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved);
+      SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedInstancesMILP.csv";
+      String fileNameSolvedCSV = "scrap/solvedNormalInstancesMILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -108,10 +121,7 @@ public class SKPNormalBatch {
       }
    }
    
-   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName) throws IloException {
-      int partitions = 10;
-      int simulationRuns = 100000;
-      
+   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
       ArrayList<SKPNormalMILPSolvedInstance>solved = new ArrayList<SKPNormalMILPSolvedInstance>();
       for(SKPNormal instance : instances) {
          solved.add(new SKPNormalMILP(instance, partitions).solve(simulationRuns));
@@ -138,7 +148,7 @@ public class SKPNormalBatch {
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPNormalSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedInstancesDSKP.csv";
+      String fileNameSolvedCSV = "scrap/solvedNormalInstancesDSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -210,5 +220,48 @@ public class SKPNormalBatch {
                                               UniformGen.nextDouble(randGenerator, 50, 150)))
                                         .toArray(SKPNormal[]::new);
       return instances;
+   }
+
+   private static void storeBatchAsOPLDataFiles(SKPNormal[] instances, String OPLDataFileZipArchive, int partitions) {
+      Date date = Calendar.getInstance().getTime();
+      DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+      String strDate = dateFormat.format(date);
+      String header = 
+            "/*********************************************\n" + 
+            " * OPL 12.8.0.0 Data\n" + 
+            " * Author: Roberto Rossi\n" + 
+            " * Creation Date: "+strDate+"\n" + 
+            " *********************************************/\n\n";
+      
+      try {
+         File zipFile = new File(OPLDataFileZipArchive);
+         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
+
+         for(SKPNormal s : instances) {
+            String body = "";
+            body += 
+                  "N = "+s.getItems()+";\n"+
+                        "expectedValues = "+Arrays.toString(s.getExpectedValues())+";\n"+
+                        "expectedWeights = "+Arrays.toString(Arrays.stream(s.getWeights()).mapToDouble(d -> d.getMean()).toArray())+";\n"+
+                        "varianceWeights = "+Arrays.toString(Arrays.stream(s.getWeights()).mapToDouble(d -> d.getVariance()).toArray())+";\n"+
+                        "C = "+s.getCapacity()+";\n"+
+                        "c = "+s.getShortageCost()+";\n\n"+
+                        "nbpartitions = "+partitions+";\n"+
+                        "prob = "+Arrays.toString(PiecewiseStandardNormalFirstOrderLossFunction.getProbabilities(partitions))+";\n"+
+                        "means = "+Arrays.toString(PiecewiseStandardNormalFirstOrderLossFunction.getMeans(partitions))+";\n"+
+                        "error = "+PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions)+";";
+
+            ZipEntry e = new ZipEntry(s.getInstanceID()+".dat");
+            out.putNextEntry(e);
+
+            PrintWriter pw = new PrintWriter(out);
+            pw.print(header+body);
+            pw.flush();
+            out.closeEntry();
+         }
+         out.close();
+      }catch(IOException e) {
+         e.printStackTrace();
+      }
    }
 }

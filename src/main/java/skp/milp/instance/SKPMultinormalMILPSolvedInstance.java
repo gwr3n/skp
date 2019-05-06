@@ -1,9 +1,9 @@
-package skp.milp;
+package skp.milp.instance;
 
-import skp.instance.SKPPoisson;
+import skp.instance.SKPMultiNormal;
 
-public class SKPPoissonMILPSolvedInstance {
-   public SKPPoisson instance;
+public class SKPMultinormalMILPSolvedInstance {
+   public SKPMultiNormal instance;
    public int[] optimalKnapsack;
    public double simulatedSolutionValue;
    public int simulationRuns;
@@ -17,8 +17,8 @@ public class SKPPoissonMILPSolvedInstance {
    public int simplexIterations;
    public int exploredNodes;
    
-   public SKPPoissonMILPSolvedInstance(
-         SKPPoisson instance,
+   public SKPMultinormalMILPSolvedInstance(
+         SKPMultiNormal instance,
          int[] optimalKnapsack,
          double simulatedSolutionValue,
          int simulationRuns,
@@ -45,5 +45,4 @@ public class SKPPoissonMILPSolvedInstance {
       this.simplexIterations = simplexIterations;
       this.exploredNodes = exploredNodes;
    }
-   
 }

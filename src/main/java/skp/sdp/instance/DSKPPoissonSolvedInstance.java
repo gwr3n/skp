@@ -1,4 +1,4 @@
-package skp.sdp;
+package skp.sdp.instance;
 
 import skp.instance.SKPPoisson;
 

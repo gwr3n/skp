@@ -8,7 +8,6 @@ import java.util.stream.DoubleStream;
 import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKP;
-import skp.sdp.DSKP.State;
 
 @SuppressWarnings("restriction")
 public abstract class DSKP {

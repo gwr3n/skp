@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 import ilog.concert.IloException;
 import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
-import skp.milp.SKPNormalMILPSolvedInstance;
+import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;

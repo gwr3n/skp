@@ -35,4 +35,12 @@ public abstract class SKP {
    public double[] getExpectedValuesPerUnit() {
       return this.expectedValuesPerUnit;
    }
+   
+   public double[] getExpectedValues() {
+      double[] ev = new double[this.getItems()];
+      for(int i = 0; i < this.getItems(); i++) {
+         ev[i] = this.getExpectedValuesPerUnit()[i]*this.expectedWeights[i];
+      }
+      return ev;
+   }
 }

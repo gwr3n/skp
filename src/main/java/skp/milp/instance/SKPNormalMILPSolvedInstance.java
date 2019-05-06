@@ -1,4 +1,4 @@
-package skp.milp;
+package skp.milp.instance;
 
 import skp.instance.SKPNormal;
 

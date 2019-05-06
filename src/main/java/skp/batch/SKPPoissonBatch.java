@@ -15,36 +15,49 @@ package skp.batch;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-
+import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
-import skp.milp.SKPPoissonMILPSolvedInstance;
+import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sdp.DSKPPoisson;
-import skp.sdp.DSKPPoissonSolvedInstance;
+import skp.sdp.instance.DSKPPoissonSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.randvar.UniformIntGen;
-import umontreal.ssj.rng.MRG32k3aL;
 
-public class SKPPoissonBatch {
-   static final long[] seed = {1,2,3,4,5,6};
-   static final private MRG32k3aL randGenerator = new MRG32k3aL();
+public class SKPPoissonBatch extends SKPBatch {
    
    public static void main(String args[]) {
       String batchFileName = "scrap/poisson_instances.json";
-      generateBatch(1, 100, batchFileName);
+      int instances = 10;
+      int instanceSize = 10;
+      generateBatch(instances, instanceSize, batchFileName);
       
+      String OPLDataFileZipArchive = "scrap/poisson_instances_opl.zip";
+      int partitions = 10;
+      int linearizationSamples = 50000;
+      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
+      
+      int simulationRuns = 100000;
       try {
-         solveMILP(batchFileName);
+         solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns);
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
@@ -56,11 +69,11 @@ public class SKPPoissonBatch {
     * MILP
     */
    
-   public static void solveMILP(String fileName) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "scrap/solvedPoissonInstancesMILP.json";
-      SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved);
+      SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
@@ -109,11 +122,7 @@ public class SKPPoissonBatch {
       }
    }
    
-   private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName) throws IloException {
-      int partitions = 10;
-      int linearizationSamples = 50000;
-      int simulationRuns = 100000;
-      
+   private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {      
       ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
@@ -211,4 +220,49 @@ public class SKPPoissonBatch {
                                         .toArray(SKPPoisson[]::new);
       return instances;
    }   
+   
+   private static void storeBatchAsOPLDataFiles(SKPPoisson[] instances, String OPLDataFileZipArchive, int partitions, int linearizationSamples) {
+      Date date = Calendar.getInstance().getTime();
+      DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+      String strDate = dateFormat.format(date);
+      String header = 
+            "/*********************************************\n" + 
+            " * OPL 12.8.0.0 Data\n" + 
+            " * Author: Roberto Rossi\n" + 
+            " * Creation Date: "+strDate+"\n" + 
+            " *********************************************/\n\n";
+      
+      try {
+         File zipFile = new File(OPLDataFileZipArchive);
+         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
+
+         for(SKPPoisson s : instances) {
+            double[] probabilityMasses = new double[partitions];
+            Arrays.fill(probabilityMasses, 1.0/partitions);
+            
+            String body = "";
+            body += 
+                  "N = "+s.getItems()+";\n"+
+                        "expectedValues = "+Arrays.toString(s.getExpectedValues())+";\n"+
+                        "expectedWeights = "+Arrays.toString(Arrays.stream(s.getWeights()).mapToDouble(d -> d.getMean()).toArray())+";\n"+
+                        "C = "+s.getCapacity()+";\n"+
+                        "c = "+s.getShortageCost()+";\n\n"+
+                        "nbpartitions = "+partitions+";\n"+
+                        "prob = "+Arrays.toString(probabilityMasses)+";\n"+
+                        "means = "+Arrays.toString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(s.getCapacity(), probabilityMasses, linearizationSamples))+";\n"+
+                        "error = "+Arrays.toString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(s.getCapacity(), probabilityMasses, linearizationSamples))+";";
+
+            ZipEntry e = new ZipEntry(s.getInstanceID()+".dat");
+            out.putNextEntry(e);
+
+            PrintWriter pw = new PrintWriter(out);
+            pw.print(header+body);
+            pw.flush();
+            out.closeEntry();
+         }
+         out.close();
+      }catch(IOException e) {
+         e.printStackTrace();
+      }
+   }
 }
