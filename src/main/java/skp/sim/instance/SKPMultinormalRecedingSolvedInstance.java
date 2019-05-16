@@ -5,7 +5,8 @@ import skp.instance.SKPMultinormal;
 public class SKPMultinormalRecedingSolvedInstance {
    public SKPMultinormal instance;
    
-   public double simulatedSolutionValue;
+   public double simulatedSolutionMean;
+   public double simulatedSolutionStd;
    public int simulationRuns;
    
    public double evp;
@@ -17,7 +18,8 @@ public class SKPMultinormalRecedingSolvedInstance {
    
    public SKPMultinormalRecedingSolvedInstance(
          SKPMultinormal instance,
-         double simulatedSolutionValue,
+         double simulatedSolutionMean,
+         double simulatedSolutionStd,
          int simulationRuns,
          double evp,
          double evwpi,
@@ -25,7 +27,8 @@ public class SKPMultinormalRecedingSolvedInstance {
          int piecewisePartitions,
          int piecewiseSamples) {
       this.instance = instance;
-      this.simulatedSolutionValue = simulatedSolutionValue;
+      this.simulatedSolutionMean = simulatedSolutionMean;
+      this.simulatedSolutionStd = simulatedSolutionStd;
       this.simulationRuns = simulationRuns;
       this.evp = evp;
       this.evwpi = evwpi;

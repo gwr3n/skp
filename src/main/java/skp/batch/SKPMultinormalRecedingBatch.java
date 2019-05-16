@@ -40,13 +40,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedMultiNormalInstancesMILPReceding.json";
+      String fileNameSolved = "scrap/solvedMultinormalInstancesMILPReceding.json";
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedMultiNormalInstancesMILPReceding.csv";
+      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILPReceding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -62,7 +62,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    private static void storeSolvedBatchToCSV(SKPMultinormalRecedingSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, "
-            + "capacity, shortageCost, simulatedSolutionValue, "
+            + "capacity, shortageCost, simulatedSolutionMean, simulatedSolutionStd, "
             + "simulationRuns, piecewisePartitions, "
             + "piecewiseSamples, evp, evwpi,"
             + "evwpi_obj_2_n\n";
@@ -75,7 +75,8 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
                  Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +
-                 s.simulatedSolutionValue + ", " +
+                 s.simulatedSolutionMean + ", " +
+                 s.simulatedSolutionStd + ", " +
                  s.simulationRuns + ", " +
                  s.piecewisePartitions + ", " +
                  s.piecewiseSamples + ", " +

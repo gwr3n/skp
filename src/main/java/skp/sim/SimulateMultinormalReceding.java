@@ -18,6 +18,8 @@ import java.util.Arrays;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import ilog.concert.IloException;
 
@@ -32,6 +34,7 @@ import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
+import umontreal.ssj.stat.Tally;
 
 public class SimulateMultinormalReceding  extends Simulate {
    
@@ -47,19 +50,25 @@ public class SimulateMultinormalReceding  extends Simulate {
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
       
-      double simSolutionValue = sim.simulate(simulationRuns, partitions);
+      double[] realisations = sim.simulate(simulationRuns, partitions);
+      Mean m = new Mean();
+      double simSolutionMean = m.evaluate(realisations);
+      StandardDeviation std = new StandardDeviation();
+      double simSolutionStd = std.evaluate(realisations);
       double simEVwPI = sim.simulateEVwPI(simulationRuns);
       double EVP = sim.computeEVP();
       double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
       
-      System.out.println("Simulation: "+simSolutionValue);
+      System.out.println("Simulation (mean): "+simSolutionMean);
+      System.out.println("Simulation (std): "+simSolutionStd);
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
       
       SKPMultinormalRecedingSolvedInstance solvedInstance = new SKPMultinormalRecedingSolvedInstance(
             this.instance,
-            simSolutionValue,
+            simSolutionMean,
+            simSolutionStd,
             simulationRuns,
             EVP,
             simEVwPI,
@@ -132,14 +141,14 @@ public class SimulateMultinormalReceding  extends Simulate {
       return knapsackValue;
    }
    
-   double simulate(int nbSamples, int partitions) {
+   double[] simulate(int nbSamples, int partitions) {
       double[][] sampleMatrix = sampleWeights(nbSamples);
-      double knapsackValue = Arrays.stream(sampleMatrix)
-                                   .parallel()
-                                   .mapToDouble(r -> simulateOneRun(r, partitions))
-                                   .peek(r -> System.out.println("Simulation run completed: "+r))
-                                   .sum()/nbSamples;
-      return knapsackValue;
+      double[] knapsackValues = Arrays.stream(sampleMatrix)
+                                      .parallel()
+                                      .mapToDouble(r -> simulateOneRun(r, partitions))
+                                      .peek(r -> System.out.println("Simulation run completed: "+r))
+                                      .toArray();
+      return knapsackValues;
    }
    
    private double simulateOneRunEVwPI(double[] realizations) {
@@ -223,12 +232,17 @@ public class SimulateMultinormalReceding  extends Simulate {
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
       
-      double simSolutionValue = sim.simulate(simulationRuns, partitions);
+      double[] realisations = sim.simulate(simulationRuns, partitions);
+      Mean m = new Mean();
+      double simSolutionMean = m.evaluate(realisations);
+      StandardDeviation std = new StandardDeviation();
+      double simSolutionStd = std.evaluate(realisations);
       double simEVwPI = sim.simulateEVwPI(simulationRuns);
       double EVP = sim.computeEVP();
       double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
       
-      System.out.println("Simulation: "+simSolutionValue);
+      System.out.println("Simulation (mean): "+simSolutionMean);
+      System.out.println("Simulation (std): "+simSolutionStd);
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);

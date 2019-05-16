@@ -54,13 +54,13 @@ public class SKPMultinormalBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedMultiNormalInstancesMILP.json";
+      String fileNameSolved = "scrap/solvedMultinormalInstancesMILP.json";
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedMultiNormalInstancesMILP.csv";
+      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
