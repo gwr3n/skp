@@ -74,7 +74,7 @@ public class SimulatePoisson extends Simulate {
       try {
          SKPPoissonMILP milp = new SKPPoissonMILP(instance, partitions, linearizationSamples);
          SKPPoissonMILPSolvedInstance solved = milp.solve(simulationSamples);
-         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsGSON(solved));
+         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
       }

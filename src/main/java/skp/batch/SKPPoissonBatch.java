@@ -36,19 +36,18 @@ import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sdp.DSKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
 import skp.utililities.gson.GSONUtility;
-
+import umontreal.ssj.probdist.DiscreteDistributionInt;
+import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
+import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.UniformGen;
-import umontreal.ssj.randvar.UniformIntGen;
+import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPPoissonBatch extends SKPBatch {
    
    public static void main(String args[]) {
       String batchFileName = "scrap/poisson_instances.json";
-      int instances = 10;
-      int instanceSize = 10;
-      generateBatch(instances, instanceSize, batchFileName);
+      generateInstances(batchFileName);
       
       String OPLDataFileZipArchive = "scrap/poisson_instances_opl.zip";
       int partitions = 10;
@@ -65,6 +64,27 @@ public class SKPPoissonBatch extends SKPBatch {
       solveDSKP(batchFileName);
    }
    
+   private static void generateInstances(String batchFileName) {
+      int instances = 10;
+      int instanceSize = 10;
+      
+      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedWeight = new UniformDist(15,70);
+      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+      Distribution shortageCost = new UniformDist(50,150);
+      
+      SKPPoissonBatch batch = new SKPPoissonBatch(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+      batch.generateBatch(instances, instanceSize, batchFileName);
+   }
+   
+   public SKPPoissonBatch(
+         Distribution expectedValuePerUnit,
+         Distribution expectedWeight,
+         DiscreteDistributionInt capacity,
+         Distribution shortageCost) {
+      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+   }
+   
    /*
     * MILP
     */
@@ -76,7 +96,7 @@ public class SKPPoissonBatch extends SKPBatch {
       SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-      System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedPoissonInstancesMILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
@@ -86,7 +106,7 @@ public class SKPPoissonBatch extends SKPBatch {
       ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
-         GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);
    }
@@ -131,7 +151,7 @@ public class SKPPoissonBatch extends SKPBatch {
    }
    
    private static SKPPoissonMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
-      SKPPoissonMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPPoissonMILPSolvedInstance[]>retrieveInstance(fileName, SKPPoissonMILPSolvedInstance[].class);
+      SKPPoissonMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPPoissonMILPSolvedInstance[]>retrieveJSONInstance(fileName, SKPPoissonMILPSolvedInstance[].class);
       return solvedInstances;
    }
    
@@ -146,7 +166,7 @@ public class SKPPoissonBatch extends SKPBatch {
       DSKPPoissonSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
-      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedPoissonInstancesDSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
@@ -157,7 +177,7 @@ public class SKPPoissonBatch extends SKPBatch {
       ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new DSKPPoisson(instance, truncationQuantile).solve());
-         GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToGSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);
    }
@@ -188,7 +208,7 @@ public class SKPPoissonBatch extends SKPBatch {
    }
    
    private static DSKPPoissonSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
-      DSKPPoissonSolvedInstance[] solvedInstances = GSONUtility.<DSKPPoissonSolvedInstance[]>retrieveInstance(fileName, DSKPPoissonSolvedInstance[].class);
+      DSKPPoissonSolvedInstance[] solvedInstances = GSONUtility.<DSKPPoissonSolvedInstance[]>retrieveJSONInstance(fileName, DSKPPoissonSolvedInstance[].class);
       return solvedInstances;
    }
    
@@ -196,26 +216,26 @@ public class SKPPoissonBatch extends SKPBatch {
     * Generate a batch of instances
     */
    
-   public static void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPPoisson[] instances = SKPPoissonBatch.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPPoisson[]>saveInstanceToGSON(instances, fileName);
+   public void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
+      SKPPoisson[] instances = this.generateInstances(numberOfInstances, instanceSize);
+      GSONUtility.<SKPPoisson[]>saveInstanceToJSON(instances, fileName);
    }
    
    public static SKPPoisson[] retrieveBatch(String fileName) {
-      SKPPoisson[] instances = GSONUtility.<SKPPoisson[]>retrieveInstance(fileName, SKPPoisson[].class);
+      SKPPoisson[] instances = GSONUtility.<SKPPoisson[]>retrieveJSONInstance(fileName, SKPPoisson[].class);
       return instances;
    }
    
-   private static SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
+   private SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
                                         .limit(numberOfInstances)
                                         .mapToObj(i -> new SKPPoisson(
-                                              (new RandomVariateGen(randGenerator, new UniformDist(0.1,10))).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
-                                              UniformIntGen.nextInt(randGenerator, 100, 200),
-                                              UniformGen.nextDouble(randGenerator, 50, 150)))
+                                              (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
+                                              (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
                                         .toArray(SKPPoisson[]::new);
       return instances;
    }   

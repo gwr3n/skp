@@ -90,6 +90,6 @@ public class DSKPNormal extends DSKP{
       
       DSKPNormal dskp = new DSKPNormal(instance, truncationQuantile);
       
-      System.out.println(GSONUtility.<DSKPNormalSolvedInstance>printInstanceAsGSON(dskp.solve()));
+      System.out.println(GSONUtility.<DSKPNormalSolvedInstance>printInstanceAsJSON(dskp.solve()));
    }
 }

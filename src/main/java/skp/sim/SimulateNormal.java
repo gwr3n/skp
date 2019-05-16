@@ -73,7 +73,7 @@ public class SimulateNormal extends Simulate {
       try {
          SKPNormalMILP milp = new SKPNormalMILP(instance, partitions);
          SKPNormalMILPSolvedInstance solved = milp.solve(simulationSamples);
-         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsGSON(solved));
+         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
       }

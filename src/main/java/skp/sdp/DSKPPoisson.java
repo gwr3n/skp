@@ -90,6 +90,6 @@ public class DSKPPoisson extends DSKP{
       
       DSKPPoisson dskp = new DSKPPoisson(instance, truncationQuantile);
       
-      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance>printInstanceAsGSON(dskp.solve()));
+      System.out.println(GSONUtility.<DSKPPoissonSolvedInstance>printInstanceAsJSON(dskp.solve()));
    }
 }

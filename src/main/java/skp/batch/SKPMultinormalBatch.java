@@ -21,18 +21,18 @@ import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
-
+import umontreal.ssj.probdist.DiscreteDistributionInt;
+import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
+import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.UniformGen;
-import umontreal.ssj.randvar.UniformIntGen;
+import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPMultinormalBatch extends SKPBatch {
+   
    public static void main(String args[]) {
       String batchFileName = "scrap/multinormal_instances.json";
-      int instances = 10;
-      int instanceSize = 10;
-      generateBatch(instances, instanceSize, batchFileName);
+      generateInstances(batchFileName);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
@@ -47,6 +47,36 @@ public class SKPMultinormalBatch extends SKPBatch {
       }
    }
    
+   private static void generateInstances(String batchFileName) {
+      int instances = 10;
+      int instanceSize = 10;
+      
+      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedWeight = new UniformDist(15,70);
+      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+      Distribution correlationCoefficient = new UniformDist(0, 1);
+      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+      Distribution shortageCost = new UniformDist(50,150);
+      
+      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+      batch.generateBatch(instances, instanceSize, batchFileName);
+   }
+   
+   protected Distribution coefficientOfVariation;
+   protected Distribution correlationCoefficient;
+   
+   public SKPMultinormalBatch(
+         Distribution expectedValuePerUnit,
+         Distribution expectedWeight,
+         Distribution coefficientOfVariation,
+         Distribution correlationCoefficient,
+         DiscreteDistributionInt capacity,
+         Distribution shortageCost) {
+      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+      this.coefficientOfVariation = coefficientOfVariation;
+      this.correlationCoefficient = correlationCoefficient;
+   }
+   
    /*
     * MILP
     */   
@@ -58,7 +88,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-      System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
@@ -68,7 +98,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
       for(SKPMultinormal instance : instances) {
          solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
-         GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
    }
@@ -114,7 +144,7 @@ public class SKPMultinormalBatch extends SKPBatch {
    }
    
    private static SKPMultinormalMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
-      SKPMultinormalMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalMILPSolvedInstance[]>retrieveInstance(fileName, SKPMultinormalMILPSolvedInstance[].class);
+      SKPMultinormalMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalMILPSolvedInstance[]>retrieveJSONInstance(fileName, SKPMultinormalMILPSolvedInstance[].class);
       return solvedInstances;
    }
    
@@ -122,28 +152,28 @@ public class SKPMultinormalBatch extends SKPBatch {
     * Generate a batch of instances
     */
    
-   public static void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = SKPMultinormalBatch.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultinormal[]>saveInstanceToGSON(instances, fileName);
+   public void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
+      SKPMultinormal[] instances = this.generateInstances(numberOfInstances, instanceSize);
+      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
    }
    
    public static SKPMultinormal[] retrieveBatch(String fileName) {
-      SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveInstance(fileName, SKPMultinormal[].class);
+      SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveJSONInstance(fileName, SKPMultinormal[].class);
       return instances;
    }
    
-   private static SKPMultinormal[] generateInstances(int numberOfInstances, int instanceSize){
+   private SKPMultinormal[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
                                             .limit(numberOfInstances)
                                             .mapToObj(i -> new SKPMultinormal(
-                                                  (new RandomVariateGen(randGenerator, new UniformDist(0.1,10))).nextArrayOfDouble(instanceSize),
-                                                  (new RandomVariateGen(randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
-                                                  UniformGen.nextDouble(randGenerator, 0.1, 0.5),
-                                                  UniformGen.nextDouble(randGenerator, 0, 1),
-                                                  UniformIntGen.nextInt(randGenerator, 100, 200),
-                                                  UniformGen.nextDouble(randGenerator, 50, 150)))
+                                                  (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                                  (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
+                                                  (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
+                                                  (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble(),
+                                                  (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
+                                                  (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
                                             .toArray(SKPMultinormal[]::new);
       return instances;
    }

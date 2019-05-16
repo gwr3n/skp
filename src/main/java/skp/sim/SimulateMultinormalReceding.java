@@ -34,7 +34,6 @@ import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
-import umontreal.ssj.stat.Tally;
 
 public class SimulateMultinormalReceding  extends Simulate {
    

@@ -12,13 +12,20 @@ import skp.instance.SKPMultinormal;
 import skp.sim.SimulateMultinormalReceding;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.utililities.gson.GSONUtility;
+import umontreal.ssj.probdist.DiscreteDistributionInt;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.UniformDist;
+import umontreal.ssj.probdist.UniformIntDist;
 
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
+   
    public static void main(String args[]) {
       String batchFileName = "scrap/multinormal_instances.json";
-      int instances = 10;
-      int instanceSize = 10;
-      generateBatch(instances, instanceSize, batchFileName);
+      
+      /**
+       *  Generate instances using SKPMultinormalBatch or SKPNormalBatch
+       */
+      //generateInstances(batchFileName);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
@@ -32,6 +39,32 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
          e.printStackTrace();
       }
    }
+   
+   @SuppressWarnings("unused")
+   private static void generateInstances(String batchFileName) {
+      int instances = 10;
+      int instanceSize = 10;
+      
+      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedWeight = new UniformDist(15,70);
+      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+      Distribution correlationCoefficient = new UniformDist(0, 1);
+      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+      Distribution shortageCost = new UniformDist(50,150);
+      
+      SKPMultinormalRecedingBatch batch = new SKPMultinormalRecedingBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+      batch.generateBatch(instances, instanceSize, batchFileName);
+   }
+   
+   public SKPMultinormalRecedingBatch(
+         Distribution expectedValuePerUnit,
+         Distribution expectedWeight,
+         Distribution coefficientOfVariation,
+         Distribution correlationCoefficient,
+         DiscreteDistributionInt capacity,
+         Distribution shortageCost) {
+      super(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+   }
 
    /*
     * MILP receding
@@ -44,7 +77,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-      System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsGSON(solvedBatch));
+      System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILPReceding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
@@ -54,7 +87,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       ArrayList<SKPMultinormalRecedingSolvedInstance>solved = new ArrayList<SKPMultinormalRecedingSolvedInstance>();
       for(SKPMultinormal instance : instances) {
          solved.add(new SimulateMultinormalReceding(instance, partitions).solve(simulationRuns));
-         GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToGSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]);
    }
@@ -96,7 +129,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    }
    
    private static SKPMultinormalRecedingSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
-      SKPMultinormalRecedingSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>retrieveInstance(fileName, SKPMultinormalRecedingSolvedInstance[].class);
+      SKPMultinormalRecedingSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>retrieveJSONInstance(fileName, SKPMultinormalRecedingSolvedInstance[].class);
       return solvedInstances;
    }
 }

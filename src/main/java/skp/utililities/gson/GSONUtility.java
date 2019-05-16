@@ -11,12 +11,12 @@ import com.google.gson.stream.JsonReader;
 
 public class GSONUtility<T> {
    
-   public static <T> String printInstanceAsGSON(T instance){
+   public static <T> String printInstanceAsJSON(T instance){
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
       return gson.toJson(instance);
    }
    
-   public static <T> void saveInstanceToGSON(T instance, String fileName){
+   public static <T> void saveInstanceToJSON(T instance, String fileName){
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
       try {
          FileWriter fw = new FileWriter(fileName);
@@ -31,7 +31,7 @@ public class GSONUtility<T> {
       }
    }
    
-   public static <T> T retrieveInstance(String fileName, Class<T> type){
+   public static <T> T retrieveJSONInstance(String fileName, Class<T> type){
       Gson gson = new Gson();
       JsonReader reader;
       try {

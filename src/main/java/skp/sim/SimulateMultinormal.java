@@ -74,7 +74,7 @@ public class SimulateMultinormal extends Simulate {
       try {
          SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions);
          SKPMultinormalMILPSolvedInstance solved = milp.solve(simulationRuns);
-         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsGSON(solved));
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);
