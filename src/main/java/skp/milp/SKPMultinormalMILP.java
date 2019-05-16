@@ -32,8 +32,12 @@ public class SKPMultinormalMILP extends SKPMILP{
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
    }
    
-   public SKPMultinormalMILPSolvedInstance solve(int simulationRuns) throws IloException {
+   public void solve() throws IloException {
       this.solveMILP(model, instance);
+   }
+   
+   public SKPMultinormalMILPSolvedInstance solve(int simulationRuns) throws IloException {
+      this.solve();
       
       SimulateMultinormal sim = new SimulateMultinormal(instance);
       double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);

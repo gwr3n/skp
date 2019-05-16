@@ -36,7 +36,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, 10);
+      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100000;
       try {
@@ -77,7 +77,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
-            + "simulationRuns, milpSolutionValue, simulationRuns, milpOptimalityGap, piecewisePartitions, "
+            + "simulationRuns, milpSolutionValue, milpOptimalityGap, piecewisePartitions, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
             + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
       String body = "";
@@ -93,7 +93,6 @@ public class SKPMultinormalBatch extends SKPBatch {
                  s.simulatedSolutionValue + ", " +
                  s.simulationRuns + ", " +
                  s.milpSolutionValue + ", " +
-                 s.simulationRuns + ", " +
                  s.milpOptimalityGap + ", " +
                  s.piecewisePartitions + ", " +
                  s.piecewiseSamples + ", " +

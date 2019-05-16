@@ -93,7 +93,7 @@ public class SKPNormalBatch extends SKPBatch {
       String header = 
             "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
-            + "simulationRuns, milpSolutionValue, simulationRuns, milpOptimalityGap, piecewisePartitions, "
+            + "simulationRuns, milpSolutionValue, milpOptimalityGap, piecewisePartitions, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
             + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
       String body = "";
@@ -109,7 +109,6 @@ public class SKPNormalBatch extends SKPBatch {
                  s.simulatedSolutionValue + ", " +
                  s.simulationRuns + ", " +
                  s.milpSolutionValue + ", " +
-                 s.simulationRuns + ", " +
                  s.milpOptimalityGap + ", " +
                  s.piecewisePartitions + ", " +
                  s.piecewiseSamples + ", " +

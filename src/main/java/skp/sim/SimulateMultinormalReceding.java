@@ -21,10 +21,12 @@ import org.apache.commons.math3.linear.RealMatrix;
 
 import ilog.concert.IloException;
 
+import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.KP;
 import skp.instance.SKPMultinormal;
 import skp.milp.KPMILP;
 import skp.milp.SKPMultinormalMILP;
+import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
@@ -34,9 +36,39 @@ import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 public class SimulateMultinormalReceding  extends Simulate {
    
    SKPMultinormal instance;
+   int partitions;
    
-   public SimulateMultinormalReceding(SKPMultinormal instance, long[] seed) {
+   public SimulateMultinormalReceding(SKPMultinormal instance, int partitions) {
       this.instance = instance;
+      this.partitions = partitions;
+   }
+   
+   public SKPMultinormalRecedingSolvedInstance solve(int simulationRuns) {
+      
+      SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
+      
+      double simSolutionValue = sim.simulate(simulationRuns, partitions);
+      double simEVwPI = sim.simulateEVwPI(simulationRuns);
+      double EVP = sim.computeEVP();
+      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
+      
+      System.out.println("Simulation: "+simSolutionValue);
+      System.out.println("EVwPI: "+simEVwPI);
+      System.out.println("EVP: "+EVP);
+      System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
+      
+      SKPMultinormalRecedingSolvedInstance solvedInstance = new SKPMultinormalRecedingSolvedInstance(
+            this.instance,
+            simSolutionValue,
+            simulationRuns,
+            EVP,
+            simEVwPI,
+            EVwPI_obj_2_n,
+            partitions,
+            PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples()
+            );
+      
+      return solvedInstance;
    }
    
    private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions) {
@@ -75,8 +107,10 @@ public class SimulateMultinormalReceding  extends Simulate {
       int[] knapsack = null;
       try {
          milp = new SKPMultinormalMILP(reducedInstance, partitions);
+         milp.solve();
          knapsack = milp.getOptimalKnapsack();
-         System.out.println("Knapsack: "+Arrays.toString(knapsack));
+         //System.out.println("Knapsack: "+Arrays.toString(knapsack));
+         System.out.print(".");
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);
@@ -98,18 +132,22 @@ public class SimulateMultinormalReceding  extends Simulate {
       return knapsackValue;
    }
    
-   public double simulate(int nbSamples, int partitions) {
+   double simulate(int nbSamples, int partitions) {
       double[][] sampleMatrix = sampleWeights(nbSamples);
-      double knapsackValue = Arrays.stream(sampleMatrix).parallel().mapToDouble(r -> simulateOneRun(r, partitions)).sum()/nbSamples;
+      double knapsackValue = Arrays.stream(sampleMatrix)
+                                   .parallel()
+                                   .mapToDouble(r -> simulateOneRun(r, partitions))
+                                   .peek(r -> System.out.println("Simulation run completed: "+r))
+                                   .sum()/nbSamples;
       return knapsackValue;
    }
    
-   private double simulateOneRunEVPI(double[] realizations) {
-      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+   private double simulateOneRunEVwPI(double[] realizations) {
+      KP instanceEVwPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new KPMILP(instanceEVPI);
+         milp = new KPMILP(instanceEVwPI);
          knapsack = milp.getKnapsack();
          System.out.println("Knapsack: "+Arrays.toString(knapsack));
       } catch (IloException e) {
@@ -119,13 +157,13 @@ public class SimulateMultinormalReceding  extends Simulate {
       return milp.getSolutionValue();
    }
    
-   public double simulateEVPI(int nbSamples) {
+   double simulateEVwPI(int nbSamples) {
       double[][] sampleMatrix = sampleWeights(nbSamples);
-      double knapsackValue = Arrays.stream(sampleMatrix).parallel().mapToDouble(r -> simulateOneRunEVPI(r)).sum()/nbSamples;
+      double knapsackValue = Arrays.stream(sampleMatrix).parallel().mapToDouble(r -> simulateOneRunEVwPI(r)).sum()/nbSamples;
       return knapsackValue;
    }
    
-   public double computeEVP() {
+   double computeEVP() {
       KP instanceEVP = new KP(instance.getExpectedValuesPerUnit(), instance.getWeights().getMean(), instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
@@ -155,7 +193,7 @@ public class SimulateMultinormalReceding  extends Simulate {
       return milp.getSolutionValue();
    }
    
-   public double simulateEVwPI(int nbSamples) {
+   double simulateEVwPI_obj_2_n(int nbSamples) {
       double[][] sampleMatrix = sampleWeights(nbSamples);
       double knapsackValueX1Eq0 = Arrays.stream(sampleMatrix).parallel().mapToDouble(r -> simulateOneRunEVwPI(r, 0)).sum()/nbSamples;
       double knapsackValueX1Eq1 = Arrays.stream(sampleMatrix).parallel().mapToDouble(r -> simulateOneRunEVwPI(r, 1)).sum()/nbSamples;
@@ -181,19 +219,19 @@ public class SimulateMultinormalReceding  extends Simulate {
       SKPMultinormal instance = SKPMultinormal.getTestInstance();
       
       int partitions = 10;
-      int nbSamples = 20;
+      int simulationRuns = 20;
       
-      SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, seed);
+      SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
       
-      double simSolutionValue = sim.simulate(nbSamples, partitions);
-      double simEVPI = sim.simulateEVPI(nbSamples);
+      double simSolutionValue = sim.simulate(simulationRuns, partitions);
+      double simEVwPI = sim.simulateEVwPI(simulationRuns);
       double EVP = sim.computeEVP();
-      double EVwP = sim.simulateEVwPI(nbSamples);
+      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
       
       System.out.println("Simulation: "+simSolutionValue);
-      System.out.println("EVPI: "+simEVPI);
+      System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
-      System.out.println("EVwP on items 2-n: "+EVwP);
+      System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
    }
    
    private static class MatrixAlgebra {
@@ -242,10 +280,9 @@ public class SimulateMultinormalReceding  extends Simulate {
          RealMatrix realisedDemandMatrix = MatrixUtils.createRealMatrix(realisedDemand); 
          zeta1 = realisedDemandMatrix.getSubMatrix(0, 0, 0, 0).transpose();
          
-         
          RealMatrix results = d2.add(sigma21.multiply(sigma11Inv.multiply(zeta1.subtract(d1))));      
          
-           return results.transpose();    
+         return results.transpose();    
       }
    }
 }
