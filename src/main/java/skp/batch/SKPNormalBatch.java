@@ -86,8 +86,10 @@ public class SKPNormalBatch extends SKPBatch {
       switch(type) {
          case NORMAL:
             batch.generateBatch(instances, instanceSize, batchFileName);
+            break;
          case MULTINORMAL:
             batch.generateMultinormalBatch(instances, instanceSize, batchFileName);
+            break;
       }
    }
    
