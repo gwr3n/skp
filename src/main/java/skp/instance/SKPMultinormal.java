@@ -25,6 +25,10 @@ public class SKPMultinormal extends SKP {
       this(expectedValuesPerUnit, expectedWeights, calculateCovariance(expectedWeights, coefficientOfVariation, correlationCoefficient), capacity, shortageCost);
    }
    
+   public SKPMultinormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double capacity, double shortageCost) {
+      this(expectedValuesPerUnit, expectedWeights, calculateCovariance(expectedWeights, coefficientOfVariation, 0), capacity, shortageCost);
+   }
+   
    public static double[][] calculateCovariance(double [] means, double cv, double rho){
       double[] stdDemand =new double [means.length];
       for (int i = 0; i < means.length; i ++) {

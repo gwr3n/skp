@@ -30,6 +30,7 @@ import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
+import skp.instance.SKPMultinormal;
 import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
@@ -48,6 +49,9 @@ public class SKPNormalBatch extends SKPBatch {
       int instances = 10;
       int instanceSize = 10;
       generateBatch(instances, instanceSize, batchFileName);
+      
+      String multinormalBatchFileName = "scrap/multinormal_instances.json";
+      generateMultinormalBatch(instances, instanceSize, multinormalBatchFileName);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/normal_instances_opl.zip";
@@ -201,6 +205,11 @@ public class SKPNormalBatch extends SKPBatch {
       GSONUtility.<SKPNormal[]>saveInstanceToGSON(instances, fileName);
    }
    
+   public static void generateMultinormalBatch(int numberOfInstances, int instanceSize, String fileName) {
+      SKPMultinormal[] instances = SKPNormalBatch.generateMultinormalInstance(numberOfInstances, instanceSize);
+      GSONUtility.<SKPMultinormal[]>saveInstanceToGSON(instances, fileName);
+   }
+   
    public static SKPNormal[] retrieveBatch(String fileName) {
       SKPNormal[] instances = GSONUtility.<SKPNormal[]>retrieveInstance(fileName, SKPNormal[].class);
       return instances;
@@ -218,6 +227,21 @@ public class SKPNormalBatch extends SKPBatch {
                                               UniformIntGen.nextInt(randGenerator, 100, 200),
                                               UniformGen.nextDouble(randGenerator, 50, 150)))
                                         .toArray(SKPNormal[]::new);
+      return instances;
+   }
+   
+   private static SKPMultinormal[] generateMultinormalInstance(int numberOfInstances, int instanceSize){
+      randGenerator.setSeed(seed);
+      randGenerator.resetStartStream();
+      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
+                                        .limit(numberOfInstances)
+                                        .mapToObj(i -> new SKPMultinormal(
+                                              (new RandomVariateGen(randGenerator, new UniformDist(0.1,10))).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, new UniformDist(15,70))).nextArrayOfDouble(instanceSize),
+                                              UniformGen.nextDouble(randGenerator, 0.1, 0.5),
+                                              UniformIntGen.nextInt(randGenerator, 100, 200),
+                                              UniformGen.nextDouble(randGenerator, 50, 150)))
+                                        .toArray(SKPMultinormal[]::new);
       return instances;
    }
 
