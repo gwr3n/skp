@@ -51,7 +51,7 @@ public class SKPNormalBatch extends SKPBatch {
       String multinormalBatchFileName = "scrap/multinormal_instances.json";
       
       generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
-      generateInstances(multinormalBatchFileName, INSTANCE_TYPE.NORMAL);
+      generateInstances(multinormalBatchFileName, INSTANCE_TYPE.MULTINORMAL);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/normal_instances_opl.zip";
