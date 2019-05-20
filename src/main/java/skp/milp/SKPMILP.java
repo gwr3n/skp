@@ -113,12 +113,10 @@ public abstract class SKPMILP {
          computeMILPMaxLinearizationError(opl, cplex);
       } else {
          System.out.println("No solution!");
-         opl.end();
-         oplF.end();//
-         errHandler.end();
-         cplex.end();
-         System.gc();
-         
       } 
+      opl.end();
+      errHandler.end();
+      cplex.end();
+      System.gc();
    }
 }

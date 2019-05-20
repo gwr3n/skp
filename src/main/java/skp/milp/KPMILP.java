@@ -106,13 +106,11 @@ public class KPMILP {
          }
       } else {
          System.out.println("No solution!");
-         opl.end();
-         oplF.end();//
-         errHandler.end();
-         cplex.end();
-         System.gc();
-         
       } 
+      opl.end();
+      errHandler.end();
+      cplex.end();
+      System.gc();
    }
 
    class MyData extends IloCustomOplDataSource
