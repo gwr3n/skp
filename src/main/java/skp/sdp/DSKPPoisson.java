@@ -12,7 +12,6 @@ import skp.instance.SKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
-@SuppressWarnings("restriction")
 public class DSKPPoisson extends DSKP{
    
    

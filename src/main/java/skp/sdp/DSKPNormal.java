@@ -12,7 +12,6 @@ import skp.instance.SKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
-@SuppressWarnings("restriction")
 public class DSKPNormal extends DSKP{
    
    SKPNormal instance;

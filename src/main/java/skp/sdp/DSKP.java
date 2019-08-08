@@ -9,7 +9,6 @@ import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKP;
 
-@SuppressWarnings("restriction")
 public abstract class DSKP {
    
    int[] supportLB;
