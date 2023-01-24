@@ -1,12 +1,13 @@
 package skp.sdp;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 
 import com.sun.management.OperatingSystemMXBean;
 
+import gnu.trove.map.hash.THashMap;
 import skp.instance.SKP;
 
 public abstract class DSKP {
@@ -61,8 +62,8 @@ public abstract class DSKP {
          };
    }
    
-   Map<State, Double> cacheActions = new HashMap<>();
-   Map<State, Double> cacheValueFunction = new HashMap<>();
+   Map<State, Double> cacheActions = Collections.synchronizedMap(new THashMap<>());
+   Map<State, Double> cacheValueFunction = Collections.synchronizedMap(new THashMap<>());
    
    abstract double f(State state); 
    
