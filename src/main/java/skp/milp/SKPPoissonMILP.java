@@ -14,6 +14,20 @@ import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sim.SimulatePoisson;
+import skp.utililities.gson.GSONUtility;
+
+/**
+ * To run from Mac OS
+ * 
+ * -Djava.library.path=/Applications/CPLEX_Studio1210/opl/bin/x86-64_osx/
+ * 
+ * Environment variable
+ * 
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio1210/opl/bin/x86-64_osx/
+ * 
+ * @author gwren
+ *
+ */
 
 public class SKPPoissonMILP extends SKPMILP{
    SKPPoisson instance;
@@ -140,4 +154,17 @@ public class SKPPoissonMILP extends SKPMILP{
          handler.endElement();
       }
    };
+   
+   public static void main(String args[]) {
+      SKPPoisson instance = SKPPoisson.getTestInstance();
+      
+      try {
+         SKPPoissonMILP sskp = new SKPPoissonMILP(instance, 10, 100000);
+         
+         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
+      } catch (IloException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
 }

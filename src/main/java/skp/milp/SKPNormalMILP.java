@@ -11,6 +11,20 @@ import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPNormal;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.sim.SimulateNormal;
+import skp.utililities.gson.GSONUtility;
+
+/**
+ * To run from Mac OS
+ * 
+ * -Djava.library.path=/Applications/CPLEX_Studio1210/opl/bin/x86-64_osx/
+ * 
+ * Environment variable
+ * 
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio1210/opl/bin/x86-64_osx/
+ * 
+ * @author gwren
+ *
+ */
 
 public class SKPNormalMILP extends SKPMILP{
    SKPNormal instance;
@@ -128,4 +142,18 @@ public class SKPNormalMILP extends SKPMILP{
          handler.endElement();
       }
    };
+   
+   public static void main(String args[]) {
+
+      SKPNormal instance = SKPNormal.getTestInstance();
+      
+      try {
+         SKPNormalMILP sskp = new SKPNormalMILP(instance, 10);
+         
+         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
+      } catch (IloException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
 }
