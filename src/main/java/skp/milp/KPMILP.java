@@ -70,8 +70,8 @@ public class KPMILP {
       IloOplSettings settings = oplF.createOplSettings(errHandler);
       IloOplModelDefinition def=oplF.createOplModelDefinition(modelSource,settings);
       IloOplModel opl=oplF.createOplModel(def,cplex);
-      cplex.setParam(IloCplex.IntParam.Threads, 8);
-      cplex.setParam(IloCplex.IntParam.MIPDisplay, 2);
+      cplex.setParam(IloCplex.Param.Threads, 8);
+      cplex.setParam(IloCplex.Param.MIP.Display, 2);
       /*cplex.setParam(IloCplex.IntParam.VarSel, 1);
       cplex.setParam(IloCplex.IntParam.ZeroHalfCuts, 2);
       cplex.setParam(IloCplex.IntParam.ImplBd, 2);
