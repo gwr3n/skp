@@ -39,5 +39,10 @@
   		</artifactId>
   		<version>3.0.3</version>
   	</dependency>
+  	<dependency>
+  		<groupId>com.gurobi</groupId>
+  		<artifactId>gurobi</artifactId>
+  		<version>11.0.0</version>
+  	</dependency>
   </dependencies>
 </project>
