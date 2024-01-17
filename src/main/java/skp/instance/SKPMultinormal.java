@@ -58,11 +58,11 @@ public class SKPMultinormal extends SKP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(this.expectedValuesPerUnit) +
-            Arrays.hashCode(this.expectedWeights) +
-            Arrays.deepHashCode(this.covarianceWeights) +
-            Double.hashCode(this.capacity) + 
-            Double.hashCode(this.shortageCost);
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValuesPerUnit),
+                                        Arrays.hashCode(this.expectedWeights),
+                                        Arrays.deepHashCode(this.covarianceWeights),
+                                        Double.hashCode(this.capacity), 
+                                        Double.hashCode(this.shortageCost)});
    }
    
    @Override

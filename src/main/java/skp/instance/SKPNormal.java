@@ -55,11 +55,11 @@ public class SKPNormal extends SKP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(this.expectedValuesPerUnit) +
-            Arrays.hashCode(this.expectedWeights) +
-            Arrays.hashCode(this.stdWeights) +
-            Double.hashCode(this.capacity) + 
-            Double.hashCode(this.shortageCost);
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValuesPerUnit),
+                                        Arrays.hashCode(this.expectedWeights),
+                                        Arrays.hashCode(this.stdWeights),
+                                        Double.hashCode(this.capacity),
+                                        Double.hashCode(this.shortageCost)});
    }
    
    @Override

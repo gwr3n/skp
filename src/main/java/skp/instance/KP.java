@@ -51,10 +51,10 @@ public class KP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(this.valuesPerUnit) +
-            Arrays.hashCode(this.weights) +
-            Double.hashCode(this.capacity) + 
-            Double.hashCode(this.shortageCost);
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.valuesPerUnit),
+                                        Arrays.hashCode(this.weights),
+                                        Double.hashCode(this.capacity),
+                                        Double.hashCode(this.shortageCost)});
    }
    
    @Override
