@@ -101,9 +101,9 @@ public abstract class SKPMILP {
       if ( status ) {   
          this.milpSolutionValue = cplex.getObjValue();
          this.milpOptimalityGap = cplex.getMIPRelativeGap();
-         cplexSolutionTimeMs = (end - start)*1000;
-         simplexIterations = cplex.getNiterations();
-         exploredNodes = cplex.getNnodes();
+         this.cplexSolutionTimeMs = (end - start)*1000;
+         this.simplexIterations = cplex.getNiterations();
+         this.exploredNodes = cplex.getNnodes();
          
          this.optimalKnapsack = new int[instance.getItems()];
          for(int i = 0; i < instance.getItems(); i++){
