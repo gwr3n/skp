@@ -7,7 +7,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 public class SKPPoisson extends SKP {
    
-   protected int capacity;
+   int capacity;
    
    public SKPPoisson(double[] expectedValuesPerUnit, double[] expectedWeights, int capacity, double shortageCost) {
       super(expectedValuesPerUnit, expectedWeights, shortageCost);
