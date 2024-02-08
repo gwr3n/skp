@@ -21,7 +21,7 @@ public class KP {
    }
    
    private void generateInstanceID() {
-      String intHash = ""+this.hashCode();
+      String intHash = this.getClass().getSimpleName()+this.hashCode();
       instanceID = SHA.generateSHA256(intHash);
    }
    
