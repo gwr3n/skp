@@ -9,7 +9,7 @@ public class SKPGenericDistributionMILPSolvedInstance {
    public int simulationRuns;
    public double milpSolutionValue;
    public double milpOptimalityGap;
-   public int piecewisePartitions;
+   public int cuts;
    public int piecewiseSamples;
    public double milpMaxLinearizationError;
    public double simulatedLinearizationError;
@@ -24,7 +24,7 @@ public class SKPGenericDistributionMILPSolvedInstance {
          int simulationRuns,
          double milpSolutionValue,
          double milpOptimalityGap,
-         int piecewisePartitions,
+         int cuts,
          int piecewiseSamples,
          double milpMaxLinearizationError,
          double simulatedLinearizationError,
@@ -37,7 +37,7 @@ public class SKPGenericDistributionMILPSolvedInstance {
       this.simulationRuns = simulationRuns;
       this.milpSolutionValue = milpSolutionValue;
       this.milpOptimalityGap = milpOptimalityGap;
-      this.piecewisePartitions = piecewisePartitions;
+      this.cuts = cuts;
       this.piecewiseSamples = piecewiseSamples;
       this.milpMaxLinearizationError = milpMaxLinearizationError;
       this.simulatedLinearizationError = simulatedLinearizationError;

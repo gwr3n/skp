@@ -9,10 +9,11 @@ import com.gurobi.gurobi.GRBVar;
 
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
+import skp.sim.SimulateGenericDistribution;
+import skp.sim.SimulateNormal;
 import skp.utililities.gson.GSONUtility;
 
-public class SKPGenericDistributionMILP{
-   int partitions;
+public class SKPGenericDistributionMILP{   
    int linearizationSamples;
    
    int[] optimalKnapsack;
@@ -22,15 +23,15 @@ public class SKPGenericDistributionMILP{
    
    SKPGenericDistribution instance;
    
-   public SKPGenericDistributionMILP(SKPGenericDistribution instance, int partitions, int linearizationSamples){
+   public SKPGenericDistributionMILP(SKPGenericDistribution instance, int linearizationSamples){
       this.instance = instance;
-      this.partitions = partitions;
       this.linearizationSamples = linearizationSamples;
    }
    
    double gurobiSolutionTimeMs;
    int simplexIterations;
    int exploredNodes;
+   int cuts = 0;
 
    public int[] getOptimalKnapsack() {
       return this.optimalKnapsack;
@@ -130,9 +131,11 @@ public class SKPGenericDistributionMILP{
          model.dispose();
          env.dispose();
          
-         double simulatedSolutionValue = 0;
-         double milpMaxLinearizationError = 0;
-         double simulatedLinearizationError = 0;
+         SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
+         double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
+         
+         double milpMaxLinearizationError = 0; // cuts are tight
+         double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
          
          SKPGenericDistributionMILPSolvedInstance solvedInstance = new SKPGenericDistributionMILPSolvedInstance(
                instance,
@@ -141,7 +144,7 @@ public class SKPGenericDistributionMILP{
                simulationRuns,
                this.getMILPSolutionValue(),
                this.getMILPOptimalityGap(),
-               this.partitions,
+               cuts,
                this.linearizationSamples,
                milpMaxLinearizationError,
                simulatedLinearizationError,
@@ -165,7 +168,7 @@ public class SKPGenericDistributionMILP{
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
       
       try {
-         SKPGenericDistributionMILP sskp = new SKPGenericDistributionMILP(instance, 10, 100000);
+         SKPGenericDistributionMILP sskp = new SKPGenericDistributionMILP(instance, 100000);
          
          System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
       } catch (Exception e) {
