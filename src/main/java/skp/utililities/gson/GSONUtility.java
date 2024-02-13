@@ -12,12 +12,12 @@ import com.google.gson.stream.JsonReader;
 public class GSONUtility<T> {
    
    public static <T> String printInstanceAsJSON(T instance){
-      Gson gson = new GsonBuilder().setPrettyPrinting().create();
+      Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().setPrettyPrinting().create();
       return gson.toJson(instance);
    }
    
    public static <T> void saveInstanceToJSON(T instance, String fileName){
-      Gson gson = new GsonBuilder().setPrettyPrinting().create();
+      Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().setPrettyPrinting().create();
       try {
          FileWriter fw = new FileWriter(fileName);
          gson.toJson(instance, fw);
