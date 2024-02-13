@@ -1,23 +1,20 @@
 package skp.milp;
 
-import java.util.stream.IntStream;
+import java.util.Arrays;
 
-import com.gurobi.gurobi.GRB;
-import com.gurobi.gurobi.GRBCallback;
-import com.gurobi.gurobi.GRBEnv;
-import com.gurobi.gurobi.GRBException;
-import com.gurobi.gurobi.GRBLinExpr;
-import com.gurobi.gurobi.GRBModel;
-import com.gurobi.gurobi.GRBVar;
+import ilog.concert.IloNumVar;
+import ilog.concert.IloNumVarType;
+import ilog.opl.*;
 
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
 import skp.utililities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.Distribution;
 
-public class SKPGenericDistributionMILP extends GRBCallback { 
+public class SKPGenericDistributionMILP { 
    private static long[] seed = {1,2,3,4,5,6};
    
    int linearizationSamples;
@@ -29,14 +26,10 @@ public class SKPGenericDistributionMILP extends GRBCallback {
    
    SKPGenericDistribution instance;
    
-   double gurobiSolutionTimeMs;
+   double cplexSolutionTimeMs;
    int simplexIterations;
    int exploredNodes;
    int cuts = 0; // cuts counter
-   
-   GRBVar[] X;
-   GRBVar M;
-   GRBVar P;
    
    public SKPGenericDistributionMILP(SKPGenericDistribution instance, int linearizationSamples){
       this.instance = instance;
@@ -61,7 +54,7 @@ public class SKPGenericDistributionMILP extends GRBCallback {
    
    // Piecewise linearization callback.  Whenever a feasible solution is found,
    // find the cut that corresponds to the current partial assignment.
-   protected void callback() {
+   /*protected void callback() {
       try {
          if (where == GRB.CB_MIPSOL) {
             this.cuts++;
@@ -92,88 +85,67 @@ public class SKPGenericDistributionMILP extends GRBCallback {
                e.getMessage());
          e.printStackTrace();
       }
-   }
+   }*/
    
    public SKPGenericDistributionMILPSolvedInstance solve(int simulationRuns) {
       try {
-         GRBEnv env = new GRBEnv();
-         GRBModel model = new GRBModel(env);
-         
-         // Must set LazyConstraints parameter when using lazy constraints
-         //model.set(GRB.IntParam.LazyConstraints, 1);
-         model.getEnv().set(GRB.IntParam.PreCrush,1);
-         model.getEnv().set(GRB.IntParam.DualReductions, 0);
-         model.getEnv().set(GRB.DoubleParam.Heuristics, 0);
-         
-         model.set(GRB.StringAttr.ModelName, "SKPGenericDistribution");
+         IloCplex cplex = new IloCplex();
          
          // Create decision variables
          
          // Object selectors
-         this.X = new GRBVar[this.instance.getItems()];
-         for (int i = 0; i < this.instance.getItems(); ++i) {
-            this.X[i] = model.addVar(0.0, 1.0, this.instance.getExpectedValues()[i], GRB.BINARY, "X"+i);
-         }
+         IloNumVar[] X = cplex.numVarArray(this.instance.getItems(), 0, 1, IloNumVarType.Int);
+         
          // Expected knapsack weight
-         this.M = model.addVar(0, GRB.INFINITY, 0, GRB.CONTINUOUS, "M");
+         IloNumVar M = cplex.numVar(0, Double.POSITIVE_INFINITY);
+         
          // Expected capacity shortage
-         this.P = model.addVar(0, GRB.INFINITY, -instance.getShortageCost(), GRB.CONTINUOUS, "P");
+         IloNumVar P = cplex.numVar(0, Double.POSITIVE_INFINITY);
          
          // Create constraints
          
          // Expected knapsack weight
-         {
-            GRBLinExpr expr = new GRBLinExpr();
-            for (int i = 0; i < this.instance.getItems(); i++)
-               expr.addTerm(this.instance.getWeights()[i].getMean(), X[i]);
-            model.addConstr(expr, GRB.EQUAL, M, "Expected knapsack weight");
-         }
+         cplex.addEq(cplex.scalProd(Arrays.stream(this.instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), X), M);
          
          // Expected capacity shortage (loss): P >= - (C-M)
          //                                    P-M >= -C
-         {
-            GRBLinExpr expr = new GRBLinExpr();
-            expr.addTerm(1.0, P);
-            expr.addTerm(-1.0, M);
-            model.addConstr(expr, GRB.EQUAL, -this.instance.getCapacity(), "Expected knapsack weight");
-         }
+         cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
+         
          
          // The objective is to maximize the profit minus the expected capacity shortage
-         //
-         // Note: The objective coefficients are set during the creation of
-         //       the decision variables above.
-         model.set(GRB.IntAttr.ModelSense, GRB.MAXIMIZE);
+         cplex.addMaximize(cplex.sum(
+               cplex.scalProd(this.instance.getExpectedValues(), X),
+               cplex.prod(-instance.getShortageCost(), P))
+               );
          
-         // Callback
-         model.setCallback(this);
          
-         // Solve
-         model.optimize();
+         cplex.setParam(IloCplex.Param.MIP.Strategy.Search,
+                        IloCplex.MIPSearch.Traditional);
          
-         if (model.get(GRB.IntAttr.Status) == GRB.Status.OPTIMAL) {
-         
-         this.milpSolutionValue = model.get(GRB.DoubleAttr.ObjVal);
-         this.milpOptimalityGap = model.get(GRB.DoubleAttr.MIPGap);
-         this.gurobiSolutionTimeMs = model.get(GRB.DoubleAttr.Runtime);
-         this.simplexIterations = (int) Math.round(model.get(GRB.DoubleAttr.IterCount));
-         this.exploredNodes = (int) Math.round(model.get(GRB.DoubleAttr.NodeCount));
-         
-         this.optimalKnapsack = new int[instance.getItems()];
-         for(int i = 0; i < instance.getItems(); i++){
-            this.optimalKnapsack[i] = (int) Math.round(X[i].get(GRB.DoubleAttr.X));
-         }
-         
-         this.milpMaxLinearizationError = 0; // cuts are tight
-         
+         double start = cplex.getCplexImpl().getCplexTime();
+         boolean status =  cplex.solve();
+         double end = cplex.getCplexImpl().getCplexTime();
+         if ( status ) {   
+            this.milpSolutionValue = cplex.getObjValue();
+            this.milpOptimalityGap = cplex.getMIPRelativeGap();
+            this.cplexSolutionTimeMs = (end - start)*1000;
+            this.simplexIterations = cplex.getNiterations();
+            this.exploredNodes = cplex.getNnodes();
+            
+            this.optimalKnapsack = new int[instance.getItems()];
+            for(int i = 0; i < instance.getItems(); i++){
+               this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(X[i]));
+            }
+            System.out.println("M: "+cplex.getValue(M));
+            System.out.println("P: "+cplex.getValue(P));
+            
+            this.milpMaxLinearizationError = 0; // cuts are tight
+            
          } else {
-            System.err.println("No solution");
-         }
-         
-         System.out.println("JSON solution:" + model.getJSONSolution());
-         
-         // Dispose of model and environment
-         model.dispose();
-         env.dispose();
+            System.out.println("No solution!");
+         } 
+         cplex.end();
+         System.gc();
          
          SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
          double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
@@ -190,14 +162,14 @@ public class SKPGenericDistributionMILP extends GRBCallback {
                this.linearizationSamples,
                milpMaxLinearizationError,
                simulatedLinearizationError,
-               gurobiSolutionTimeMs,
+               cplexSolutionTimeMs,
                simplexIterations,
                exploredNodes
                );
          
          return solvedInstance;
          
-      } catch (GRBException e) {
+      } catch (Exception e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
