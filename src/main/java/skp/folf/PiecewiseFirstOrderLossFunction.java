@@ -23,7 +23,7 @@ import umontreal.ssj.probdist.Distribution;
 
 public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
-   PiecewiseFirstOrderLossFunction(Distribution[] distributions, long[] seed){
+   public PiecewiseFirstOrderLossFunction(Distribution[] distributions, long[] seed){
       super(distributions, seed);
    }
    
@@ -62,7 +62,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       return approximationErrors;
    }
 
-   public double getMaxApproximationError(double[] probabilityMasses, int nbSamples){
+   double getMaxApproximationError(double[] probabilityMasses, int nbSamples){
       double[] approximationErrors = this.getApproximationErrors(probabilityMasses, nbSamples);
       double maxApproximationError = 0;
 
