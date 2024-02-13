@@ -2,6 +2,7 @@ package skp.instance;
 
 import java.util.Arrays;
 
+import umontreal.ssj.probdist.BinomialDist;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
@@ -48,11 +49,19 @@ public class SKPGenericDistribution extends SKP{
    }
    
    public static SKPGenericDistribution getTestInstance() {
-      //double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
-      //Distribution[] expectedWeights = {new PoissonDist(44),new PoissonDist(42),new PoissonDist(73),new PoissonDist(15),new PoissonDist(71),new PoissonDist(12),new PoissonDist(13),new PoissonDist(14),new PoissonDist(23),new PoissonDist(15)};
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233};
-      Distribution[] expectedWeights = {new NormalDist(1,1),new NormalDist(1,1),new NormalDist(1,1)};
-      int capacity = 50;
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 
+                                        2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      Distribution[] expectedWeights = {new NormalDist(44,10),
+                                        new PoissonDist(42),
+                                        new BinomialDist(73,0.5),
+                                        new PoissonDist(15),
+                                        new PoissonDist(71),
+                                        new PoissonDist(12),
+                                        new PoissonDist(13),
+                                        new PoissonDist(14),
+                                        new PoissonDist(23),
+                                        new PoissonDist(15)};
+      int capacity = 100;
       int shortageCost = 100;
       return new SKPGenericDistribution(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
    }
