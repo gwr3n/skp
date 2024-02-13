@@ -42,7 +42,7 @@ public class FirstOrderLossFunction {
       return sampleMatrix;
    }
    
-   protected EmpiricalDist getEmpiricalDistribution(int nbSamples){
+   public EmpiricalDist getEmpiricalDistribution(int nbSamples){
       double[][] sampleMatrix = this.sample(nbSamples);
       double[] observations = new double[nbSamples];
       for(int i = 0; i < sampleMatrix.length; i++){
