@@ -1,19 +1,25 @@
 package skp.milp;
 
+import java.util.stream.IntStream;
+
 import com.gurobi.gurobi.GRB;
+import com.gurobi.gurobi.GRBCallback;
 import com.gurobi.gurobi.GRBEnv;
 import com.gurobi.gurobi.GRBException;
 import com.gurobi.gurobi.GRBLinExpr;
 import com.gurobi.gurobi.GRBModel;
 import com.gurobi.gurobi.GRBVar;
 
+import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
-import skp.sim.SimulateNormal;
 import skp.utililities.gson.GSONUtility;
+import umontreal.ssj.probdist.Distribution;
 
-public class SKPGenericDistributionMILP{   
+public class SKPGenericDistributionMILP extends GRBCallback { 
+   private static long[] seed = {1,2,3,4,5,6};
+   
    int linearizationSamples;
    
    int[] optimalKnapsack;
@@ -23,16 +29,20 @@ public class SKPGenericDistributionMILP{
    
    SKPGenericDistribution instance;
    
+   double gurobiSolutionTimeMs;
+   int simplexIterations;
+   int exploredNodes;
+   int cuts = 0; // cuts counter
+   
+   GRBVar[] X;
+   GRBVar M;
+   GRBVar P;
+   
    public SKPGenericDistributionMILP(SKPGenericDistribution instance, int linearizationSamples){
       this.instance = instance;
       this.linearizationSamples = linearizationSamples;
    }
    
-   double gurobiSolutionTimeMs;
-   int simplexIterations;
-   int exploredNodes;
-   int cuts = 0;
-
    public int[] getOptimalKnapsack() {
       return this.optimalKnapsack;
    }
@@ -48,12 +58,40 @@ public class SKPGenericDistributionMILP{
    public double getMILPMaxLinearizationError() {
       return this.milpMaxLinearizationError;
    }
+   
+   // Piecewise linearization callback.  Whenever a feasible solution is found,
+   // find the cut that corresponds to the current partial assignment.
+   protected void callback() {
+      try {
+         if (where == GRB.CB_MIPSOL) {
+            this.cuts++;
+            
+            double[] x = this.getNodeRel(X);
 
-   void computeMILPMaxLinearizationError() {
-      // TODO Auto-generated method stub
-      // use PiecewiseFirstOrderLossFunction.getMaxApproximationError 
-      // by feeding the optimal knapsack weight distributions to the constructor.
-      System.err.print("Unimplemented method");
+            Distribution[] weights = this.instance.getWeights();
+            Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
+                  .limit(weights.length)
+                  .filter(i -> x[i] == 1.0)
+                  .mapToObj(i -> weights[i])
+                  .toArray(Distribution[]::new);
+
+            PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(reducedWeights, seed);
+
+            double a = pwfolf.getFirstOrderLossFunctionValue(this.instance.getCapacity(), linearizationSamples)-
+                  (pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(this.instance.getCapacity())-1)*this.instance.getCapacity();
+            double b = pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(this.instance.getCapacity())-1; //slope
+
+            // Expected capacity shortage (loss): P >= bC+a 
+            //                                    
+            GRBLinExpr expr = new GRBLinExpr();
+            expr.addTerm(1.0, this.P);
+            addLazy(expr, GRB.GREATER_EQUAL, b*this.instance.getCapacity()+a);
+         }
+      } catch (GRBException e) {
+         System.out.println("Error code: " + e.getErrorCode() + ". " +
+               e.getMessage());
+         e.printStackTrace();
+      }
    }
    
    public SKPGenericDistributionMILPSolvedInstance solve(int simulationRuns) {
@@ -63,20 +101,23 @@ public class SKPGenericDistributionMILP{
          
          // Must set LazyConstraints parameter when using lazy constraints
          //model.set(GRB.IntParam.LazyConstraints, 1);
+         model.getEnv().set(GRB.IntParam.PreCrush,1);
+         model.getEnv().set(GRB.IntParam.DualReductions, 0);
+         model.getEnv().set(GRB.DoubleParam.Heuristics, 0);
          
          model.set(GRB.StringAttr.ModelName, "SKPGenericDistribution");
          
          // Create decision variables
          
          // Object selectors
-         GRBVar[] X = new GRBVar[this.instance.getItems()];
+         this.X = new GRBVar[this.instance.getItems()];
          for (int i = 0; i < this.instance.getItems(); ++i) {
-            X[i] = model.addVar(0.0, 1.0, this.instance.getExpectedValues()[i], GRB.BINARY, "X"+i);
+            this.X[i] = model.addVar(0.0, 1.0, this.instance.getExpectedValues()[i], GRB.BINARY, "X"+i);
          }
          // Expected knapsack weight
-         GRBVar M = model.addVar(0, GRB.INFINITY, 0, GRB.CONTINUOUS, "M");
+         this.M = model.addVar(0, GRB.INFINITY, 0, GRB.CONTINUOUS, "M");
          // Expected capacity shortage
-         GRBVar P = model.addVar(0, GRB.INFINITY, -instance.getShortageCost(), GRB.CONTINUOUS, "P");
+         this.P = model.addVar(0, GRB.INFINITY, -instance.getShortageCost(), GRB.CONTINUOUS, "P");
          
          // Create constraints
          
@@ -103,6 +144,9 @@ public class SKPGenericDistributionMILP{
          //       the decision variables above.
          model.set(GRB.IntAttr.ModelSense, GRB.MAXIMIZE);
          
+         // Callback
+         model.setCallback(this);
+         
          // Solve
          model.optimize();
          
@@ -119,7 +163,7 @@ public class SKPGenericDistributionMILP{
             this.optimalKnapsack[i] = (int) Math.round(X[i].get(GRB.DoubleAttr.X));
          }
          
-         this.milpMaxLinearizationError = 0;
+         this.milpMaxLinearizationError = 0; // cuts are tight
          
          } else {
             System.err.println("No solution");
@@ -133,8 +177,6 @@ public class SKPGenericDistributionMILP{
          
          SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
          double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
-         
-         double milpMaxLinearizationError = 0; // cuts are tight
          double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
          
          SKPGenericDistributionMILPSolvedInstance solvedInstance = new SKPGenericDistributionMILPSolvedInstance(
@@ -144,7 +186,7 @@ public class SKPGenericDistributionMILP{
                simulationRuns,
                this.getMILPSolutionValue(),
                this.getMILPOptimalityGap(),
-               cuts,
+               this.cuts,
                this.linearizationSamples,
                milpMaxLinearizationError,
                simulatedLinearizationError,
@@ -170,7 +212,8 @@ public class SKPGenericDistributionMILP{
       try {
          SKPGenericDistributionMILP sskp = new SKPGenericDistributionMILP(instance, 100000);
          
-         System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
+         SKPGenericDistributionMILPSolvedInstance solvedInstance = sskp.solve(100000);
+         System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance>printInstanceAsJSON(solvedInstance));
       } catch (Exception e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
