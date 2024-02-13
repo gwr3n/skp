@@ -3,16 +3,12 @@ package skp.sim;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import ilog.concert.IloException;
 import skp.instance.SKPGenericDistribution;
-import skp.instance.SKPNormal;
 import skp.milp.SKPGenericDistributionMILP;
-import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
-import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.utililities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;
 
 public class SimulateGenericDistribution extends Simulate {
@@ -42,7 +38,7 @@ public class SimulateGenericDistribution extends Simulate {
                                                .limit(weights.length)
                                                .filter(i -> knapsack[i] == 1)
                                                .mapToObj(i -> weights[i])
-                                               .toArray(NormalDist[]::new);
+                                               .toArray(Distribution[]::new);
       
       this.randGenerator.resetStartStream();
       double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
