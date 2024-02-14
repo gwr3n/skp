@@ -20,6 +20,11 @@ import umontreal.ssj.probdist.UniformIntDist;
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    public static void main(String args[]) {
+      File folder = new File("scrap");
+      if (!folder.exists()) {
+        folder.mkdir();
+      } 
+      
       String batchFileName = "scrap/multinormal_instances.json";
       
       /**

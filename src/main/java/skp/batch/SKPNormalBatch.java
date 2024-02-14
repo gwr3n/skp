@@ -47,6 +47,11 @@ import umontreal.ssj.randvar.RandomVariateGenInt;
 public class SKPNormalBatch extends SKPBatch {
 
    public static void main(String args[]) {
+      File folder = new File("scrap");
+      if (!folder.exists()) {
+        folder.mkdir();
+      } 
+      
       String batchFileName = "scrap/normal_instances.json";
       String multinormalBatchFileName = "scrap/multinormal_instances.json";
       
