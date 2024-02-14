@@ -29,8 +29,8 @@ public class SKPGenericDistributionMILP {
    SKPGenericDistribution instance;
    
    double cplexSolutionTimeMs = 0;
-   int simplexIterations;
-   int exploredNodes;
+   int simplexIterations = 0;
+   int exploredNodes = 0;
    int[] lastKnapsack = null;
    
    ArrayList<Cut> cutList = new ArrayList<Cut>();
@@ -123,8 +123,8 @@ public class SKPGenericDistributionMILP {
                this.milpSolutionValue = cplex.getObjValue();
                this.milpOptimalityGap = cplex.getMIPRelativeGap();
                this.cplexSolutionTimeMs += (end - start)*1000;
-               this.simplexIterations = cplex.getNiterations();
-               this.exploredNodes = cplex.getNnodes();
+               this.simplexIterations += cplex.getNiterations();
+               this.exploredNodes += cplex.getNnodes();
 
                this.optimalKnapsack = new int[instance.getItems()];
                for(int i = 0; i < instance.getItems(); i++){
