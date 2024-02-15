@@ -249,7 +249,7 @@ public class SKPNormalBatch extends SKPBatch {
    }
    
    public void generateMultinormalBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = this.generateMultinormalInstance(numberOfInstances, instanceSize);
+      SKPMultinormal[] instances = this.generateMultinormalInstances(numberOfInstances, instanceSize);
       GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
    }
    
@@ -273,7 +273,7 @@ public class SKPNormalBatch extends SKPBatch {
       return instances;
    }
    
-   private SKPMultinormal[] generateMultinormalInstance(int numberOfInstances, int instanceSize){
+   private SKPMultinormal[] generateMultinormalInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
