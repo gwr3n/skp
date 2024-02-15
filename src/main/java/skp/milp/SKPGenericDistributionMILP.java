@@ -104,7 +104,7 @@ public class SKPGenericDistributionMILP {
             for(int i = 0; i < this.cutList.size(); i++) {
                Cut cut = this.cutList.get(i);
                // if all objects in the knapsack are selected, then P should be greater or equal than cut RHS
-               cplex.add(cplex.ifThen(cplex.eq(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
+               cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
             }
 
             // The objective is to maximize the profit minus the expected capacity shortage
