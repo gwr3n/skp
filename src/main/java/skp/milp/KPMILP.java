@@ -66,7 +66,8 @@ public class KPMILP {
       IloOplErrorHandler errHandler = oplF.createOplErrorHandler(System.out);
       IloCplex cplex = oplF.createCplex();
       ClassLoader classLoader = getClass().getClassLoader();
-      IloOplModelSource modelSource=oplF.createOplModelSourceFromStream(getMILPModelStream(new File(classLoader.getResource("./opl_models/"+model_name+".mod").getFile())),model_name);
+      InputStream isModel = getMILPModelStream(new File(classLoader.getResource("./opl_models/"+model_name+".mod").getFile()));
+      IloOplModelSource modelSource=oplF.createOplModelSourceFromStream(isModel,model_name);
       IloOplSettings settings = oplF.createOplSettings(errHandler);
       IloOplModelDefinition def=oplF.createOplModelDefinition(modelSource,settings);
       IloOplModel opl=oplF.createOplModel(def,cplex);
@@ -107,6 +108,12 @@ public class KPMILP {
       } else {
          System.out.println("No solution!");
       } 
+      try {
+         isModel.close();
+      } catch (IOException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
       opl.end();
       errHandler.end();
       cplex.end();
