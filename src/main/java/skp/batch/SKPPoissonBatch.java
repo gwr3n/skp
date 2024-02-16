@@ -7,7 +7,7 @@
  * 
  * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
  * 
- * @author gwren
+ * @author Roberto Rossi
  *
  */
 

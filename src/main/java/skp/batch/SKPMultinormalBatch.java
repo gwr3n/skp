@@ -1,3 +1,16 @@
+/**
+ * To run from Mac OS
+ * 
+ * -Djava.library.path=/Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * 
+ * Environment variable
+ * 
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * 
+ * @author Roberto Rossi
+ *
+ */
+
 package skp.batch;
 
 import java.io.File;
