@@ -9,9 +9,7 @@ import java.util.stream.IntStream;
 import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKPGenericDistribution;
-import skp.sdp.DSKP.State;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
-import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utililities.gson.GSONUtility;
 
 public class DSKPGenericDistribution extends DSKP{
