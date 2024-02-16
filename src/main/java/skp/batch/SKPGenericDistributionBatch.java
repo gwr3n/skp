@@ -111,9 +111,12 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns) throws IloException {
+      // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+      
       String fileNameSolved = "scrap/solvedGenericDistributionInstancesMILP.json";
       SKPGenericDistributionMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns);
       
+      // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedGenericDistributionInstancesMILP.csv";
@@ -183,9 +186,12 @@ public class SKPGenericDistributionBatch extends SKPBatch {
     */
    
    public static void solveDSKP(SKPGenericDistribution[] batch) {
+      // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+      
       String fileNameSolved = "scrap/solvedGenericDistributionInstancesDSKP.json";
       DSKPGenericDistributionSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
+      // solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<DSKPGenericDistributionSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
       String fileNameSolvedCSV = "scrap/solvedGenericDistributionInstancesDSKP.csv";
