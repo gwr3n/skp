@@ -3,7 +3,7 @@ package skp.sdp.instance;
 import skp.instance.SKPGenericDistribution;
 
 public class DSKPGenericDistributionSolvedInstance{
-   SKPGenericDistribution instance;
+   public SKPGenericDistribution instance;
    public double solutionValue;
    public long solutionTimeMs;
    public long statesExplored;
