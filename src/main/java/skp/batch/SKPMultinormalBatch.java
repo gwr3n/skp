@@ -49,8 +49,13 @@ public class SKPMultinormalBatch extends SKPBatch {
         folder.mkdir();
       } 
       
+      boolean specialStructure = true;
+      
       String batchFileName = "scrap/multinormal_instances.json";
-      generateInstances(batchFileName);
+      if(specialStructure)
+         generateInstancesSpecialStructure(batchFileName);
+      else
+         generateInstances(batchFileName);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
@@ -78,6 +83,21 @@ public class SKPMultinormalBatch extends SKPBatch {
       
       SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
       batch.generateBatch(instances, instanceSize, batchFileName);
+   }
+   
+   private static void generateInstancesSpecialStructure(String batchFileName) {
+      int instances = 10;
+      int instanceSize = 10;
+      
+      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedWeight = new UniformDist(15,70);
+      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+      Distribution correlationCoefficient = new UniformDist(0, 1);
+      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+      Distribution shortageCost = new UniformDist(50,150);
+      
+      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+      batch.generateBatchSpecialStructure(instances, instanceSize, batchFileName);
    }
    
    protected Distribution coefficientOfVariation;
@@ -175,6 +195,11 @@ public class SKPMultinormalBatch extends SKPBatch {
       GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
    }
    
+   public void generateBatchSpecialStructure(int numberOfInstances, int instanceSize, String fileName) {
+      SKPMultinormal[] instances = this.generateInstancesSpecialStructure(numberOfInstances, instanceSize);
+      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
+   }
+   
    public static SKPMultinormal[] retrieveBatch(String fileName) {
       SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveJSONInstance(fileName, SKPMultinormal[].class);
       return instances;
@@ -192,6 +217,26 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                   (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble(),
                                                   (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
                                                   (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
+                                            .toArray(SKPMultinormal[]::new);
+      return instances;
+   }
+   
+   private SKPMultinormal[] generateInstancesSpecialStructure(int numberOfInstances, int instanceSize){
+      randGenerator.setSeed(seed);
+      randGenerator.resetStartStream();
+      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
+                                            .limit(numberOfInstances)
+                                            .mapToObj(i -> {
+                                                  double[] expectedValuePerUnit = (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize);
+                                                  double[] expectedWeight = (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize);
+                                                  return new SKPMultinormal(
+                                                  expectedValuePerUnit,
+                                                  expectedWeight,
+                                                  SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeight, 
+                                                                                      (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(), 
+                                                                                      (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble()),
+                                                  (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
+                                                  (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble());})
                                             .toArray(SKPMultinormal[]::new);
       return instances;
    }
