@@ -48,6 +48,10 @@ public class SKPMultinormal extends SKP {
       return covariance;
    }
    
+   /**
+    * Compute covariance according to the special structure \rho^{|j-i|}\sigma_i\sigma_j
+    * See https://doi.org/10.1016/j.ejor.2022.04.011
+    */
    public static double[][] calculateCovarianceSpecialStructure(double [] means, double cv, double rho){
       double[] stdDemand = new double [means.length];
       for (int i = 0; i < means.length; i ++) {
