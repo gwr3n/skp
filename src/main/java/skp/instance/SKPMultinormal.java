@@ -30,7 +30,7 @@ public class SKPMultinormal extends SKP {
    }
    
    public static double[][] calculateCovariance(double [] means, double cv, double rho){
-      double[] stdDemand =new double [means.length];
+      double[] stdDemand = new double [means.length];
       for (int i = 0; i < means.length; i ++) {
          stdDemand[i] = cv * means[i];
       }
@@ -42,6 +42,25 @@ public class SKPMultinormal extends SKP {
                covariance[row][col]=stdDemand[row]*stdDemand[col];
             } else {
                covariance[row][col]=stdDemand[row]*stdDemand[col]*rho;
+            }
+         }
+      }
+      return covariance;
+   }
+   
+   public static double[][] calculateCovarianceSpecialStructure(double [] means, double cv, double rho){
+      double[] stdDemand = new double [means.length];
+      for (int i = 0; i < means.length; i ++) {
+         stdDemand[i] = cv * means[i];
+      }
+      
+      double[][] covariance = new double [means.length][means.length];
+      for (int row=0; row<covariance.length;row++) {
+         for (int col=0; col<covariance[row].length;col++) {
+            if (row==col) {
+               covariance[row][col]=stdDemand[row]*stdDemand[col];
+            } else {
+               covariance[row][col]=stdDemand[row]*stdDemand[col]*Math.pow(rho, Math.abs(col-row));
             }
          }
       }
@@ -86,5 +105,15 @@ public class SKPMultinormal extends SKP {
       int capacity = 100;
       int shortageCost = 100;
       return new SKPMultinormal(expectedValuesPerUnit, expectedWeights, cv, rho, capacity, shortageCost);
+   }
+   
+   public static SKPMultinormal getTestInstanceSpecialStructure() {
+      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
+      double cv = 0.2;
+      double rho = 0.9;
+      int capacity = 100;
+      int shortageCost = 100;
+      return new SKPMultinormal(expectedValuesPerUnit, expectedWeights, calculateCovarianceSpecialStructure(expectedWeights, cv, rho), capacity, shortageCost);
    }
 }
