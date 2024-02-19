@@ -22,13 +22,14 @@ import java.util.Arrays;
 import ilog.concert.IloException;
 
 import skp.instance.SKPMultinormal;
+import skp.sdp.DSKPMultinormal;
+import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.sim.SimulateMultinormalReceding;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.utililities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.UniformDist;
-import umontreal.ssj.probdist.UniformIntDist;
 
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
@@ -42,8 +43,9 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       
       /**
        *  Generate instances using SKPMultinormalBatch or SKPNormalBatch
+       *  
+       *  generateInstances(batchFileName);
        */
-      //generateInstances(batchFileName);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
@@ -56,24 +58,9 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
+      //solveDSKP(batchFileName); //To be implemented
    }
-   
-   @SuppressWarnings("unused")
-   private static void generateInstances(String batchFileName) {
-      int instances = 10;
-      int instanceSize = 10;
-      
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
-      Distribution expectedWeight = new UniformDist(15,70);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
-      Distribution correlationCoefficient = new UniformDist(0, 1);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
-      
-      SKPMultinormalRecedingBatch batch = new SKPMultinormalRecedingBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
-      batch.generateBatch(instances, instanceSize, batchFileName);
-   }
-   
+     
    public SKPMultinormalRecedingBatch(
          Distribution expectedValuePerUnit,
          Distribution expectedWeight,
@@ -148,6 +135,64 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    private static SKPMultinormalRecedingSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPMultinormalRecedingSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>retrieveJSONInstance(fileName, SKPMultinormalRecedingSolvedInstance[].class);
+      return solvedInstances;
+   }
+   
+   /*
+    * DSKP
+    */
+   
+   public static void solveDSKP(String fileName) {
+      SKPMultinormal[] batch = retrieveBatch(fileName);
+      
+      String fileNameSolved = "scrap/solvedMultinormalInstancesDSKP.json";
+      DSKPMultinormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
+      
+      solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
+      System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+      
+      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesDSKP.csv";
+      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+   }
+   
+   private static DSKPMultinormalSolvedInstance[] solveBatchDSKP(SKPMultinormal[] instances, String fileName) {
+      double truncationQuantile = 0.999999999999999;
+      ArrayList<DSKPMultinormalSolvedInstance>solved = new ArrayList<DSKPMultinormalSolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new DSKPMultinormal(instance, truncationQuantile).solve());
+         GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]);
+   }
+
+   private static void storeSolvedBatchToCSV(DSKPMultinormalSolvedInstance[] instances, String fileName) {
+      String header = "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String body = "";
+      
+      for(DSKPMultinormalSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights().getMean()).toArray()).replace(",", "\t")+ ", " +
+                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 s.solutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.statesExplored +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
+   
+   private static DSKPMultinormalSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
+      DSKPMultinormalSolvedInstance[] solvedInstances = GSONUtility.<DSKPMultinormalSolvedInstance[]>retrieveJSONInstance(fileName, DSKPMultinormalSolvedInstance[].class);
       return solvedInstances;
    }
 }
