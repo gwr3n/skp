@@ -51,10 +51,10 @@ public class SKPPoissonBatch extends SKPBatch {
         folder.mkdir();
       } 
       
-      String batchFileName = "scrap/poisson_instances.json";
+      String batchFileName = "batch/poisson_instances.json";
       generateInstances(batchFileName);
       
-      String OPLDataFileZipArchive = "scrap/poisson_instances_opl.zip";
+      String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
       int partitions = 10;
       int linearizationSamples = 50000;
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
@@ -97,13 +97,13 @@ public class SKPPoissonBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solved_poisson_instances_MILP.json";
+      String fileNameSolved = "batch/solved_poisson_instances_MILP.json";
       SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_poisson_instances_MILP.csv";
+      String fileNameSolvedCSV = "batch/solved_poisson_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -167,13 +167,13 @@ public class SKPPoissonBatch extends SKPBatch {
    public static void solveDSKP(String fileName) {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solved_poisson_instances_DSKP.json";
+      String fileNameSolved = "batch/solved_poisson_instances_DSKP.json";
       DSKPPoissonSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_poisson_instances_DSKP.csv";
+      String fileNameSolvedCSV = "batch/solved_poisson_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

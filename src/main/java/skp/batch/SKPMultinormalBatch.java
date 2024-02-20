@@ -51,14 +51,14 @@ public class SKPMultinormalBatch extends SKPBatch {
       
       boolean specialStructure = true;
       
-      String batchFileName = "scrap/multinormal_instances.json";
+      String batchFileName = "batch/multinormal_instances.json";
       if(specialStructure)
          generateInstancesSpecialStructure(batchFileName);
       else
          generateInstances(batchFileName);
       
       int partitions = 10;
-      String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
+      String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100000;
@@ -122,13 +122,13 @@ public class SKPMultinormalBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solved_multinormal_instances_MILP.json";
+      String fileNameSolved = "batch/solved_multinormal_instances_MILP.json";
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_MILP.csv";
+      String fileNameSolvedCSV = "batch/solved_multinormal_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

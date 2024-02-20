@@ -44,7 +44,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
         folder.mkdir();
       } 
       
-      String batchFileName = "scrap/generic_distribution_instances.json";
+      String batchFileName = "batch/generic_distribution_instances.json";
       
       SKPGenericDistribution[] instances = generateInstances(batchFileName);
       
@@ -112,13 +112,13 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns) throws IloException {
       // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
-      String fileNameSolved = "scrap/solved_generic_distribution_instances_MILP.json";
+      String fileNameSolved = "batch/solved_generic_distribution_instances_MILP.json";
       SKPGenericDistributionMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns);
       
       // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_generic_distribution_instances_MILP.csv";
+      String fileNameSolvedCSV = "batch/solved_generic_distribution_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -193,13 +193,13 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    public static void solveDSKP(SKPGenericDistribution[] batch) {
       // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
-      String fileNameSolved = "scrap/solved_generic_distribution_instances_DSKP.json";
+      String fileNameSolved = "batch/solved_generic_distribution_instances_DSKP.json";
       DSKPGenericDistributionSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       // solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<DSKPGenericDistributionSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_generic_distribution_instances_DSKP.csv";
+      String fileNameSolvedCSV = "batch/solved_generic_distribution_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

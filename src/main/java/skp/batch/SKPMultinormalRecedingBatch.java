@@ -38,7 +38,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
         folder.mkdir();
       } 
       
-      String batchFileName = "scrap/multinormal_instances.json";
+      String batchFileName = "batch/multinormal_instances.json";
       
       /**
        *  Generate instances using SKPMultinormalBatch or SKPNormalBatch
@@ -47,7 +47,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
        */
       
       int partitions = 10;
-      String OPLDataFileZipArchive = "scrap/multinormal_instances_opl.zip";
+      String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100;
@@ -77,13 +77,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solved_multinormal_instances_MILP_receding.json";
+      String fileNameSolved = "batch/solved_multinormal_instances_MILP_receding.json";
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = "batch/solved_multinormal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -144,13 +144,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveDSKP(String fileName) {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solved_multinormal_instances_DSKP.json";
+      String fileNameSolved = "batch/solved_multinormal_instances_DSKP.json";
       DSKPMultinormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_DSKP.csv";
+      String fileNameSolvedCSV = "batch/solved_multinormal_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
