@@ -33,7 +33,7 @@ import umontreal.ssj.probdist.Distribution;
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    public static void main(String args[]) {
-      File folder = new File("scrap");
+      File folder = new File("batch");
       if (!folder.exists()) {
         folder.mkdir();
       } 

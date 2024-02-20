@@ -47,7 +47,7 @@ import umontreal.ssj.randvar.RandomVariateGenInt;
 public class SKPNormalBatch extends SKPBatch {
 
    public static void main(String args[]) {
-      File folder = new File("scrap");
+      File folder = new File("batch");
       if (!folder.exists()) {
         folder.mkdir();
       } 
