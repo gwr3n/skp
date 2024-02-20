@@ -242,6 +242,8 @@ public class SimulateMultinormalReceding  extends Simulate {
       
       System.out.println("Simulation (mean): "+simSolutionMean);
       System.out.println("Simulation (std): "+simSolutionStd);
+      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
+                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
