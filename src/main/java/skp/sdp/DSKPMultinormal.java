@@ -9,8 +9,7 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -73,7 +72,7 @@ public class DSKPMultinormal{
        */
       this.immediateValueFunction = (state, action, realisedWeight) -> {
             double value = action*instance.getExpectedValuesPerUnit()[state.item]*realisedWeight;
-            double cost = (state.item == instance.getItems() - 1 ? instance.getShortageCost() : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
+            double cost = (state.item == instance.getItems() - 1 ? instance.getShortageCost() : 0)*Math.max(action*realisedWeight - state.remainingCapacity, 0);
             return value - cost;
          };
    }
@@ -166,19 +165,19 @@ public class DSKPMultinormal{
       if(state.item == 1) System.out.println(state);
       return cacheValueFunction.computeIfAbsent(state, s -> {
          double val= Arrays.stream(s.getFeasibleActions())
-                           .map(x ->             DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                             .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
-                                                             .sum())
+                           .map(x ->          DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                          .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                          .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                    ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
+                                                          .sum())
                            .max()
                            .getAsDouble();
          double bestAction = Arrays.stream(s.getFeasibleActions())
-                                .filter(x -> (   DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                             .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
-                                                             .sum()) == val)
+                                .filter(x -> (DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                          .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                          .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                    ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
+                                                          .sum()) == val)
                                 .findAny()
                                 .getAsDouble();
          cacheActions.putIfAbsent(s, bestAction);
@@ -202,41 +201,74 @@ public class DSKPMultinormal{
          NormalDist normal = new NormalDist(dist.getMu(0), Math.sqrt(dist.getSigma()[0][0]));
          return normal.cdf(value + d) - normal.cdf(value - d);
       } else {
-         NormalDist normal = new NormalDist(dist.getMu(coordinate-1), Math.sqrt(dist.getSigma()[coordinate-1][coordinate-1]));
-         MultiNormalDist marginal = getMarginalDistribution(dist, new int[] {coordinate-1,coordinate});
-         MultivariateGaussianDistribution mvgd = new MultivariateGaussianDistribution(marginal.getMean(), MatrixUtils.createRealMatrix(marginal.getCovariance()));
-         //UnivariateFunction pdf = new MarginalPDF(getMarginalDistribution(dist, new int[] {coordinate-1,coordinate}), realisedDemand);
-         //SimpsonIntegrator simpson = new SimpsonIntegrator();
-         //return simpson.integrate(100000, pdf, value - d, value + d)/(normal.cdf(realisedDemand+d)-normal.cdf(realisedDemand-d));
-         return mvgd.cdf(new double[] {realisedDemand + d, value + d}) - mvgd.cdf(new double[] {realisedDemand - d, value - d})/(normal.cdf(realisedDemand + d) - normal.cdf(realisedDemand - d));
+         double[][] conditionalCovarianceMatrix =  MatrixAlgebra.computeConditionalCovarianceMatrix(dist.getCovariance(), coordinate);
+         double[] realizationsBuffer = new double[coordinate];
+         realizationsBuffer[coordinate-1] = realisedDemand;
+         double[] shortExpWeight = MatrixAlgebra.computeConditionalExpectedDemand(dist.getMu(), realizationsBuffer, MatrixUtils.createRealMatrix(dist.getCovariance()));
+         //MultivariateGaussianDistribution mvgd = new MultivariateGaussianDistribution(shortExpWeight, MatrixUtils.createRealMatrix(conditionalCovarianceMatrix));
+         //return mvgd.cdf(new double[] {value + d}) - mvgd.cdf(new double[] {value - d});
+         NormalDist normal = new NormalDist(shortExpWeight[0], Math.sqrt(conditionalCovarianceMatrix[0][0]));
+         return normal.cdf(value + d) - normal.cdf(value - d);
       }
    }
    
-   public static MultiNormalDist getMarginalDistribution(MultiNormalDist dist, int[] coordinates) {
-      double[] mu = new double[coordinates.length];
-      for(int i = 0; i < coordinates.length; i++)
-         mu[i] = dist.getMu(coordinates[i]);
-      double[][] sigma = new double[coordinates.length][];
-      for(int i = 0; i < coordinates.length; i++) {
-         sigma[i] = new double[coordinates.length];
-         for(int j = 0; j < coordinates.length; j++)
-            sigma[i][j] = dist.getSigma()[coordinates[i]][coordinates[j]];
+private static class MatrixAlgebra {
+      
+      private static RealMatrix matrixInverse(RealMatrix m) {
+         RealMatrix pInverse = new LUDecomposition(m).getSolver().getInverse();
+         return pInverse;
       }
-      return new MultiNormalDist(mu, sigma);
-   }
-}
-
-class MarginalPDF implements UnivariateFunction{
-   MultiNormalDist dist;
-   double realisedDemand;
-   
-   public MarginalPDF(MultiNormalDist dist, double realisedDemand) {
-      this.dist = dist;
-      this.realisedDemand = realisedDemand;
-   }
-   
-   public double value(double x) {
-      return dist.density(new double[]{realisedDemand, x});
+      
+      private static RealMatrix createReducedMatrix(RealMatrix m, int period) {
+         double[][] matrix = new double[m.getRowDimension() - period][m.getColumnDimension( )- period];
+         for(int i = period; i < m.getRowDimension(); i++) {
+            for(int j = period; j < m.getColumnDimension(); j++) {
+               matrix[i-period][j-period]=m.getEntry(i, j);
+            }
+         }
+         RealMatrix n = MatrixUtils.createRealMatrix(matrix);
+         return n;  
+      }
+      
+      public static double[][] computeConditionalCovarianceMatrix(double[][] covarianceMatrix, int period) {
+         RealMatrix conditionalCovarianceMatrix = MatrixUtils.createRealMatrix(covarianceMatrix);
+         RealMatrix inverseM =  MatrixAlgebra.matrixInverse(conditionalCovarianceMatrix);
+         RealMatrix reducedInverseM = MatrixAlgebra.createReducedMatrix(inverseM, period);
+         return MatrixAlgebra.matrixInverse(reducedInverseM).getData();
+      }
+      
+      public static double[] computeConditionalExpectedDemand(double [] expDemand, double [] realizationDemand, RealMatrix m) {
+         RealMatrix d1 =null;
+         RealMatrix d2 =null;
+         RealMatrix sigma21 =null;
+         RealMatrix sigma11Inv =null;
+         RealMatrix zeta1 =null;
+         
+         int period = realizationDemand.length;
+         
+         double[][] ed1 = new double[1][];
+         ed1[0] = expDemand;
+         RealMatrix ed1Matrix = MatrixUtils.createRealMatrix(ed1); 
+         d1=ed1Matrix.getSubMatrix(0, 0, 0, period - 1).transpose(); //d1
+         
+         double[][] ed2 = new double[1][];
+         ed2[0] = expDemand;
+         RealMatrix ed2Matrix = MatrixUtils.createRealMatrix(ed2); 
+         d2=ed2Matrix.getSubMatrix(0, 0, period, expDemand.length - 1).transpose(); //d2
+         
+         sigma21 = m.getSubMatrix(period, m.getRowDimension() - 1, 0, period - 1);
+         
+         sigma11Inv = matrixInverse(m.getSubMatrix(0, period - 1, 0, period - 1));
+         
+         double[][] realisedDemand = new double[1][];
+         realisedDemand[0] = realizationDemand;
+         RealMatrix realisedDemandMatrix = MatrixUtils.createRealMatrix(realisedDemand); 
+         zeta1 = realisedDemandMatrix.transpose();
+         
+         RealMatrix results = d2.add(sigma21.multiply(sigma11Inv.multiply(zeta1.subtract(d1))));      
+         
+         return results.transpose().getRow(0);    
+      }
    }
 }
 
