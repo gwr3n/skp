@@ -41,7 +41,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       String batchFileName = "scrap/multinormal_instances.json";
       
       /**
-       *  Generate instances using SKPMultinormalBatch
+       *  Generate instances using SKPMultinormalBatch or SKPNormalBatch
        *  
        *  generateInstances(batchFileName);
        */
