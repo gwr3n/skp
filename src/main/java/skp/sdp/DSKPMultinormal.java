@@ -124,11 +124,11 @@ public class DSKPMultinormal{
       this.instance = instance;
       supportLB = IntStream.iterate(0, i -> i + 1)
                            .limit(instance.getWeights().getMu().length)
-                           .map(i -> (int)Math.round((new NormalDist(instance.getWeights().getMu(i),instance.getWeights().getSigma()[i][i])).inverseF(1-truncationQuantile)))
+                           .map(i -> (int)Math.round((new NormalDist(instance.getWeights().getMu(i),Math.sqrt(instance.getWeights().getSigma()[i][i]))).inverseF(1-truncationQuantile)))
                            .toArray();
       supportUB = IntStream.iterate(0, i -> i + 1)
                            .limit(instance.getWeights().getMu().length)
-                           .map(i -> (int)Math.round((new NormalDist(instance.getWeights().getMu(i),instance.getWeights().getSigma()[i][i])).inverseF(truncationQuantile)))
+                           .map(i -> (int)Math.round((new NormalDist(instance.getWeights().getMu(i),Math.sqrt(instance.getWeights().getSigma()[i][i]))).inverseF(truncationQuantile)))
                            .toArray();
       
       initialiseFunctionalInterfaces(instance);
@@ -189,7 +189,7 @@ public class DSKPMultinormal{
 
       SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
-      double truncationQuantile = 0.9999;
+      double truncationQuantile = 0.999;
       
       DSKPMultinormal dskp = new DSKPMultinormal(instance, truncationQuantile);
       
@@ -211,10 +211,10 @@ public class DSKPMultinormal{
    
    public static double getMarginalCDFDifference(MultiNormalDist dist, int coordinate, double realisedDemand, double value) {
       if(coordinate == 0) {
-         NormalDist normal = new NormalDist(dist.getMu(0), dist.getSigma()[0][0]);
+         NormalDist normal = new NormalDist(dist.getMu(0), Math.sqrt(dist.getSigma()[0][0]));
          return normal.cdf(value + d) - normal.cdf(value - d);
       } else {
-         NormalDist normal = new NormalDist(dist.getMu(coordinate-1), dist.getSigma()[coordinate-1][coordinate-1]);
+         NormalDist normal = new NormalDist(dist.getMu(coordinate-1), Math.sqrt(dist.getSigma()[coordinate-1][coordinate-1]));
          UnivariateFunction pdf = new MarginalPDF(getMarginalDistribution(dist, new int[] {coordinate-1,coordinate}), realisedDemand);
          SimpsonIntegrator simpson = new SimpsonIntegrator();
          return simpson.integrate(100000, pdf, value - d, value + d)/(normal.cdf(realisedDemand + d) - normal.cdf(realisedDemand - d));
