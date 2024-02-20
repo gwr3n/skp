@@ -57,7 +57,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-      //solveDSKP(batchFileName); //To be implemented
+      solveDSKP(batchFileName); //To be implemented
    }
      
    public SKPMultinormalRecedingBatch(
