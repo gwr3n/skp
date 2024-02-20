@@ -113,7 +113,7 @@ public class SKPMultinormal extends SKP {
    
    public static SKPMultinormal getTestInstanceSpecialStructure() {
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366};
-      double[] expectedWeights = {44,42,73,15,71};
+      double[] expectedWeights = {20,25,30,35,22};
       double cv = 0.2;
       double rho = 0.9;
       int capacity = 100;
