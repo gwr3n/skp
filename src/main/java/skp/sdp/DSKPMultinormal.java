@@ -162,7 +162,7 @@ public class DSKPMultinormal{
    }
    
    double f(State state){
-      if(state.item == 1) System.out.println(state);
+      //if(state.item == 1) System.out.println(state);
       return cacheValueFunction.computeIfAbsent(state, s -> {
          double val= Arrays.stream(s.getFeasibleActions())
                            .map(x ->          DoubleStream.iterate(supportLB[s.item], k -> k + 1)
