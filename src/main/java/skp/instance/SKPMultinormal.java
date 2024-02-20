@@ -113,10 +113,10 @@ public class SKPMultinormal extends SKP {
    
    public static SKPMultinormal getTestInstanceSpecialStructure() {
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366};
-      double[] expectedWeights = {25,20,25,20,15};
+      double[] expectedWeights = {44,42,73,15,71};
       double cv = 0.2;
       double rho = 0.9;
-      int capacity = 50;
+      int capacity = 100;
       int shortageCost = 100;
       return new SKPMultinormal(expectedValuesPerUnit, expectedWeights, calculateCovarianceSpecialStructure(expectedWeights, cv, rho), capacity, shortageCost);
    }
