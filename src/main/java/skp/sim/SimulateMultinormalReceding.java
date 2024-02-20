@@ -41,6 +41,7 @@ public class SimulateMultinormalReceding  extends Simulate {
    int partitions;
    
    public SimulateMultinormalReceding(SKPMultinormal instance, int partitions) {
+      super();
       this.instance = instance;
       this.partitions = partitions;
    }

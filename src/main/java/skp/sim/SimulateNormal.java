@@ -29,6 +29,7 @@ public class SimulateNormal extends Simulate {
    SKPNormal instance;
    
    public SimulateNormal(SKPNormal instance) {
+      super();
       this.instance = instance;
    }
    

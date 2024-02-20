@@ -29,6 +29,7 @@ public class SimulatePoisson extends Simulate {
    SKPPoisson instance;
    
    public SimulatePoisson(SKPPoisson instance) {
+      super();
       this.instance = instance;
    }
    

@@ -31,6 +31,7 @@ public class SimulateMultinormal extends Simulate {
    SKPMultinormal instance;
    
    public SimulateMultinormal(SKPMultinormal instance) {
+      super();
       this.instance = instance;
    }
    

@@ -15,6 +15,7 @@ public class SimulateGenericDistribution extends Simulate {
    SKPGenericDistribution instance;
    
    public SimulateGenericDistribution(SKPGenericDistribution instance) {
+      super();
       this.instance = instance;
    }
    
