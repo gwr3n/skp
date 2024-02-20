@@ -86,7 +86,7 @@ public class MultivariateGaussianDistribution {
 
        int Nmax = 10000;
        double alph = NormalDist.inverseF01(0.999);
-       double errMax = 0.0001;
+       double errMax = 0.001;
 
        double[] v = x.clone();
        sub(v, mu);
