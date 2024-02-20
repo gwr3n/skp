@@ -97,9 +97,7 @@ public class SimulateMultinormalReceding  extends Simulate {
       RealMatrix M = conditionalCovarianceMatrix;
       double[] realizationsBuffer = realizations;
       for(int k = 0; k < t; k++) {
-         RealMatrix inverseM =  MatrixAlgebra.matrixInverse(conditionalCovarianceMatrix);
-         RealMatrix reducedInverseM = MatrixAlgebra.createReducedMatrix(inverseM);
-         conditionalCovarianceMatrix =  MatrixAlgebra.matrixInverse(reducedInverseM);
+         conditionalCovarianceMatrix =  MatrixAlgebra.computeConditionalCovarianceMatrix(conditionalCovarianceMatrix);
          shortExpWeight = MatrixAlgebra.computeConditionalExpectedDemand(shortExpWeight, realizationsBuffer, M).getRow(0);
          double[][] realizationMatrix = new double[1][];
          realizationMatrix[0] = realizationsBuffer;
@@ -268,7 +266,13 @@ public class SimulateMultinormalReceding  extends Simulate {
          return n;  
       }
       
-      private static RealMatrix computeConditionalExpectedDemand(double [] expDemand, double [] realizationDemand, RealMatrix m) {
+      public static RealMatrix computeConditionalCovarianceMatrix(RealMatrix conditionalCovarianceMatrix) {
+         RealMatrix inverseM =  MatrixAlgebra.matrixInverse(conditionalCovarianceMatrix);
+         RealMatrix reducedInverseM = MatrixAlgebra.createReducedMatrix(inverseM);
+         return MatrixAlgebra.matrixInverse(reducedInverseM);
+      }
+      
+      public static RealMatrix computeConditionalExpectedDemand(double [] expDemand, double [] realizationDemand, RealMatrix m) {
          RealMatrix d1 =null;
          RealMatrix d2 =null;
          RealMatrix sigma21 =null;
