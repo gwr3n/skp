@@ -1,11 +1,11 @@
 /**
  * To run from Mac OS
  * 
- * -Djava.library.path=/Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * Environment variable
  * 
- * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * @author Roberto Rossi
  *
@@ -77,13 +77,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedMultinormalInstancesMILPReceding.json";
+      String fileNameSolved = "scrap/solved_multinormal_instances_MILP_receding.json";
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILPReceding.csv";
+      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -144,13 +144,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveDSKP(String fileName) {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedMultinormalInstancesDSKP.json";
+      String fileNameSolved = "scrap/solved_multinormal_instances_DSKP.json";
       DSKPMultinormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesDSKP.csv";
+      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

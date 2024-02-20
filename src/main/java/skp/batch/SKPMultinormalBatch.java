@@ -1,11 +1,11 @@
 /**
  * To run from Mac OS
  * 
- * -Djava.library.path=/Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * Environment variable
  * 
- * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * @author Roberto Rossi
  *
@@ -122,13 +122,13 @@ public class SKPMultinormalBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedMultinormalInstancesMILP.json";
+      String fileNameSolved = "scrap/solved_multinormal_instances_MILP.json";
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedMultinormalInstancesMILP.csv";
+      String fileNameSolvedCSV = "scrap/solved_multinormal_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

@@ -1,11 +1,11 @@
 /**
  * To run from Mac OS
  * 
- * -Djava.library.path=/Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * Environment variable
  * 
- * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio128/opl/bin/x86-64_osx/
+ * DYLD_LIBRARY_PATH /Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
  * 
  * @author Roberto Rossi
  *
@@ -117,13 +117,13 @@ public class SKPNormalBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPNormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedNormalInstancesMILP.json";
+      String fileNameSolved = "scrap/solved_normal_instances_MILP.json";
       SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedNormalInstancesMILP.csv";
+      String fileNameSolvedCSV = "scrap/solved_normal_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -188,13 +188,13 @@ public class SKPNormalBatch extends SKPBatch {
    public static void solveDSKP(String fileName) {
       SKPNormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "scrap/solvedNormalInstancesDSKP.json";
+      String fileNameSolved = "scrap/solved_normal_instances_DSKP.json";
       DSKPNormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPNormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "scrap/solvedNormalInstancesDSKP.csv";
+      String fileNameSolvedCSV = "scrap/solved_normal_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
