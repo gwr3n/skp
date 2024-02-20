@@ -224,10 +224,10 @@ public class SimulateMultinormalReceding  extends Simulate {
    
    public static void main(String args[]) {
 
-      SKPMultinormal instance = SKPMultinormal.getTestInstance();
+      SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
       int partitions = 10;
-      int simulationRuns = 20;
+      int simulationRuns = 100;
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
       

@@ -1,4 +1,4 @@
-package skp.utililities.hash;
+package skp.utilities.hash;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

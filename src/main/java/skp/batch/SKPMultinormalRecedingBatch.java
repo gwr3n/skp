@@ -26,8 +26,7 @@ import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.sim.SimulateMultinormalReceding;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
-import skp.utililities.gson.GSONUtility;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 

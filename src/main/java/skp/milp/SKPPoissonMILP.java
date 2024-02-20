@@ -14,7 +14,7 @@ import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sim.SimulatePoisson;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 
 /**
  * To run from Mac OS

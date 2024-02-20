@@ -10,7 +10,7 @@ import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 
 public class DSKPPoisson extends DSKP{
    

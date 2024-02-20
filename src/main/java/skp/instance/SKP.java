@@ -1,6 +1,6 @@
 package skp.instance;
 
-import skp.utililities.hash.SHA;
+import skp.utilities.hash.SHA;
 
 public abstract class SKP {
 

@@ -2,7 +2,7 @@ package skp.instance;
 
 import java.util.Arrays;
 
-import skp.utililities.hash.SHA;
+import skp.utilities.hash.SHA;
 
 public class KP {
    String instanceID;

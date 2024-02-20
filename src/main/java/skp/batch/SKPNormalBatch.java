@@ -36,7 +36,7 @@ import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.sdp.DSKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;

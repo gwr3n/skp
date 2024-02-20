@@ -11,7 +11,7 @@ import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPNormal;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.sim.SimulateNormal;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 
 /**
  * To run from Mac OS

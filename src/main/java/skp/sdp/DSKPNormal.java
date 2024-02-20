@@ -10,7 +10,7 @@ import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 
 public class DSKPNormal extends DSKP{
    

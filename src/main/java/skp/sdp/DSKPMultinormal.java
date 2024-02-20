@@ -18,7 +18,7 @@ import gnu.trove.map.hash.THashMap;
 import skp.instance.SKP;
 import skp.instance.SKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
@@ -159,6 +159,7 @@ public class DSKPMultinormal{
    }
    
    double f(State state){
+      if(state.item == 1) System.out.println(state);
       return cacheValueFunction.computeIfAbsent(state, s -> {
          double val= Arrays.stream(s.getFeasibleActions())
                            .map(x -> (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < instance.getItems() - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
@@ -188,7 +189,7 @@ public class DSKPMultinormal{
 
       SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
-      double truncationQuantile = 0.99;
+      double truncationQuantile = 0.9999;
       
       DSKPMultinormal dskp = new DSKPMultinormal(instance, truncationQuantile);
       
@@ -213,9 +214,10 @@ public class DSKPMultinormal{
          NormalDist normal = new NormalDist(dist.getMu(0), dist.getSigma()[0][0]);
          return normal.cdf(value + d) - normal.cdf(value - d);
       } else {
+         NormalDist normal = new NormalDist(dist.getMu(coordinate-1), dist.getSigma()[coordinate-1][coordinate-1]);
          UnivariateFunction pdf = new MarginalPDF(getMarginalDistribution(dist, new int[] {coordinate-1,coordinate}), realisedDemand);
          SimpsonIntegrator simpson = new SimpsonIntegrator();
-         return simpson.integrate(100000, pdf, value - d, value + d);
+         return simpson.integrate(100000, pdf, value - d, value + d)/(normal.cdf(realisedDemand + d) - normal.cdf(realisedDemand - d));
       }
    }
    
@@ -235,17 +237,15 @@ public class DSKPMultinormal{
 
 class MarginalPDF implements UnivariateFunction{
    MultiNormalDist dist;
-   MultiNormalDist denominator;
    double realisedDemand;
    
    public MarginalPDF(MultiNormalDist dist, double realisedDemand) {
       this.dist = dist;
-      this.denominator = new MultiNormalDist(new double[] {dist.getMu(0)}, new double[][] {{dist.getSigma()[0][0]}});
       this.realisedDemand = realisedDemand;
    }
    
    public double value(double x) {
-      return dist.density(new double[]{realisedDemand, x})/denominator.density(new double[]{realisedDemand});
+      return dist.density(new double[]{realisedDemand, x});
    }
 }
 

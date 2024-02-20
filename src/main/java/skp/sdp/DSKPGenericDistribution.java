@@ -10,7 +10,7 @@ import com.sun.management.OperatingSystemMXBean;
 
 import skp.instance.SKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 
 public class DSKPGenericDistribution extends DSKP{
    SKPGenericDistribution instance;

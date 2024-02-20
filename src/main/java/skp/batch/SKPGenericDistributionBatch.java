@@ -27,8 +27,7 @@ import skp.milp.SKPGenericDistributionMILP;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
-import skp.utililities.gson.GSONUtility;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;

@@ -33,7 +33,7 @@ import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;

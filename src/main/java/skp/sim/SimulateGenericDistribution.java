@@ -6,8 +6,7 @@ import java.util.stream.IntStream;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.SKPGenericDistributionMILP;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
-import skp.utililities.gson.GSONUtility;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.randvar.UniformGen;
 

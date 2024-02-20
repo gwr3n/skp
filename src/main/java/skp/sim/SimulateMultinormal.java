@@ -21,8 +21,7 @@ import ilog.concert.IloException;
 import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
-import skp.utililities.gson.GSONUtility;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;

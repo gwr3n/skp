@@ -20,7 +20,7 @@ import ilog.concert.IloException;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
-import skp.utililities.gson.GSONUtility;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
 

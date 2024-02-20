@@ -12,8 +12,7 @@ import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
-import skp.utililities.gson.GSONUtility;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
 
 public class SKPGenericDistributionMILP { 
