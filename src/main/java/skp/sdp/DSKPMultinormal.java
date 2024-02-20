@@ -11,14 +11,18 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import com.sun.management.OperatingSystemMXBean;
 
 import gnu.trove.map.hash.THashMap;
+
 import skp.instance.SKP;
 import skp.instance.SKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+import skp.utilities.probability.MultivariateGaussianDistribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
@@ -34,11 +38,11 @@ public class DSKPMultinormal{
    Function<State, double[]> actionGenerator;
    
    @FunctionalInterface
-   interface StateTransitionFunction <S, A> { 
-      public S apply (S s, A a);
+   interface StateTransitionFunction <S, M, A> { 
+      public S apply (S s, M m, A a);
    }
    
-   public StateTransitionFunction<State, Double> stateTransition;
+   public StateTransitionFunction<State, Double, Double> stateTransition;
    
    @FunctionalInterface
    interface ImmediateValueFunction <S, A, R, V> { 
@@ -61,8 +65,8 @@ public class DSKPMultinormal{
        * State transition function; given a state, an action and a random outcome, the function
        * returns the future state
        */
-      this.stateTransition = (state, realisedWeight) -> 
-         this.new State(state.item + 1, realisedWeight, state.remainingCapacity - realisedWeight);
+      this.stateTransition = (state, previousItemWeight, realisedWeight) -> 
+         this.new State(state.item + 1, previousItemWeight, state.remainingCapacity - realisedWeight);
       
       /**
        * Immediate value function for a given state
@@ -162,21 +166,18 @@ public class DSKPMultinormal{
       if(state.item == 1) System.out.println(state);
       return cacheValueFunction.computeIfAbsent(state, s -> {
          double val= Arrays.stream(s.getFeasibleActions())
-                           .map(x -> (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < instance.getItems() - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
-                                                DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                                            .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                            .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                      ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
-                                                            .sum())
+                           .map(x ->             DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                             .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
+                                                                       ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
+                                                             .sum())
                            .max()
                            .getAsDouble();
          double bestAction = Arrays.stream(s.getFeasibleActions())
-                                .filter(x -> (
-                                      (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < instance.getItems() - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
-                                                 DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                .filter(x -> (   DoubleStream.iterate(supportLB[s.item], k -> k + 1)
                                                              .limit(supportUB[s.item]-supportLB[s.item]+1)
                                                              .map(w -> getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                                       ((s.item < instance.getItems() - 1) ? getMarginalCDFDifference(instance.getWeights(), s.item, s.previousItemWeight, w)*f(stateTransition.apply(s, w, x == 0 ? 0 : w)) : 0))
                                                              .sum()) == val)
                                 .findAny()
                                 .getAsDouble();
@@ -189,25 +190,12 @@ public class DSKPMultinormal{
 
       SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
-      double truncationQuantile = 0.999;
+      double truncationQuantile = 0.9999;
       
       DSKPMultinormal dskp = new DSKPMultinormal(instance, truncationQuantile);
       
       System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance>printInstanceAsJSON(dskp.solve()));
    }
-   
-   /*public static void main(String args[]) {
-      SimpsonIntegrator simpson = new SimpsonIntegrator();
-      double[] mu = {20, 30};
-      double[][] sigma = {{16., 21.6}, {21.6, 36.}};
-      MultiNormalDist dist = new MultiNormalDist(mu, sigma);
-
-      UnivariateFunction uf = new MarginalCDF(dist, 20);
-
-      double j = simpson.integrate(10000, uf, 30, 31);
-      System.out.println("Trapezoid integral : " + j);
-      System.out.println("Density : " + dist.density(new double[] {20,30}));
-   }*/
    
    public static double getMarginalCDFDifference(MultiNormalDist dist, int coordinate, double realisedDemand, double value) {
       if(coordinate == 0) {
@@ -215,9 +203,12 @@ public class DSKPMultinormal{
          return normal.cdf(value + d) - normal.cdf(value - d);
       } else {
          NormalDist normal = new NormalDist(dist.getMu(coordinate-1), Math.sqrt(dist.getSigma()[coordinate-1][coordinate-1]));
-         UnivariateFunction pdf = new MarginalPDF(getMarginalDistribution(dist, new int[] {coordinate-1,coordinate}), realisedDemand);
-         SimpsonIntegrator simpson = new SimpsonIntegrator();
-         return simpson.integrate(100000, pdf, value - d, value + d)/(normal.cdf(realisedDemand + d) - normal.cdf(realisedDemand - d));
+         MultiNormalDist marginal = getMarginalDistribution(dist, new int[] {coordinate-1,coordinate});
+         MultivariateGaussianDistribution mvgd = new MultivariateGaussianDistribution(marginal.getMean(), MatrixUtils.createRealMatrix(marginal.getCovariance()));
+         //UnivariateFunction pdf = new MarginalPDF(getMarginalDistribution(dist, new int[] {coordinate-1,coordinate}), realisedDemand);
+         //SimpsonIntegrator simpson = new SimpsonIntegrator();
+         //return simpson.integrate(100000, pdf, value - d, value + d)/(normal.cdf(realisedDemand+d)-normal.cdf(realisedDemand-d));
+         return mvgd.cdf(new double[] {realisedDemand + d, value + d}) - mvgd.cdf(new double[] {realisedDemand - d, value - d})/(normal.cdf(realisedDemand + d) - normal.cdf(realisedDemand - d));
       }
    }
    
