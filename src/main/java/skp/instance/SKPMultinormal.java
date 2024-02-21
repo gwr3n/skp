@@ -49,8 +49,10 @@ public class SKPMultinormal extends SKP {
    }
    
    /**
-    * Compute covariance according to the special structure \rho^{|j-i|}\sigma_i\sigma_j
-    * See https://doi.org/10.1016/j.ejor.2022.04.011
+    * Compute covariance according to the special structure $\rho^{|j-i|}\sigma_i\sigma_j$
+    * which ensures P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)
+    * 
+    * see https://doi.org/10.1016/j.ejor.2022.04.011
     */
    public static double[][] calculateCovarianceSpecialStructure(double [] means, double cv, double rho){
       double[] stdDemand = new double [means.length];
@@ -111,6 +113,11 @@ public class SKPMultinormal extends SKP {
       return new SKPMultinormal(expectedValuesPerUnit, expectedWeights, cv, rho, capacity, shortageCost);
    }
    
+   /**
+    * Generate a test instance according to the special structure $\rho^{|j-i|}\sigma_i\sigma_j$
+    * 
+    * see https://doi.org/10.1016/j.ejor.2022.04.011
+    */
    public static SKPMultinormal getTestInstanceSpecialStructure() {
       double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366};
       double[] expectedWeights = {44,42,73,15,71};
