@@ -1,6 +1,7 @@
 /target/
 /bin/
 /scrap/
+/batch/
 
 .DS_Store
 .settings/
