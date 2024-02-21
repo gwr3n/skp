@@ -57,6 +57,14 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
+      /*
+       * Note that this will only work if an instance covariance matrix takes the special structure 
+       * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.
+       *
+       * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
+       * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
+       * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
+       */
       solveDSKP(batchFileName); 
    }
      

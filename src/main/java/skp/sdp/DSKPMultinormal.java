@@ -126,10 +126,10 @@ public class DSKPMultinormal{
    /**
     * Computes the optimal solution to the SKPMultinormal <code>instance</code> using Stochastic Dynamic Programming.<br>
     * <br>
-    * Note that the weight covariance matrix of <code>instance</code> must be generated according to the special 
-    * structure $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.<br>
+    * The weight covariance matrix of <code>instance</code> must be generated according to the special structure 
+    * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.<br>
     * <br>
-    * [1]M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
+    * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
     * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>,
     * " European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023
     * 
