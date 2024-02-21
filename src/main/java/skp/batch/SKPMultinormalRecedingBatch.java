@@ -50,9 +50,12 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
+      boolean solveMILP = true;
+      boolean solveSDP = true;
+      
       int simulationRuns = 100;
       try {
-         solveMILP(batchFileName, partitions, simulationRuns);
+         if(solveMILP) solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
@@ -65,7 +68,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
        * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
        * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
        */
-      solveDSKP(batchFileName); 
+      if(solveSDP) solveDSKP(batchFileName); 
    }
      
    public SKPMultinormalRecedingBatch(
