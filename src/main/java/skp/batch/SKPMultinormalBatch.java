@@ -90,11 +90,11 @@ public class SKPMultinormalBatch extends SKPBatch {
       int instanceSize = 10;
       
       Distribution expectedValuePerUnit = new UniformDist(0.1,10);
-      Distribution expectedWeight = new UniformDist(15,70);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+      Distribution expectedWeight = new UniformDist(5,10);
+      Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
       Distribution correlationCoefficient = new UniformDist(0, 1);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
+      DiscreteDistributionInt capacity = new UniformIntDist(25,50);
+      Distribution shortageCost = new UniformDist(20,50);
       
       SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
       batch.generateBatchSpecialStructure(instances, instanceSize, batchFileName);
