@@ -21,7 +21,7 @@ import skp.instance.SKP;
 import skp.instance.SKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
-import skp.utilities.probability.MultivariateGaussianDistribution;
+
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
