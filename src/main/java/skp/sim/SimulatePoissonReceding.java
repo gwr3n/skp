@@ -22,7 +22,6 @@ import ilog.concert.IloException;
 
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.KP;
-import skp.instance.SKPMultinormal;
 import skp.instance.SKPPoisson;
 import skp.milp.KPMILP;
 import skp.milp.SKPPoissonMILP;
