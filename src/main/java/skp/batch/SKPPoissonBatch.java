@@ -56,7 +56,7 @@ public class SKPPoissonBatch extends SKPBatch {
       
       String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
       int partitions = 10;
-      int linearizationSamples = 50000;
+      int linearizationSamples = 1000;
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
       
       int simulationRuns = 100000;
@@ -273,7 +273,7 @@ public class SKPPoissonBatch extends SKPBatch {
                         "c = "+s.getShortageCost()+";\n\n"+
                         "nbpartitions = "+partitions+";\n"+
                         "prob = "+Arrays.toString(probabilityMasses)+";\n"+
-                        "means = "+Arrays.toString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(s.getCapacity(), probabilityMasses, linearizationSamples))+";\n"+
+                        "means = "+Arrays.deepToString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(s.getCapacity(), probabilityMasses, linearizationSamples))+";\n"+
                         "error = "+Arrays.toString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(s.getCapacity(), probabilityMasses, linearizationSamples))+";";
 
             ZipEntry e = new ZipEntry(s.getInstanceID()+".dat");
