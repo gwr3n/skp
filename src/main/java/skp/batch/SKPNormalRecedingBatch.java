@@ -33,7 +33,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
        */
       
       int partitions = 10;
-      String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
+      String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100;
