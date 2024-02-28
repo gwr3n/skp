@@ -12,7 +12,8 @@ import skp.instance.SKPGenericDistribution;
 import skp.milp.KPMILP;
 import skp.milp.SKPGenericDistributionMILP;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
-
+import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.randvar.UniformGen;
 
@@ -189,22 +190,6 @@ public class SimulateGenericDistributionReceding extends Simulate {
       int simulationRuns = 100;
       
       SimulateGenericDistributionReceding sim = new SimulateGenericDistributionReceding(instance);
-      
-      double[] realisations = sim.simulate(simulationRuns, linearisationSamples);
-      Mean m = new Mean();
-      double simSolutionMean = m.evaluate(realisations);
-      StandardDeviation std = new StandardDeviation();
-      double simSolutionStd = std.evaluate(realisations);
-      double simEVwPI = sim.simulateEVwPI(simulationRuns);
-      double EVP = sim.computeEVP();
-      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
-      
-      System.out.println("Simulation (mean): "+simSolutionMean);
-      System.out.println("Simulation (std): "+simSolutionStd);
-      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
-                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
-      System.out.println("EVwPI: "+simEVwPI);
-      System.out.println("EVP: "+EVP);
-      System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
+      System.out.println(GSONUtility.<SKPGenericDistributionRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns, linearisationSamples)));
    }
 }

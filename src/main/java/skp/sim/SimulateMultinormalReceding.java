@@ -29,7 +29,8 @@ import skp.instance.SKPMultinormal;
 import skp.milp.KPMILP;
 import skp.milp.SKPMultinormalMILP;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
-
+import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
@@ -229,23 +230,7 @@ public class SimulateMultinormalReceding extends Simulate {
       int simulationRuns = 100;
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
-      
-      double[] realisations = sim.simulate(simulationRuns, partitions);
-      Mean m = new Mean();
-      double simSolutionMean = m.evaluate(realisations);
-      StandardDeviation std = new StandardDeviation();
-      double simSolutionStd = std.evaluate(realisations);
-      double simEVwPI = sim.simulateEVwPI(simulationRuns);
-      double EVP = sim.computeEVP();
-      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
-      
-      System.out.println("Simulation (mean): "+simSolutionMean);
-      System.out.println("Simulation (std): "+simSolutionStd);
-      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
-                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
-      System.out.println("EVwPI: "+simEVwPI);
-      System.out.println("EVP: "+EVP);
-      System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
+      System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns)));
    }
    
    private static class MatrixAlgebra {

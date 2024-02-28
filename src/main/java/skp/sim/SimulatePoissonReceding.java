@@ -24,8 +24,9 @@ import skp.instance.KP;
 import skp.instance.SKPPoisson;
 import skp.milp.KPMILP;
 import skp.milp.SKPPoissonMILP;
+import skp.sim.instance.SKPNormalRecedingSolvedInstance;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
-
+import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.randvar.UniformGen;
 
 
@@ -205,26 +206,10 @@ public class SimulatePoissonReceding extends Simulate {
       SKPPoisson instance = SKPPoisson.getTestInstance();
       
       int partitions = 10;
-      int linearisationSamples = 1000;
       int simulationRuns = 100;
+      int linearisationSamples = 1000;
       
       SimulatePoissonReceding sim = new SimulatePoissonReceding(instance, partitions);
-      
-      double[] realisations = sim.simulate(simulationRuns, partitions, linearisationSamples);
-      Mean m = new Mean();
-      double simSolutionMean = m.evaluate(realisations);
-      StandardDeviation std = new StandardDeviation();
-      double simSolutionStd = std.evaluate(realisations);
-      double simEVwPI = sim.simulateEVwPI(simulationRuns);
-      double EVP = sim.computeEVP();
-      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
-      
-      System.out.println("Simulation (mean): "+simSolutionMean);
-      System.out.println("Simulation (std): "+simSolutionStd);
-      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
-                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
-      System.out.println("EVwPI: "+simEVwPI);
-      System.out.println("EVP: "+EVP);
-      System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
+      System.out.println(GSONUtility.<SKPPoissonRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns, linearisationSamples)));
    }
 }
