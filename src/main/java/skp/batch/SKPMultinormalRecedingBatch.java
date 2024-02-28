@@ -22,11 +22,10 @@ import java.util.Arrays;
 import ilog.concert.IloException;
 
 import skp.instance.SKPMultinormal;
-import skp.sdp.DSKPMultinormal;
-import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.sim.SimulateMultinormalReceding;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 
@@ -50,25 +49,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
-      boolean solveMILP = true;
-      boolean solveSDP = true;
-      
       int simulationRuns = 100;
       try {
-         if(solveMILP) solveMILP(batchFileName, partitions, simulationRuns);
+         solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
-      }
-      /*
-       * Note that this will only work if an instance covariance matrix takes the special structure 
-       * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.
-       *
-       * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
-       * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
-       * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
-       */
-      if(solveSDP) solveDSKP(batchFileName); 
+      } 
    }
      
    public SKPMultinormalRecedingBatch(
@@ -145,64 +132,6 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    private static SKPMultinormalRecedingSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPMultinormalRecedingSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>retrieveJSONInstance(fileName, SKPMultinormalRecedingSolvedInstance[].class);
-      return solvedInstances;
-   }
-   
-   /*
-    * DSKP
-    */
-   
-   public static void solveDSKP(String fileName) {
-      SKPMultinormal[] batch = retrieveBatch(fileName);
-      
-      String fileNameSolved = "batch/solved_multinormal_instances_DSKP.json";
-      DSKPMultinormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
-      
-      solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
-      System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-      
-      String fileNameSolvedCSV = "batch/solved_multinormal_instances_DSKP.csv";
-      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-   }
-   
-   private static DSKPMultinormalSolvedInstance[] solveBatchDSKP(SKPMultinormal[] instances, String fileName) {
-      double truncationQuantile = 0.999999999999999;
-      ArrayList<DSKPMultinormalSolvedInstance>solved = new ArrayList<DSKPMultinormalSolvedInstance>();
-      for(SKPMultinormal instance : instances) {
-         solved.add(new DSKPMultinormal(instance, truncationQuantile).solve());
-         GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]);
-   }
-
-   private static void storeSolvedBatchToCSV(DSKPMultinormalSolvedInstance[] instances, String fileName) {
-      String header = "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
-      String body = "";
-      
-      for(DSKPMultinormalSolvedInstance s : instances) {
-         body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
-                 Arrays.toString(Arrays.stream(s.instance.getWeights().getMean()).toArray()).replace(",", "\t")+ ", " +
-                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
-                 s.instance.getCapacity()+ ", " +
-                 s.instance.getShortageCost()+ ", " +
-                 s.solutionValue + ", " +
-                 s.solutionTimeMs + ", " +
-                 s.statesExplored +"\n";
-      }
-      PrintWriter pw;
-      try {
-         pw = new PrintWriter(new File(fileName));
-         pw.print(header+body);
-         pw.close();
-      } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-   
-   private static DSKPMultinormalSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
-      DSKPMultinormalSolvedInstance[] solvedInstances = GSONUtility.<DSKPMultinormalSolvedInstance[]>retrieveJSONInstance(fileName, DSKPMultinormalSolvedInstance[].class);
       return solvedInstances;
    }
 }
