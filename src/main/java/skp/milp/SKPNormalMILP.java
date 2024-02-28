@@ -46,6 +46,10 @@ public class SKPNormalMILP extends SKPMILP{
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
    }
    
+   public void solve() throws IloException {
+      this.solveMILP(model, instance);
+   }
+   
    public SKPNormalMILPSolvedInstance solve(int simulationRuns) throws IloException {
       this.solveMILP(model, instance);
       
