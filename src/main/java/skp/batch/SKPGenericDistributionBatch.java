@@ -59,7 +59,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       solveDSKP(instances);
    }
 
-   private static SKPGenericDistribution[] generateInstances(String batchFileName) {
+   protected static SKPGenericDistribution[] generateInstances(String batchFileName) {
       int instances = 10;
       int instanceSize = 10;
       
@@ -95,7 +95,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }
    
-   protected SKPGenericDistribution[] generateInstances(int numberOfInstances, int instanceSize){
+   private SKPGenericDistribution[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPGenericDistribution[] instances = IntStream.iterate(0, i -> i + 1)
