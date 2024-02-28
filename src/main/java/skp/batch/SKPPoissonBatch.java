@@ -245,7 +245,7 @@ public class SKPPoissonBatch extends SKPBatch {
       return instances;
    }   
    
-   private static void storeBatchAsOPLDataFiles(SKPPoisson[] instances, String OPLDataFileZipArchive, int partitions, int linearizationSamples) {
+   protected static void storeBatchAsOPLDataFiles(SKPPoisson[] instances, String OPLDataFileZipArchive, int partitions, int linearizationSamples) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
       String strDate = dateFormat.format(date);
