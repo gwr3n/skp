@@ -96,8 +96,7 @@ public class SimulatePoissonReceding extends Simulate {
       int[] knapsack = null;
       try {
          milp = new SKPPoissonMILP(reducedInstance, partitions, linearisationSamples);
-         int simulationRuns = 0; // we do not need to simulate the knapsack value;
-         milp.solve(simulationRuns);
+         milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
          System.out.print(".");
