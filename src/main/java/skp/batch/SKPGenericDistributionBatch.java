@@ -110,7 +110,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns) throws IloException {
-      // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+      // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
       String fileNameSolved = "batch/solved_generic_distribution_instances_MILP.json";
       SKPGenericDistributionMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns);
