@@ -74,7 +74,14 @@ public class SKPNormalBatch extends SKPBatch {
    
    enum INSTANCE_TYPE {
       NORMAL,
-      MULTINORMAL
+      MULTINORMAL,
+      P05_UNCORRELATED,
+      P05_WEEKLY_CORRELATED,
+      P05_STRONGLY_CORRELATED,
+      P05_INVERSE_STRONGLY_CORRELATED,
+      P05_ALMOST_STRONGLY_CORRELATED,
+      P05_SUBSET_SUM,
+      P05_UNCORRELATED_SIMILAR_WEIGHTS
    };
    
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
