@@ -12,7 +12,6 @@ import skp.instance.KP;
 import skp.instance.SKPNormal;
 import skp.milp.KPMILP;
 import skp.milp.SKPNormalMILP;
-import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.sim.instance.SKPNormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.randvar.UniformGen;
