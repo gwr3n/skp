@@ -28,10 +28,10 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
       
       SKPGenericDistribution[] instances = generateInstances(batchFileName);
       
-      int linearizationSamples = 100000;
-      int simulationRuns = 100000; 
+      int linearizationSamples = 10000;
+      int simulationRuns = 100; 
       try {
-         solveMILP(instances, linearizationSamples, simulationRuns);
+         solveMILP(instances, simulationRuns, linearizationSamples);
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
@@ -51,7 +51,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
     * MILP receding
     */ 
    
-   public static void solveMILP(SKPGenericDistribution[] batch, int partitions, int simulationRuns, int linearizationSamples) throws IloException {
+   public static void solveMILP(SKPGenericDistribution[] batch, int simulationRuns, int linearizationSamples) throws IloException {
       // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
       String fileNameSolved = "batch/solved_generic_distribution_instances_MILP_receding.json";
