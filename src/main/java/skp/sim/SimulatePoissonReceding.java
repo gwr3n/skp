@@ -121,8 +121,8 @@ public class SimulatePoissonReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int nbSamples, int partitions, int linearisationSamples) {
-      double[][] sampleMatrix = sampleWeights(nbSamples);
+   double[] simulate(int simulationRuns, int partitions, int linearisationSamples) {
+      double[][] sampleMatrix = sampleWeights(simulationRuns);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
                                       .mapToDouble(r -> simulateOneRun(r, partitions, linearisationSamples))

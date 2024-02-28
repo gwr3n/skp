@@ -139,8 +139,8 @@ public class SimulateMultinormalReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int nbSamples, int partitions) {
-      double[][] sampleMatrix = sampleWeights(nbSamples);
+   double[] simulate(int simulationRuns, int partitions) {
+      double[][] sampleMatrix = sampleWeights(simulationRuns);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
                                       .mapToDouble(r -> simulateOneRun(r, partitions))
