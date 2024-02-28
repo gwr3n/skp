@@ -34,9 +34,6 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       
       int partitions = 10;
       int linearizationSamples = 1000;
-      String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
-      
       int simulationRuns = 100;
       try {
          solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples);

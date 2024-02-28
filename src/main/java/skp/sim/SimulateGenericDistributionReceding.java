@@ -12,8 +12,8 @@ import skp.instance.SKPGenericDistribution;
 import skp.milp.KPMILP;
 import skp.milp.SKPGenericDistributionMILP;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
-import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.randvar.UniformGen;
 

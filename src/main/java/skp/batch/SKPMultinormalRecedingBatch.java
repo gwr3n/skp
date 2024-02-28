@@ -40,15 +40,12 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       String batchFileName = "batch/multinormal_instances.json";
       
       /**
-       *  Generate instances using SKPMultinormalBatch or SKPNormalBatch
+       *  Generate instances using SKPMultinormalBatch
        *  
        *  generateInstances(batchFileName);
        */
       
       int partitions = 10;
-      String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
-      
       int simulationRuns = 100;
       try {
          solveMILP(batchFileName, partitions, simulationRuns);
