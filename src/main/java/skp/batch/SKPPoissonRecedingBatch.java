@@ -10,7 +10,6 @@ import ilog.concert.IloException;
 
 import skp.instance.SKPPoisson;
 import skp.sim.SimulatePoissonReceding;
-import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
