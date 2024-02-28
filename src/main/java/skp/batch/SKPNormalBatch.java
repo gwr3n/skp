@@ -53,10 +53,7 @@ public class SKPNormalBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/normal_instances.json";
-      String multinormalBatchFileName = "batch/multinormal_instances.json";
-      
       generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
-      generateInstances(multinormalBatchFileName, INSTANCE_TYPE.MULTINORMAL);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
@@ -75,33 +72,75 @@ public class SKPNormalBatch extends SKPBatch {
    enum INSTANCE_TYPE {
       NORMAL,
       MULTINORMAL,
-      P05_UNCORRELATED,
+      P05_UNCORRELATED/*,
       P05_WEEKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
       P05_INVERSE_STRONGLY_CORRELATED,
       P05_ALMOST_STRONGLY_CORRELATED,
       P05_SUBSET_SUM,
-      P05_UNCORRELATED_SIMILAR_WEIGHTS
+      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
    };
    
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
-      int instances = 10;
-      int instanceSize = 10;
       
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
-      Distribution expectedWeight = new UniformDist(15,70);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
-      
-      SKPNormalBatch batch = new SKPNormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
       switch(type) {
-         case NORMAL:
+         case NORMAL: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+            Distribution expectedWeight = new UniformDist(15,70);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+            Distribution shortageCost = new UniformDist(50,150);
+            
+            SKPNormalBatch batch = new SKPNormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            
             batch.generateBatch(instances, instanceSize, batchFileName);
             break;
-         case MULTINORMAL:
+         }
+         case MULTINORMAL: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+            Distribution expectedWeight = new UniformDist(15,70);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+            Distribution shortageCost = new UniformDist(50,150);
+            
+            SKPNormalBatch batch = new SKPNormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            
             batch.generateMultinormalBatch(instances, instanceSize, batchFileName);
             break;
+         }
+         case P05_UNCORRELATED: {
+            int instances = 10;
+            int instanceSize = 10;
+            int R = 1000;
+            double cv = 0.1;
+            double shortageCost = 100;
+            
+            SKPNormal[] batch = new SKPNormal[instances];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < instances; i++) {
+               double[] expectedValuesPerUnit = new RandomVariateGen(randGenerator, new UniformDist(0,1)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double capacity = Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValuesPerUnit,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
       }
    }
    
@@ -255,16 +294,6 @@ public class SKPNormalBatch extends SKPBatch {
       GSONUtility.<SKPNormal[]>saveInstanceToJSON(instances, fileName);
    }
    
-   public void generateMultinormalBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = this.generateMultinormalInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   public static SKPNormal[] retrieveBatch(String fileName) {
-      SKPNormal[] instances = GSONUtility.<SKPNormal[]>retrieveJSONInstance(fileName, SKPNormal[].class);
-      return instances;
-   }
-   
    private SKPNormal[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
@@ -278,6 +307,11 @@ public class SKPNormalBatch extends SKPBatch {
                                               (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
                                         .toArray(SKPNormal[]::new);
       return instances;
+   }
+   
+   public void generateMultinormalBatch(int numberOfInstances, int instanceSize, String fileName) {
+      SKPMultinormal[] instances = this.generateMultinormalInstances(numberOfInstances, instanceSize);
+      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
    }
    
    private SKPMultinormal[] generateMultinormalInstances(int numberOfInstances, int instanceSize){
@@ -336,5 +370,10 @@ public class SKPNormalBatch extends SKPBatch {
       }catch(IOException e) {
          e.printStackTrace();
       }
+   }
+   
+   public static SKPNormal[] retrieveBatch(String fileName) {
+      SKPNormal[] instances = GSONUtility.<SKPNormal[]>retrieveJSONInstance(fileName, SKPNormal[].class);
+      return instances;
    }
 }
