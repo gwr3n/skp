@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
 import ilog.opl.*;
@@ -72,106 +73,100 @@ public class SKPGenericDistributionMILP {
       return b*this.instance.getCapacity()+a;
    }
    
-   public SKPGenericDistributionMILPSolvedInstance solve(int simulationRuns) {
+   public SKPGenericDistributionMILPSolvedInstance solve(int simulationRuns) throws IloException {
       SKPGenericDistributionMILPSolvedInstance solvedInstance = null;
       boolean stop = false;
       while(lastKnapsack == null || !stop) {
-         try {
-            IloCplex cplex = new IloCplex();
+         IloCplex cplex = new IloCplex();
 
-            // Create decision variables
+         // Create decision variables
 
-            // Object selectors
-            IloNumVar[] X = cplex.numVarArray(this.instance.getItems(), 0, 1, IloNumVarType.Int);
+         // Object selectors
+         IloNumVar[] X = cplex.numVarArray(this.instance.getItems(), 0, 1, IloNumVarType.Int);
 
-            // Expected knapsack weight
-            IloNumVar M = cplex.numVar(0, Double.POSITIVE_INFINITY);
+         // Expected knapsack weight
+         IloNumVar M = cplex.numVar(0, Double.POSITIVE_INFINITY);
 
-            // Expected capacity shortage
-            IloNumVar P = cplex.numVar(0, Double.POSITIVE_INFINITY);
+         // Expected capacity shortage
+         IloNumVar P = cplex.numVar(0, Double.POSITIVE_INFINITY);
 
-            // Create constraints
+         // Create constraints
 
-            // Expected knapsack weight
-            cplex.addEq(cplex.scalProd(Arrays.stream(this.instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), X), M);
+         // Expected knapsack weight
+         cplex.addEq(cplex.scalProd(Arrays.stream(this.instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), X), M);
 
-            // Expected capacity shortage (loss): P >= - (C-M)
-            //                                    P-M >= -C
-            cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
+         // Expected capacity shortage (loss): P >= - (C-M)
+         //                                    P-M >= -C
+         cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
 
-            //Cuts
-            for(int i = 0; i < this.cutList.size(); i++) {
-               Cut cut = this.cutList.get(i);
-               // if all objects in the knapsack are selected, then P should be greater or equal than cut RHS
-               cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
+         //Cuts
+         for(int i = 0; i < this.cutList.size(); i++) {
+            Cut cut = this.cutList.get(i);
+            // if all objects in the knapsack are selected, then P should be greater or equal than cut RHS
+            cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
+         }
+
+         // The objective is to maximize the profit minus the expected capacity shortage
+         cplex.addMaximize(cplex.sum(
+               cplex.scalProd(this.instance.getExpectedValues(), X),
+               cplex.prod(-instance.getShortageCost(), P))
+               );
+
+         cplex.setParam(IloCplex.Param.MIP.Strategy.Search,
+               IloCplex.MIPSearch.Traditional);
+
+         double start = cplex.getCplexImpl().getCplexTime();
+         boolean status =  cplex.solve();
+         double end = cplex.getCplexImpl().getCplexTime();
+         if ( status ) {   
+            this.milpSolutionValue = cplex.getObjValue();
+            this.milpOptimalityGap = cplex.getMIPRelativeGap();
+            this.cplexSolutionTimeMs += (end - start)*1000;
+            this.simplexIterations += cplex.getNiterations();
+            this.exploredNodes += cplex.getNnodes();
+
+            this.optimalKnapsack = new int[instance.getItems()];
+            for(int i = 0; i < instance.getItems(); i++){
+               this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(X[i]));
+            }
+            System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
+            System.out.println("M: "+cplex.getValue(M));
+            System.out.println("P: "+cplex.getValue(P));
+
+            this.milpMaxLinearizationError = 0; // cuts are tight
+
+            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack)) {
+               stop = true;
+               
+               SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
+               double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
+               double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
+
+               solvedInstance = new SKPGenericDistributionMILPSolvedInstance(
+                     instance,
+                     this.getOptimalKnapsack(),
+                     simulatedSolutionValue,
+                     simulationRuns,
+                     this.getMILPSolutionValue(),
+                     this.getMILPOptimalityGap(),
+                     this.cutList.size(),
+                     this.linearizationSamples,
+                     milpMaxLinearizationError,
+                     simulatedLinearizationError,
+                     cplexSolutionTimeMs,
+                     simplexIterations,
+                     exploredNodes
+                     );
+            } else {
+               this.lastKnapsack = this.optimalKnapsack;
+               this.cutList.add(new Cut(this.optimalKnapsack, this.computeCutRHS(this.optimalKnapsack)));
             }
 
-            // The objective is to maximize the profit minus the expected capacity shortage
-            cplex.addMaximize(cplex.sum(
-                  cplex.scalProd(this.instance.getExpectedValues(), X),
-                  cplex.prod(-instance.getShortageCost(), P))
-                  );
-
-            cplex.setParam(IloCplex.Param.MIP.Strategy.Search,
-                  IloCplex.MIPSearch.Traditional);
-
-            double start = cplex.getCplexImpl().getCplexTime();
-            boolean status =  cplex.solve();
-            double end = cplex.getCplexImpl().getCplexTime();
-            if ( status ) {   
-               this.milpSolutionValue = cplex.getObjValue();
-               this.milpOptimalityGap = cplex.getMIPRelativeGap();
-               this.cplexSolutionTimeMs += (end - start)*1000;
-               this.simplexIterations += cplex.getNiterations();
-               this.exploredNodes += cplex.getNnodes();
-
-               this.optimalKnapsack = new int[instance.getItems()];
-               for(int i = 0; i < instance.getItems(); i++){
-                  this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(X[i]));
-               }
-               System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
-               System.out.println("M: "+cplex.getValue(M));
-               System.out.println("P: "+cplex.getValue(P));
-
-               this.milpMaxLinearizationError = 0; // cuts are tight
-
-               if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack)) {
-                  stop = true;
-                  
-                  SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
-                  double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
-                  double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
-
-                  solvedInstance = new SKPGenericDistributionMILPSolvedInstance(
-                        instance,
-                        this.getOptimalKnapsack(),
-                        simulatedSolutionValue,
-                        simulationRuns,
-                        this.getMILPSolutionValue(),
-                        this.getMILPOptimalityGap(),
-                        this.cutList.size(),
-                        this.linearizationSamples,
-                        milpMaxLinearizationError,
-                        simulatedLinearizationError,
-                        cplexSolutionTimeMs,
-                        simplexIterations,
-                        exploredNodes
-                        );
-               } else {
-                  this.lastKnapsack = this.optimalKnapsack;
-                  this.cutList.add(new Cut(this.optimalKnapsack, this.computeCutRHS(this.optimalKnapsack)));
-               }
-
-            } else {
-               System.out.println("No solution!");
-            } 
-            cplex.end();
-            System.gc();
-
-         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-         }
+         } else {
+            System.out.println("No solution!");
+         } 
+         cplex.end();
+         System.gc();
       }
       return solvedInstance;
    }
