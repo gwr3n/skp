@@ -20,7 +20,6 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import ilog.concert.IloException;
 
-import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.KP;
 import skp.instance.SKPPoisson;
 import skp.milp.KPMILP;
@@ -41,11 +40,11 @@ public class SimulatePoissonReceding extends Simulate {
       this.partitions = partitions;
    }
    
-   public SKPPoissonRecedingSolvedInstance solve(int linearisationSamples, int simulationRuns) {
+   public SKPPoissonRecedingSolvedInstance solve(int simulationRuns, int linearisationSamples) {
       
       SimulatePoissonReceding sim = new SimulatePoissonReceding(instance, partitions);
       
-      double[] realisations = sim.simulate(simulationRuns, partitions, linearisationSamples, simulationRuns);
+      double[] realisations = sim.simulate(simulationRuns, partitions, linearisationSamples);
       Mean m = new Mean();
       double simSolutionMean = m.evaluate(realisations);
       StandardDeviation std = new StandardDeviation();
@@ -56,6 +55,8 @@ public class SimulatePoissonReceding extends Simulate {
       
       System.out.println("Simulation (mean): "+simSolutionMean);
       System.out.println("Simulation (std): "+simSolutionStd);
+      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
+                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
@@ -69,13 +70,13 @@ public class SimulatePoissonReceding extends Simulate {
             simEVwPI,
             EVwPI_obj_2_n,
             partitions,
-            PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples()
+            linearisationSamples
             );
       
       return solvedInstance;
    }
    
-   private int simulateOneItem(int t, double[] realizations, int remainingCapacity, int partitions, int linearisationSamples, int simulationRuns) {
+   private int simulateOneItem(int t, double[] realizations, int remainingCapacity, int partitions, int linearisationSamples) {
       double[] previousRealizations = new double[t];
       System.arraycopy(realizations, 0, previousRealizations, 0, t);
 
@@ -95,6 +96,7 @@ public class SimulatePoissonReceding extends Simulate {
       int[] knapsack = null;
       try {
          milp = new SKPPoissonMILP(reducedInstance, partitions, linearisationSamples);
+         int simulationRuns = 0; // we do not need to simulate the knapsack value;
          milp.solve(simulationRuns);
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
@@ -107,11 +109,11 @@ public class SimulatePoissonReceding extends Simulate {
       return knapsack[0];
    }
 
-   private double simulateOneRun(double[] realizations, int partitions, int linearisationSamples, int simulationRuns) {
+   private double simulateOneRun(double[] realizations, int partitions, int linearisationSamples) {
       double knapsackValue = 0;
       int remainingCapacity = instance.getCapacity();
       for(int i = 0; i < realizations.length; i++) {
-         if(simulateOneItem(i, realizations, remainingCapacity, partitions, linearisationSamples, simulationRuns) == 1) {
+         if(simulateOneItem(i, realizations, remainingCapacity, partitions, linearisationSamples) == 1) {
             remainingCapacity -= realizations[i];
             knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*realizations[i];
          }
@@ -120,11 +122,11 @@ public class SimulatePoissonReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int nbSamples, int partitions, int linearisationSamples, int simulationRuns) {
+   double[] simulate(int nbSamples, int partitions, int linearisationSamples) {
       double[][] sampleMatrix = sampleWeights(nbSamples);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
-                                      .mapToDouble(r -> simulateOneRun(r, partitions, linearisationSamples, simulationRuns))
+                                      .mapToDouble(r -> simulateOneRun(r, partitions, linearisationSamples))
                                       .peek(r -> System.out.println("Simulation run completed: "+r))
                                       .toArray();
       return knapsackValues;
@@ -205,24 +207,23 @@ public class SimulatePoissonReceding extends Simulate {
       
       int partitions = 10;
       int linearisationSamples = 1000;
-      int simulationRuns = 1000;
-      int nbSamples = 100;
+      int simulationRuns = 100;
       
       SimulatePoissonReceding sim = new SimulatePoissonReceding(instance, partitions);
       
-      double[] realisations = sim.simulate(nbSamples, partitions, linearisationSamples, simulationRuns);
+      double[] realisations = sim.simulate(simulationRuns, partitions, linearisationSamples);
       Mean m = new Mean();
       double simSolutionMean = m.evaluate(realisations);
       StandardDeviation std = new StandardDeviation();
       double simSolutionStd = std.evaluate(realisations);
-      double simEVwPI = sim.simulateEVwPI(nbSamples);
+      double simEVwPI = sim.simulateEVwPI(simulationRuns);
       double EVP = sim.computeEVP();
-      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(nbSamples);
+      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
       
       System.out.println("Simulation (mean): "+simSolutionMean);
       System.out.println("Simulation (std): "+simSolutionStd);
-      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(nbSamples))+","+
-                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(nbSamples))+"]");
+      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
+                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
