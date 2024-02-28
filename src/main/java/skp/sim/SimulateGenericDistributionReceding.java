@@ -9,7 +9,6 @@ import ilog.concert.IloException;
 
 import skp.instance.KP;
 import skp.instance.SKPGenericDistribution;
-import skp.instance.SKPPoisson;
 import skp.milp.KPMILP;
 import skp.milp.SKPGenericDistributionMILP;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
