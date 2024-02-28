@@ -67,7 +67,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_multinormal_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = "batch/solved_normal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
