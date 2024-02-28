@@ -95,7 +95,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }
    
-   private SKPGenericDistribution[] generateInstances(int numberOfInstances, int instanceSize){
+   protected SKPGenericDistribution[] generateInstances(int numberOfInstances, int instanceSize){
       randGenerator.setSeed(seed);
       randGenerator.resetStartStream();
       SKPGenericDistribution[] instances = IntStream.iterate(0, i -> i + 1)
