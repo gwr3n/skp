@@ -34,7 +34,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
        */
       
       int partitions = 10;
-      int linearizationSamples = 50000;
+      int linearizationSamples = 1000;
       String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
       
@@ -76,7 +76,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       ArrayList<SKPPoissonRecedingSolvedInstance>solved = new ArrayList<SKPPoissonRecedingSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new SimulatePoissonReceding(instance, partitions).solve(simulationRuns, linearizationSamples));
-         GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<SKPPoissonRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPPoissonRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPPoissonRecedingSolvedInstance[solved.size()]);
    }
