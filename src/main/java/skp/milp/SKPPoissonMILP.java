@@ -53,6 +53,10 @@ public class SKPPoissonMILP extends SKPMILP{
             errors[(int)Math.round(cplex.getValue(opl.getElement("M").asNumVar()))];
    }
    
+   public void solve() throws IloException {
+      this.solveMILP(model, instance);
+   }
+   
    public SKPPoissonMILPSolvedInstance solve(int simulationRuns) throws IloException {
       this.solveMILP(model, instance);
       
