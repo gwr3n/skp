@@ -74,10 +74,13 @@ public class SKPGenericDistributionMILP {
    }
    
    public void solve() throws IloException {
+      IloOplFactory.setDebugMode(false);
+      
       boolean stop = false;
       while(lastKnapsack == null || !stop) {
          IloCplex cplex = new IloCplex();
-
+         cplex.setOut(null);
+         
          // Create decision variables
 
          // Object selectors
@@ -128,9 +131,10 @@ public class SKPGenericDistributionMILP {
             for(int i = 0; i < instance.getItems(); i++){
                this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(X[i]));
             }
-            System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
-            System.out.println("M: "+cplex.getValue(M));
-            System.out.println("P: "+cplex.getValue(P));
+            //DEBUG
+            //System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
+            //System.out.println("M: "+cplex.getValue(M));
+            //System.out.println("P: "+cplex.getValue(P));
 
             this.milpMaxLinearizationError = 0; // cuts are tight
 
@@ -151,9 +155,11 @@ public class SKPGenericDistributionMILP {
    
    public SKPGenericDistributionMILPSolvedInstance solve(int simulationRuns) throws IloException {
       SKPGenericDistributionMILPSolvedInstance solvedInstance = null;
+      IloOplFactory.setDebugMode(false);
       boolean stop = false;
       while(lastKnapsack == null || !stop) {
          IloCplex cplex = new IloCplex();
+         cplex.setOut(null);
 
          // Create decision variables
 
@@ -205,9 +211,10 @@ public class SKPGenericDistributionMILP {
             for(int i = 0; i < instance.getItems(); i++){
                this.optimalKnapsack[i] = (int) Math.round(cplex.getValue(X[i]));
             }
-            System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
-            System.out.println("M: "+cplex.getValue(M));
-            System.out.println("P: "+cplex.getValue(P));
+            //DEBUG
+            //System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
+            //System.out.println("M: "+cplex.getValue(M));
+            //System.out.println("P: "+cplex.getValue(P));
 
             this.milpMaxLinearizationError = 0; // cuts are tight
 
