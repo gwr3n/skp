@@ -249,7 +249,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return instances;
    }
    
-   public static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {
+   protected static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
       String strDate = dateFormat.format(date);
