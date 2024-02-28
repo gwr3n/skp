@@ -92,6 +92,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       for(SKPPoissonRecedingSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
                  Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +
                  s.simulatedSolutionMean + ", " +
