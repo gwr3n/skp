@@ -53,7 +53,7 @@ public class SKPNormalBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/normal_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
@@ -127,9 +127,9 @@ public class SKPNormalBatch extends SKPBatch {
             randGenerator.resetStartStream();
             
             for(int i = 0; i < instances; i++) {
-               double[] expectedValuesPerUnit = new RandomVariateGen(randGenerator, new UniformDist(0,1)).nextArrayOfDouble(instanceSize);
+               double[] expectedValuesPerUnit = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
-               double capacity = Arrays.stream(expectedWeights).sum();
+               double capacity = (i/(instances+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPNormal(
                      expectedValuesPerUnit,
                      expectedWeights,
