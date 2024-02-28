@@ -35,7 +35,7 @@ import umontreal.ssj.randvar.NormalGen;
 import umontreal.ssj.randvarmulti.MultinormalGen;
 import umontreal.ssj.randvarmulti.MultinormalPCAGen;
 
-public class SimulateMultinormalReceding  extends Simulate {
+public class SimulateMultinormalReceding extends Simulate {
    
    SKPMultinormal instance;
    int partitions;
