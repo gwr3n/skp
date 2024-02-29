@@ -250,7 +250,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
     */
    
    public static double[][] poissonKnapsackPiecewiseFOLFConditionalExpectations(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -269,7 +269,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    }
    
    public static double[] poissonKnapsackPiecewiseFOLFApproximationErrors(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -288,7 +288,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    }
    
    public static int poissonKnapsackPiecewiseFOLFMaxWeight(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -318,7 +318,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
    @SuppressWarnings("unused")
    private static void testPiecewiseFirstOrderLossFunction(){
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[1];
       distributions[0] = new NormalDist(0,1);
       PiecewiseFirstOrderLossFunction pwcfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
@@ -338,7 +338,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
    @SuppressWarnings("unused")
    private static void printLinearizationParameters() {
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);

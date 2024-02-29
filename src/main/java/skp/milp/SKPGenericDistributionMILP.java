@@ -17,7 +17,7 @@ import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
 
 public class SKPGenericDistributionMILP { 
-   private static long[] seed = {1,2,3,4,5,6};
+   private static final long[] seed = {12345,54321,21435,53412,54321,14235};
    
    int linearizationSamples;
    

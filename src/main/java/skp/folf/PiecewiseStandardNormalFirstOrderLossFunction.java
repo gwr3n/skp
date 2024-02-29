@@ -7,7 +7,7 @@ import umontreal.ssj.probdist.NormalDist;
 
 public final class PiecewiseStandardNormalFirstOrderLossFunction {
    
-   private static long[] seed = {1,2,3,4,5,6};
+   private static final long[] seed = {12345,54321,21435,53412,54321,14235};
    private static int linearizationSamples = 100000;
    
    public static int getLinearizationSamples() {

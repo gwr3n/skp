@@ -201,7 +201,7 @@ public class FirstOrderLossFunction {
    }
    
    private static void testDistributionPlot(){
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);
@@ -218,7 +218,7 @@ public class FirstOrderLossFunction {
    }
    
    private static void testLossFunctionPlot(){
-      long[] seed = {1,2,3,4,5,6};
+      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);
