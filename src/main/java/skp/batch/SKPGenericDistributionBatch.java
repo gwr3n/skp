@@ -85,7 +85,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-            Distribution shortageCost = new UniformDist(5,25);
+            Distribution shortageCost = new UniformDist(2,10);
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[instances];
             
