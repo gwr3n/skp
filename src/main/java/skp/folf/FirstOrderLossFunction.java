@@ -23,10 +23,10 @@ import umontreal.ssj.rng.MRG32k3aL;
 
 public class FirstOrderLossFunction {
    Distribution[] distributions;
-   long[] seed;
+   protected static final long[] seed = {12345,54321,21435,53412,54321,14235};
    MRG32k3aL randGenerator;
    
-   FirstOrderLossFunction(Distribution[] distributions, long[] seed){
+   FirstOrderLossFunction(Distribution[] distributions){
       this.distributions = distributions;
       this.randGenerator = new MRG32k3aL();
       this.randGenerator.setSeed(seed);
@@ -201,13 +201,12 @@ public class FirstOrderLossFunction {
    }
    
    private static void testDistributionPlot(){
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);
       distributions[1] = new PoissonDist(lambda[1]);
       distributions[2] = new PoissonDist(lambda[2]);
-      FirstOrderLossFunction lf = new FirstOrderLossFunction(distributions, seed);
+      FirstOrderLossFunction lf = new FirstOrderLossFunction(distributions);
       
       /* Plot parameters */
       int samples = 1000;
@@ -218,13 +217,12 @@ public class FirstOrderLossFunction {
    }
    
    private static void testLossFunctionPlot(){
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);
       distributions[1] = new PoissonDist(lambda[1]);
       distributions[2] = new PoissonDist(lambda[2]);
-      FirstOrderLossFunction lf = new FirstOrderLossFunction(distributions, seed);
+      FirstOrderLossFunction lf = new FirstOrderLossFunction(distributions);
       
       /* Plot parameters */
       int min = 50;

@@ -16,8 +16,7 @@ import skp.sim.SimulateGenericDistribution;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
 
-public class SKPGenericDistributionMILP { 
-   private static final long[] seed = {12345,54321,21435,53412,54321,14235};
+public class SKPGenericDistributionMILP {    
    
    int linearizationSamples;
    
@@ -64,7 +63,7 @@ public class SKPGenericDistributionMILP {
             .mapToObj(i -> weights[i])
             .toArray(Distribution[]::new);
 
-      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(reducedWeights, seed);
+      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(reducedWeights);
 
       double a = pwfolf.getFirstOrderLossFunctionValue(this.instance.getCapacity(), linearizationSamples)-
             (pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(this.instance.getCapacity())-1)*this.instance.getCapacity();

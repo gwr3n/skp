@@ -23,8 +23,8 @@ import umontreal.ssj.probdist.Distribution;
 
 public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
-   public PiecewiseFirstOrderLossFunction(Distribution[] distributions, long[] seed){
-      super(distributions, seed);
+   public PiecewiseFirstOrderLossFunction(Distribution[] distributions){
+      super(distributions);
    }
    
    /**
@@ -250,7 +250,6 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
     */
    
    public static double[][] poissonKnapsackPiecewiseFOLFConditionalExpectations(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -258,7 +257,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       while(true) {
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
-         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
+         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
          double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
          conditionalExpectations.add(ce);
          approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
@@ -269,7 +268,6 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    }
    
    public static double[] poissonKnapsackPiecewiseFOLFApproximationErrors(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -277,7 +275,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       while(true) {
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
-         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
+         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
          double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
          conditionalExpectations.add(ce);
          approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
@@ -288,7 +286,6 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    }
    
    public static int poissonKnapsackPiecewiseFOLFMaxWeight(int capacity, double[] probabilityMasses, int nbSamples) {
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
@@ -296,7 +293,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       while(true) {
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
-         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
+         PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
          double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
          conditionalExpectations.add(ce);
          approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
@@ -318,10 +315,9 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
    @SuppressWarnings("unused")
    private static void testPiecewiseFirstOrderLossFunction(){
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[1];
       distributions[0] = new NormalDist(0,1);
-      PiecewiseFirstOrderLossFunction pwcfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
+      PiecewiseFirstOrderLossFunction pwcfolf = new PiecewiseFirstOrderLossFunction(distributions);
       double[] probabilityMasses = {0.5,0.5};
       
       /* Plot parameters */
@@ -338,13 +334,12 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
    
    @SuppressWarnings("unused")
    private static void printLinearizationParameters() {
-      long[] seed = {12345,54321,21435,53412,54321,14235};
       Distribution[] distributions = new Distribution[3];
       double lambda[] = {20,5,50};
       distributions[0] = new PoissonDist(lambda[0]);
       distributions[1] = new PoissonDist(lambda[1]);
       distributions[2] = new PoissonDist(lambda[2]);
-      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions, seed);
+      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
       
       int partitions = 5;
       int nbSamples = 1000;
