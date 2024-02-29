@@ -26,7 +26,7 @@ import skp.milp.KPMILP;
 import skp.milp.SKPPoissonMILP;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
-
+import skp.utilities.probability.SampleFactory;
 import umontreal.ssj.randvar.UniformGen;
 
 
@@ -192,12 +192,21 @@ public class SimulatePoissonReceding extends Simulate {
    
    private double[][] sampleWeights(int nbSamples) {
       this.randGenerator.resetStartStream();
-      double[][] sampleMatrix = new double[nbSamples][instance.getWeights().length];
+      double[][] sampleMatrix;
+      switch(Simulate.samplingStrategy) {
+      case LHS:
+         sampleMatrix = SampleFactory.getNextLHSample(instance.getWeights(), nbSamples, randGenerator);
+         break;
+      case SRS:
+      default:
+         sampleMatrix = SampleFactory.getNextSimpleRandomSample(instance.getWeights(), nbSamples, randGenerator);
+      }
+      /*double[][] sampleMatrix = new double[nbSamples][instance.getWeights().length];
       for(int i = 0; i < sampleMatrix.length; i++){
          for(int j = 0; j < sampleMatrix[i].length; j++){
             sampleMatrix[i][j] = instance.getWeights()[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
          }
-      }
+      }*/
       return sampleMatrix;
    }
    

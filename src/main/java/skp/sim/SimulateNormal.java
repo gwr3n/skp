@@ -21,6 +21,9 @@ import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+import skp.utilities.probability.SampleFactory;
+
+import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.randvar.UniformGen;
 
@@ -40,27 +43,35 @@ public class SimulateNormal extends Simulate {
       }
       double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)
-                             .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row)
-                                                                                              .sum() - instance.getCapacity()))
+                             .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row).sum() - instance.getCapacity()))
                              .sum()/nbSamples;
       return knapsackValue;
    }
    
    private double[][] sampleWeights(int[] knapsack, int nbSamples){
-      NormalDist[] weights = this.instance.getWeights();
-      NormalDist[] reducedWeights = IntStream.iterate(0, i -> i + 1)
+      Distribution[] weights = this.instance.getWeights();
+      Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
                                              .limit(weights.length)
                                              .filter(i -> knapsack[i] == 1)
                                              .mapToObj(i -> weights[i])
-                                             .toArray(NormalDist[]::new);
+                                             .toArray(Distribution[]::new);
       
       this.randGenerator.resetStartStream();
-      double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
+      double[][] sampleMatrix;
+      switch(Simulate.samplingStrategy) {
+      case LHS:
+         sampleMatrix = SampleFactory.getNextLHSample(reducedWeights, nbSamples, randGenerator);
+         break;
+      case SRS:
+      default:
+         sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, randGenerator);
+      }
+      /*double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
       for(int i = 0; i < sampleMatrix.length; i++){
          for(int j = 0; j < sampleMatrix[i].length; j++){
             sampleMatrix[i][j] = reducedWeights[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
          }
-      }
+      }*/
       return sampleMatrix;
    }
    

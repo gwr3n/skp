@@ -1,5 +1,6 @@
 package skp.sim;
 
+import skp.utilities.probability.SAMPLING;
 import umontreal.ssj.rng.MRG32k3aL;
 
 public abstract class Simulate {
@@ -9,4 +10,6 @@ public abstract class Simulate {
    public Simulate() {
       this.randGenerator.setSeed(seed);
    }
+   
+   public static final SAMPLING samplingStrategy = SAMPLING.LHS;
 }

@@ -21,6 +21,7 @@ import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+import skp.utilities.probability.SampleFactory;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
 
@@ -55,12 +56,21 @@ public class SimulatePoisson extends Simulate {
                                              .toArray(PoissonDist[]::new);
       
       this.randGenerator.resetStartStream();
-      double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
+      double[][] sampleMatrix;
+      switch(Simulate.samplingStrategy) {
+      case LHS:
+         sampleMatrix = SampleFactory.getNextLHSample(reducedWeights, nbSamples, randGenerator);
+         break;
+      case SRS:
+      default:
+         sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, randGenerator);
+      }
+      /*double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
       for(int i = 0; i < sampleMatrix.length; i++){
          for(int j = 0; j < sampleMatrix[i].length; j++){
             sampleMatrix[i][j] = reducedWeights[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
          }
-      }
+      }*/
       return sampleMatrix;
    }
    
@@ -69,7 +79,7 @@ public class SimulatePoisson extends Simulate {
       SKPPoisson instance = SKPPoisson.getTestInstance();
       
       int partitions = 10;
-      int linearizationSamples = 50000;
+      int linearizationSamples = 10000;
       int simulationSamples = 100000;
       
       try {
