@@ -16,7 +16,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 import skp.sim.Simulate;
 import skp.utilities.probability.SampleFactory;
 import umontreal.ssj.probdist.EmpiricalDist;
-import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.charts.XYLineChart;
 import umontreal.ssj.probdist.Distribution;
