@@ -1,9 +1,12 @@
 package skp.instance;
 
 import java.util.Arrays;
+import java.util.Random;
+import java.util.stream.IntStream;
 
 import umontreal.ssj.probdist.BinomialDist;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -50,18 +53,34 @@ public class SKPGenericDistribution extends SKP{
    
    public static SKPGenericDistribution getTestInstance() {
       double[] expectedValues = {111, 111, 21, 117, 123, 34, 3, 121, 112, 12};
-      Distribution[] expectedWeights = {new NormalDist(44,10),
-                                        new PoissonDist(42),
-                                        new BinomialDist(73,0.5),
-                                        new PoissonDist(15),
-                                        new PoissonDist(71),
-                                        new PoissonDist(12),
-                                        new PoissonDist(13),
-                                        new PoissonDist(14),
-                                        new PoissonDist(23),
-                                        new PoissonDist(15)};
+      Distribution[] weights = {new NormalDist(44,10),
+                                new PoissonDist(42),
+                                new BinomialDist(73,0.5),
+                                new GammaDist(15, 20),
+                                new PoissonDist(71),
+                                new PoissonDist(12),
+                                new PoissonDist(13),
+                                new PoissonDist(14),
+                                new PoissonDist(23),
+                                new PoissonDist(15)};
       int capacity = 100;
       int shortageCost = 10;
-      return new SKPGenericDistribution(expectedValues, expectedWeights, capacity, shortageCost);
+      return new SKPGenericDistribution(expectedValues, weights, capacity, shortageCost);
+   }
+   
+   public static SKPGenericDistribution getTestInstanceLarge() {
+      int objects = 35;
+      Random rnd = new Random(1122);
+      double[] expectedValues = IntStream.iterate(0, i -> i + 1)
+                                         .limit(objects)
+                                         .mapToDouble(i -> 100*rnd.nextDouble())
+                                         .toArray();
+      Distribution[] weights = IntStream.iterate(0, i -> i + 1)
+                                        .limit(objects)
+                                        .mapToObj(i -> new NormalDist(100*rnd.nextDouble(),10*rnd.nextDouble()))
+                                        .toArray(NormalDist[]::new);
+      int capacity = 10*50;
+      int shortageCost = 10;
+      return new SKPGenericDistribution(expectedValues, weights, capacity, shortageCost);
    }
 }

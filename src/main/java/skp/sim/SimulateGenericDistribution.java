@@ -56,13 +56,14 @@ public class SimulateGenericDistribution extends Simulate {
    
    public static void main(String args[]) {
       
-      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
+      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
       
-      int linearizationSamples = 100000;
+      int linearizationSamples = 10000;
       int simulationSamples = 100000;
+      int maxCuts = 1000;
       
       try {
-         SKPGenericDistributionMILP milp = new SKPGenericDistributionMILP(instance, linearizationSamples);
+         SKPGenericDistributionMILP milp = new SKPGenericDistributionMILP(instance, linearizationSamples, maxCuts);
          SKPGenericDistributionMILPSolvedInstance solved = milp.solve(simulationSamples);
          System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (Exception e) {

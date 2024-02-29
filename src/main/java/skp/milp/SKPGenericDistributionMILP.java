@@ -19,6 +19,7 @@ import umontreal.ssj.probdist.Distribution;
 public class SKPGenericDistributionMILP {    
    
    int linearizationSamples;
+   int maxCuts;
    
    int[] optimalKnapsack;
    double milpSolutionValue;
@@ -34,9 +35,10 @@ public class SKPGenericDistributionMILP {
    
    ArrayList<Cut> cutList = new ArrayList<Cut>();
    
-   public SKPGenericDistributionMILP(SKPGenericDistribution instance, int linearizationSamples){
+   public SKPGenericDistributionMILP(SKPGenericDistribution instance, int linearizationSamples, int maxCuts){
       this.instance = instance;
       this.linearizationSamples = linearizationSamples;
+      this.maxCuts = maxCuts;
    }
    
    public int[] getOptimalKnapsack() {
@@ -137,7 +139,7 @@ public class SKPGenericDistributionMILP {
 
             this.milpMaxLinearizationError = 0; // cuts are tight
 
-            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack)) {
+            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || this.cutList.size() > this.maxCuts) {
                stop = true;
             } else {
                this.lastKnapsack = this.optimalKnapsack;
@@ -158,7 +160,7 @@ public class SKPGenericDistributionMILP {
       boolean stop = false;
       while(lastKnapsack == null || !stop) {
          IloCplex cplex = new IloCplex();
-         cplex.setOut(null);
+         cplex.setOut(System.out);
 
          // Create decision variables
 
@@ -217,7 +219,7 @@ public class SKPGenericDistributionMILP {
 
             this.milpMaxLinearizationError = 0; // cuts are tight
 
-            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack)) {
+            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || this.cutList.size() > this.maxCuts) {
                stop = true;
                
                SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
@@ -257,8 +259,11 @@ public class SKPGenericDistributionMILP {
 
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
       
+      int linearizationSamples = 100000;
+      int maxCuts = 100000;
+      
       try {
-         SKPGenericDistributionMILP sskp = new SKPGenericDistributionMILP(instance, 100000);
+         SKPGenericDistributionMILP sskp = new SKPGenericDistributionMILP(instance, linearizationSamples, maxCuts);
          
          SKPGenericDistributionMILPSolvedInstance solvedInstance = sskp.solve(100000);
          System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance>printInstanceAsJSON(solvedInstance));
