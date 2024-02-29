@@ -13,6 +13,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import skp.sim.Simulate;
+import skp.utilities.probability.SampleFactory;
 import umontreal.ssj.probdist.EmpiricalDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.probdist.PoissonDist;
@@ -33,12 +35,21 @@ public class FirstOrderLossFunction {
    
    private double[][] sample(int nbSamples){
       this.randGenerator.resetStartStream();
-      double[][] sampleMatrix = new double[nbSamples][this.distributions.length];
+      double[][] sampleMatrix;
+      switch(Simulate.samplingStrategy) {
+         case LHS:
+            sampleMatrix = SampleFactory.getNextLHSample(this.distributions, nbSamples, randGenerator);
+            break;
+         case SRS:
+         default:
+            sampleMatrix = SampleFactory.getNextSimpleRandomSample(this.distributions, nbSamples, randGenerator);
+      }
+      /*double[][] sampleMatrix = new double[nbSamples][this.distributions.length];
       for(int i = 0; i < sampleMatrix.length; i++){
          for(int j = 0; j < sampleMatrix[i].length; j++){
             sampleMatrix[i][j] = distributions[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
          }
-      }
+      }*/
       return sampleMatrix;
    }
    
@@ -108,7 +119,6 @@ public class FirstOrderLossFunction {
             file.write(lc.toLatex(8, 5));
             file.close();
          } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
          }
       }
@@ -151,7 +161,6 @@ public class FirstOrderLossFunction {
             file.write(lc.toLatex(8, 5));
             file.close();
          } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
          }
       }
@@ -178,7 +187,6 @@ public class FirstOrderLossFunction {
             file.write(lc.toLatex(8, 5));
             file.close();
          } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
          }
       }
