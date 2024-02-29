@@ -63,7 +63,6 @@ public class SKPNormalBatch extends SKPBatch {
       try {
          solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
       solveDSKP(batchFileName);
@@ -81,6 +80,10 @@ public class SKPNormalBatch extends SKPBatch {
       P05_UNCORRELATED_SIMILAR_WEIGHTS*/
    };
    
+   /**
+    * Generate a batch of instances
+    */
+   
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
       switch(type) {
@@ -94,9 +97,21 @@ public class SKPNormalBatch extends SKPBatch {
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);
             
-            SKPNormalBatch batch = new SKPNormalBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            SKPNormal[] batch = new SKPNormal[instances];
             
-            batch.generateBatch(instances, instanceSize, batchFileName);
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> new SKPNormal(
+                                                    (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble(),
+                                                    (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                    (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
+                             .toArray(SKPNormal[]::new);
+            
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case MULTINORMAL: {
@@ -109,9 +124,21 @@ public class SKPNormalBatch extends SKPBatch {
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);
             
-            SKPNormalBatch batch = new SKPNormalBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            SKPMultinormal[] batch = new SKPMultinormal[instances];
             
-            batch.generateMultinormalBatch(instances, instanceSize, batchFileName);
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> new SKPMultinormal(
+                                                    (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble(),
+                                                    (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                    (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
+                             .toArray(SKPMultinormal[]::new);
+            
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_UNCORRELATED: {
@@ -217,7 +244,6 @@ public class SKPNormalBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
@@ -275,7 +301,6 @@ public class SKPNormalBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
@@ -285,50 +310,6 @@ public class SKPNormalBatch extends SKPBatch {
       return solvedInstances;
    }   
    
-   /**
-    * Generate a batch of instances
-    */
-   
-   public void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPNormal[] instances = this.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPNormal[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   private SKPNormal[] generateInstances(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPNormal[] instances = IntStream.iterate(0, i -> i + 1)
-                                        .limit(numberOfInstances)
-                                        .mapToObj(i -> new SKPNormal(
-                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
-                                              (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                              (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
-                                        .toArray(SKPNormal[]::new);
-      return instances;
-   }
-   
-   public void generateMultinormalBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = this.generateMultinormalInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   private SKPMultinormal[] generateMultinormalInstances(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
-                                        .limit(numberOfInstances)
-                                        .mapToObj(i -> new SKPMultinormal(
-                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
-                                              (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                              (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
-                                        .toArray(SKPMultinormal[]::new);
-      return instances;
-   }
-
    public static void storeBatchAsOPLDataFiles(SKPNormal[] instances, String OPLDataFileZipArchive, int partitions) {
       Date date = Calendar.getInstance().getTime();
       DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
