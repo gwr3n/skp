@@ -115,15 +115,20 @@ public abstract class SKPMILP {
       } else {
          System.out.println("No solution!");
       } 
+      // Release all resources
+      opl.end();
+      def.end();
+      settings.end();
+      modelSource.end();
       try {
          isModel.close();
       } catch (IOException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-      opl.end();
-      errHandler.end();
       cplex.end();
+      errHandler.end();
+      oplF.end();
       System.gc();
    }
 }
