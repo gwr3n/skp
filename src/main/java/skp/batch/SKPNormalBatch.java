@@ -54,7 +54,7 @@ public class SKPNormalBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/normal_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
