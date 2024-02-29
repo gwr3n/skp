@@ -160,7 +160,7 @@ public class SKPGenericDistributionMILP {
       boolean stop = false;
       while(lastKnapsack == null || !stop) {
          IloCplex cplex = new IloCplex();
-         cplex.setOut(System.out);
+         cplex.setOut(null);
 
          // Create decision variables
 
@@ -244,6 +244,7 @@ public class SKPGenericDistributionMILP {
             } else {
                this.lastKnapsack = this.optimalKnapsack;
                this.cutList.add(new Cut(this.optimalKnapsack, this.computeCutRHS(this.optimalKnapsack)));
+               if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:this.milpSolutionValue");
             }
 
          } else {
