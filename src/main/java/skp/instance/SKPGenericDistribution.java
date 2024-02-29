@@ -79,7 +79,7 @@ public class SKPGenericDistribution extends SKP{
                                         .limit(objects)
                                         .mapToObj(i -> new NormalDist(100*rnd.nextDouble(),10*rnd.nextDouble()))
                                         .toArray(NormalDist[]::new);
-      int capacity = 10*50;
+      int capacity = 20*50;
       int shortageCost = 10;
       return new SKPGenericDistribution(expectedValues, weights, capacity, shortageCost);
    }
