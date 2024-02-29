@@ -111,7 +111,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             Distribution correlationCoefficient = new UniformDist(0, 1);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-            Distribution shortageCost = new UniformDist(5,25);
+            Distribution shortageCost = new UniformDist(2,10);
             
             SKPMultinormal[] batch = new SKPMultinormal[instances];
             
@@ -147,7 +147,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             Distribution correlationCoefficient = new UniformDist(0, 1);
             DiscreteDistributionInt capacity = new UniformIntDist(25,50);
-            Distribution shortageCost = new UniformDist(20,50);
+            Distribution shortageCost = new UniformDist(2,10);
             
             SKPMultinormal[] batch = new SKPMultinormal[instances];
             
