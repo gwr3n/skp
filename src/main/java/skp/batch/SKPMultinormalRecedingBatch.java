@@ -26,9 +26,6 @@ import skp.sim.SimulateMultinormalReceding;
 import skp.sim.instance.SKPMultinormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
-
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    public static void main(String args[]) {
@@ -50,19 +47,8 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       try {
          solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       } 
-   }
-     
-   public SKPMultinormalRecedingBatch(
-         Distribution expectedValuePerUnit,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         Distribution correlationCoefficient,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
    }
 
    /*
@@ -122,7 +108,6 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }

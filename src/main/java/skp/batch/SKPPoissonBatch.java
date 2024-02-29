@@ -29,6 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
+
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
@@ -36,6 +37,7 @@ import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sdp.DSKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
@@ -52,7 +54,7 @@ public class SKPPoissonBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/poisson_instances.json";
-      generateInstances(batchFileName);
+      generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
       
       String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
       int partitions = 10;
@@ -69,25 +71,55 @@ public class SKPPoissonBatch extends SKPBatch {
       solveDSKP(batchFileName);
    }
    
-   private static void generateInstances(String batchFileName) {
-      int instances = 10;
-      int instanceSize = 10;
+   enum INSTANCE_TYPE {
+      NORMAL/*,
+      P05_UNCORRELATED,
+      P05_WEEKLY_CORRELATED,
+      P05_STRONGLY_CORRELATED,
+      P05_INVERSE_STRONGLY_CORRELATED,
+      P05_ALMOST_STRONGLY_CORRELATED,
+      P05_SUBSET_SUM,
+      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+   };
+   
+   /**
+    * Generate a batch of instances
+    */
+   
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
-      Distribution expectedWeight = new UniformDist(15,70);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
-      
-      SKPPoissonBatch batch = new SKPPoissonBatch(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
-      batch.generateBatch(instances, instanceSize, batchFileName);
+      switch(type) {
+         case NORMAL: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValue = new UniformDist(0.1,10);
+            Distribution expectedWeight = new UniformDist(15,70);
+            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+            Distribution shortageCost = new UniformDist(50,150);
+            
+            SKPPoisson[] batch = new SKPPoisson[instances];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> new SKPPoisson(
+                                                    (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize),
+                                                    (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                    (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
+                             .toArray(SKPPoisson[]::new);
+            
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+      }
    }
    
-   public SKPPoissonBatch(
-         Distribution expectedValuePerUnit,
-         Distribution expectedWeight,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+   public static SKPPoisson[] retrieveBatch(String fileName) {
+      SKPPoisson[] instances = GSONUtility.<SKPPoisson[]>retrieveJSONInstance(fileName, SKPPoisson[].class);
+      return instances;
    }
    
    /*
@@ -216,34 +248,6 @@ public class SKPPoissonBatch extends SKPBatch {
       DSKPPoissonSolvedInstance[] solvedInstances = GSONUtility.<DSKPPoissonSolvedInstance[]>retrieveJSONInstance(fileName, DSKPPoissonSolvedInstance[].class);
       return solvedInstances;
    }
-   
-   /**
-    * Generate a batch of instances
-    */
-   
-   public void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPPoisson[] instances = this.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPPoisson[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   public static SKPPoisson[] retrieveBatch(String fileName) {
-      SKPPoisson[] instances = GSONUtility.<SKPPoisson[]>retrieveJSONInstance(fileName, SKPPoisson[].class);
-      return instances;
-   }
-   
-   private SKPPoisson[] generateInstances(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
-                                        .limit(numberOfInstances)
-                                        .mapToObj(i -> new SKPPoisson(
-                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
-                                              (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                              (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
-                                        .toArray(SKPPoisson[]::new);
-      return instances;
-   }   
    
    protected static void storeBatchAsOPLDataFiles(SKPPoisson[] instances, String OPLDataFileZipArchive, int partitions, int linearizationSamples) {
       Date date = Calendar.getInstance().getTime();

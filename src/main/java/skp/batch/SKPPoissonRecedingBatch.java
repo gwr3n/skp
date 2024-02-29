@@ -13,9 +13,6 @@ import skp.sim.SimulatePoissonReceding;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
-
 public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
    
    public static void main(String args[]) {
@@ -38,17 +35,8 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       try {
          solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
-   }
-     
-   public SKPPoissonRecedingBatch(
-         Distribution expectedValuePerUnit,
-         Distribution expectedWeight,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
    }
 
    /*
@@ -107,7 +95,6 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }

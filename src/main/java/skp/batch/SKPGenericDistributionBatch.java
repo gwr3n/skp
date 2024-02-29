@@ -28,6 +28,7 @@ import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
@@ -46,68 +47,73 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       String batchFileName = "batch/generic_distribution_instances.json";
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName);
+      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
       
       int linearizationSamples = 100000;
       int simulationRuns = 100000;      
       try {
          solveMILP(instances, linearizationSamples, simulationRuns);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
       solveDSKP(instances);
    }
-
-   protected static SKPGenericDistribution[] generateInstances(String batchFileName) {
-      int instances = 10;
-      int instanceSize = 10;
-      
-      Distribution expectedValue = new UniformDist(75,350);
-      Distribution expectedWeight = new UniformDist(15,70);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
-      
-      SKPGenericDistributionBatch batch = new SKPGenericDistributionBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
-      return batch.generateBatch(instances, instanceSize, batchFileName);
-   }
    
-   protected Distribution coefficientOfVariation;
-   
-   public SKPGenericDistributionBatch(
-         Distribution expectedValue,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValue, expectedWeight, capacity, shortageCost);
-      this.coefficientOfVariation = coefficientOfVariation;
-   }
+   enum INSTANCE_TYPE {
+      NORMAL/*,
+      P05_UNCORRELATED,
+      P05_WEEKLY_CORRELATED,
+      P05_STRONGLY_CORRELATED,
+      P05_INVERSE_STRONGLY_CORRELATED,
+      P05_ALMOST_STRONGLY_CORRELATED,
+      P05_SUBSET_SUM,
+      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+   };
    
    /**
     * Generate a batch of instances
     */
-   
-   public SKPGenericDistribution[] generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPGenericDistribution[] instances = this.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPGenericDistribution[]>saveInstanceToJSON(instances, fileName);
-      return instances;
+
+   protected static SKPGenericDistribution[] generateInstances(String batchFileName, INSTANCE_TYPE type) {
+      
+      switch(type) {
+         case NORMAL: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedWeight = new UniformDist(15,70);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+            Distribution shortageCost = new UniformDist(50,150);
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[instances];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> new SKPGenericDistribution(
+                                                                (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
+                                                                Arrays.stream((new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(w, Math.sqrt(w/Math.pow((new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble()*w,2)))).toArray(GammaDist[]::new),
+                                                                (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                                (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
+                             .toArray(SKPGenericDistribution[]::new);
+            
+            return batch;
+         }
+         default:
+            return null;
+      }
    }
    
-   private SKPGenericDistribution[] generateInstances(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPGenericDistribution[] instances = IntStream.iterate(0, i -> i + 1)
-                                                    .limit(numberOfInstances)
-                                                    .mapToObj(i -> new SKPGenericDistribution(
-                                                          (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
-                                                          Arrays.stream((new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(w, Math.sqrt(w/Math.pow((new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble()*w,2)))).toArray(GammaDist[]::new),
-                                                          (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                                          (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
-                                                    .toArray(SKPGenericDistribution[]::new);
+   /*
+    * Batch cannot be retrieved because Distribution[] is not Serializable
+    *
+   public static SKPGenericDistribution[] retrieveBatch(String fileName) {
+      SKPGenericDistribution[] instances = GSONUtility.<SKPGenericDistribution[]>retrieveJSONInstance(fileName, SKPGenericDistribution[].class);
       return instances;
-   }
+   }*/
    
    public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns) throws IloException {
       // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
@@ -122,13 +128,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   /*
-    * Batch cannot be retrieved because Distribution[] is not Serializable
-    *
-   public static SKPGenericDistribution[] retrieveBatch(String fileName) {
-      SKPGenericDistribution[] instances = GSONUtility.<SKPGenericDistribution[]>retrieveJSONInstance(fileName, SKPGenericDistribution[].class);
-      return instances;
-   }*/
+
    
    private static SKPGenericDistributionMILPSolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns) throws IloException {
       ArrayList<SKPGenericDistributionMILPSolvedInstance>solved = new ArrayList<SKPGenericDistributionMILPSolvedInstance>();
@@ -181,7 +181,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
@@ -233,7 +232,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }

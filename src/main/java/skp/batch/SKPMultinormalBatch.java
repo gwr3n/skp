@@ -29,6 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
+
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
@@ -36,6 +37,7 @@ import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
+
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
@@ -55,9 +57,9 @@ public class SKPMultinormalBatch extends SKPBatch {
       
       String batchFileName = "batch/multinormal_instances.json";
       if(specialStructure)
-         generateInstancesSpecialStructure(batchFileName);
+         generateInstances(batchFileName, INSTANCE_TYPE.SPECIAL_STRUCTURE);
       else
-         generateInstances(batchFileName);
+         generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
@@ -67,7 +69,6 @@ public class SKPMultinormalBatch extends SKPBatch {
       try {
          solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
       /*
@@ -81,57 +82,99 @@ public class SKPMultinormalBatch extends SKPBatch {
       if(specialStructure) solveDSKP(batchFileName);
    }
    
-   private static void generateInstances(String batchFileName) {
-      int instances = 10;
-      int instanceSize = 10;
-      
-      Distribution expectedValue = new UniformDist(75,350);
-      Distribution expectedWeight = new UniformDist(15,70);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
-      Distribution correlationCoefficient = new UniformDist(0, 1);
-      DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-      Distribution shortageCost = new UniformDist(50,150);
-      
-      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValue, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
-      batch.generateBatch(instances, instanceSize, batchFileName);
-   }
+   enum INSTANCE_TYPE {
+      NORMAL,
+      SPECIAL_STRUCTURE/*,
+      MULTINORMAL,
+      P05_UNCORRELATED,
+      P05_WEEKLY_CORRELATED,
+      P05_STRONGLY_CORRELATED,
+      P05_INVERSE_STRONGLY_CORRELATED,
+      P05_ALMOST_STRONGLY_CORRELATED,
+      P05_SUBSET_SUM,
+      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+   };
    
    /**
-    * Generate a batch of instances whose covariance matrix takes the special structure $\rho^{|j-i|}\sigma_i\sigma_j$ 
-    * discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$
-    * 
-    * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
-    * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>,
-    * " European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023
+    * Generate a batch of instances
     */
-   private static void generateInstancesSpecialStructure(String batchFileName) {
-      int instances = 10;
-      int instanceSize = 10;
       
-      Distribution expectedValue = new UniformDist(75,350);
-      Distribution expectedWeight = new UniformDist(5,10);
-      Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
-      Distribution correlationCoefficient = new UniformDist(0, 1);
-      DiscreteDistributionInt capacity = new UniformIntDist(25,50);
-      Distribution shortageCost = new UniformDist(20,50);
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
-      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValue, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
-      batch.generateBatchSpecialStructure(instances, instanceSize, batchFileName);
+      switch(type) {
+         case NORMAL: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedWeight = new UniformDist(15,70);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            Distribution correlationCoefficient = new UniformDist(0, 1);
+            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
+            Distribution shortageCost = new UniformDist(50,150);
+            
+            SKPMultinormal[] batch = new SKPMultinormal[instances];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> new SKPMultinormal(
+                                                        (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
+                                                        (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize),
+                                                        (new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble(),
+                                                        (new RandomVariateGen(randGenerator, correlationCoefficient)).nextDouble(),
+                                                        (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                        (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
+                             .toArray(SKPMultinormal[]::new);
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         /**
+          * Generate a batch of instances whose covariance matrix takes the special structure $\rho^{|j-i|}\sigma_i\sigma_j$ 
+          * discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$
+          * 
+          * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
+          * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>,
+          * " European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023
+          */
+         case SPECIAL_STRUCTURE: {
+            int instances = 10;
+            int instanceSize = 10;
+            
+            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedWeight = new UniformDist(5,10);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
+            Distribution correlationCoefficient = new UniformDist(0, 1);
+            DiscreteDistributionInt capacity = new UniformIntDist(25,50);
+            Distribution shortageCost = new UniformDist(20,50);
+            
+            SKPMultinormal[] batch = new SKPMultinormal[instances];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            batch = IntStream.iterate(0, i -> i + 1)
+                             .limit(instances)
+                             .mapToObj(i -> {double[] EV = (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize);
+                                             double[] EW = (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize);
+                                             return new SKPMultinormal(
+                                                     EV,
+                                                     EW,
+                                                     SKPMultinormal.calculateCovarianceSpecialStructure(EW, 
+                                                                                         (new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble(), 
+                                                                                         (new RandomVariateGen(randGenerator, correlationCoefficient)).nextDouble()),
+                                                     (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
+                                                     (new RandomVariateGen(randGenerator, shortageCost)).nextDouble());})
+                             .toArray(SKPMultinormal[]::new);
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+      }  
    }
    
-   protected Distribution coefficientOfVariation;
-   protected Distribution correlationCoefficient;
-   
-   public SKPMultinormalBatch(
-         Distribution expectedValue,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         Distribution correlationCoefficient,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValue, expectedWeight, capacity, shortageCost);
-      this.coefficientOfVariation = coefficientOfVariation;
-      this.correlationCoefficient = correlationCoefficient;
+   public static SKPMultinormal[] retrieveBatch(String fileName) {
+      SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveJSONInstance(fileName, SKPMultinormal[].class);
+      return instances;
    }
    
    /*
@@ -195,7 +238,6 @@ public class SKPMultinormalBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
@@ -253,7 +295,6 @@ public class SKPMultinormalBatch extends SKPBatch {
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
@@ -261,61 +302,6 @@ public class SKPMultinormalBatch extends SKPBatch {
    private static DSKPMultinormalSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
       DSKPMultinormalSolvedInstance[] solvedInstances = GSONUtility.<DSKPMultinormalSolvedInstance[]>retrieveJSONInstance(fileName, DSKPMultinormalSolvedInstance[].class);
       return solvedInstances;
-   }
-   
-   /**
-    * Generate a batch of instances
-    */
-   
-   public void generateBatch(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = this.generateInstances(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   public void generateBatchSpecialStructure(int numberOfInstances, int instanceSize, String fileName) {
-      SKPMultinormal[] instances = this.generateInstancesSpecialStructure(numberOfInstances, instanceSize);
-      GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(instances, fileName);
-   }
-   
-   public static SKPMultinormal[] retrieveBatch(String fileName) {
-      SKPMultinormal[] instances = GSONUtility.<SKPMultinormal[]>retrieveJSONInstance(fileName, SKPMultinormal[].class);
-      return instances;
-   }
-   
-   private SKPMultinormal[] generateInstances(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
-                                            .limit(numberOfInstances)
-                                            .mapToObj(i -> new SKPMultinormal(
-                                                  (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
-                                                  (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
-                                                  (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
-                                                  (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble(),
-                                                  (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                                  (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
-                                            .toArray(SKPMultinormal[]::new);
-      return instances;
-   }
-   
-   private SKPMultinormal[] generateInstancesSpecialStructure(int numberOfInstances, int instanceSize){
-      randGenerator.setSeed(seed);
-      randGenerator.resetStartStream();
-      SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
-                                            .limit(numberOfInstances)
-                                            .mapToObj(i -> {
-                                                  double[] expectedValue = (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize);
-                                                  double[] expectedWeight = (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize);
-                                                  return new SKPMultinormal(
-                                                  expectedValue,
-                                                  expectedWeight,
-                                                  SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeight, 
-                                                                                      (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(), 
-                                                                                      (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble()),
-                                                  (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
-                                                  (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble());})
-                                            .toArray(SKPMultinormal[]::new);
-      return instances;
    }
    
    protected static void storeBatchAsOPLDataFiles(SKPMultinormal[] instances, String OPLDataFileZipArchive, int partitions) {

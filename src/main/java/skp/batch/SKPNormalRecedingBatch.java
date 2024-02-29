@@ -13,9 +13,6 @@ import skp.sim.SimulateNormalReceding;
 import skp.sim.instance.SKPNormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
-
 public class SKPNormalRecedingBatch extends SKPNormalBatch{
    
    public static void main(String args[]) {
@@ -37,18 +34,8 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       try {
          solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       } 
-   }
-     
-   public SKPNormalRecedingBatch(
-         Distribution expectedValuePerUnit,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
    }
 
    /*
@@ -108,7 +95,6 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }

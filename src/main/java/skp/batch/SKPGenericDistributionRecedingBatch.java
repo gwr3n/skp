@@ -13,9 +13,6 @@ import skp.sim.SimulateGenericDistributionReceding;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
-
 public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionBatch{
    
    public static void main(String args[]) {
@@ -26,25 +23,15 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
       
       String batchFileName = "batch/generic_distribution_instances.json";
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName);
+      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
       
       int linearizationSamples = 10000;
       int simulationRuns = 100; 
       try {
          solveMILP(instances, simulationRuns, linearizationSamples);
       } catch (IloException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
-   }
-     
-   public SKPGenericDistributionRecedingBatch(
-         Distribution expectedValuePerUnit,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
    }
 
    /*
@@ -102,7 +89,6 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
          pw.print(header+body);
          pw.close();
       } catch (FileNotFoundException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }

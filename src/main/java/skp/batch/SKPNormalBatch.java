@@ -171,16 +171,9 @@ public class SKPNormalBatch extends SKPBatch {
       }
    }
    
-   protected Distribution coefficientOfVariation;
-   
-   public SKPNormalBatch(
-         Distribution expectedValue,
-         Distribution expectedWeight,
-         Distribution coefficientOfVariation,
-         DiscreteDistributionInt capacity,
-         Distribution shortageCost) {
-      super(expectedValue, expectedWeight, capacity, shortageCost);
-      this.coefficientOfVariation = coefficientOfVariation;
+   public static SKPNormal[] retrieveBatch(String fileName) {
+      SKPNormal[] instances = GSONUtility.<SKPNormal[]>retrieveJSONInstance(fileName, SKPNormal[].class);
+      return instances;
    }
    
    /*
@@ -351,10 +344,5 @@ public class SKPNormalBatch extends SKPBatch {
       }catch(IOException e) {
          e.printStackTrace();
       }
-   }
-   
-   public static SKPNormal[] retrieveBatch(String fileName) {
-      SKPNormal[] instances = GSONUtility.<SKPNormal[]>retrieveJSONInstance(fileName, SKPNormal[].class);
-      return instances;
    }
 }
