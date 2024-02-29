@@ -67,15 +67,15 @@ public class DSKPNormal extends DSKP{
                            .max()
                            .getAsDouble();
          double bestAction = Arrays.stream(s.getFeasibleActions())
-                                .filter(x -> (
-                                      (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < instance.getItems() - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
-                                                 DoubleStream.iterate(supportLB[s.item], k -> k + 1)
-                                                             .limit(supportUB[s.item]-supportLB[s.item]+1)
-                                                             .map(w -> (instance.getWeights()[s.item].cdf(w+d)-instance.getWeights()[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
-                                                                       ((s.item < instance.getItems() - 1) ? (instance.getWeights()[s.item].cdf(w+d)-instance.getWeights()[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
-                                                             .sum()) == val)
-                                .findAny()
-                                .getAsDouble();
+                                   .filter(x -> (
+                                         (x == 0) ? immediateValueFunction.apply(s, 0.0, 0.0) + ((s.item < instance.getItems() - 1) ? f(stateTransition.apply(s, 0.0)) : 0) :
+                                                    DoubleStream.iterate(supportLB[s.item], k -> k + 1)
+                                                                .limit(supportUB[s.item]-supportLB[s.item]+1)
+                                                                .map(w -> (instance.getWeights()[s.item].cdf(w+d)-instance.getWeights()[s.item].cdf(w-d))*immediateValueFunction.apply(s, x, w)+ 
+                                                                          ((s.item < instance.getItems() - 1) ? (instance.getWeights()[s.item].cdf(w+d)-instance.getWeights()[s.item].cdf(w-d))*f(stateTransition.apply(s, x == 0 ? 0 : w)) : 0))
+                                                                .sum()) == val)
+                                   .findAny()
+                                   .getAsDouble();
          cacheActions.putIfAbsent(s, bestAction);
          return val;
       });
