@@ -15,7 +15,6 @@ import skp.milp.SKPNormalMILP;
 import skp.sim.instance.SKPNormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
-import umontreal.ssj.randvar.UniformGen;
 
 public class SimulateNormalReceding extends Simulate {
    SKPNormal instance;
@@ -192,12 +191,6 @@ public class SimulateNormalReceding extends Simulate {
       default:
          sampleMatrix = SampleFactory.getNextSimpleRandomSample(instance.getWeights(), nbSamples, randGenerator);
       }
-      /*double[][] sampleMatrix = new double[nbSamples][instance.getWeights().length];
-      for(int i = 0; i < sampleMatrix.length; i++){
-         for(int j = 0; j < sampleMatrix[i].length; j++){
-            sampleMatrix[i][j] = instance.getWeights()[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
-         }
-      }*/
       return sampleMatrix;
    }
    

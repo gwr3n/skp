@@ -14,8 +14,8 @@ import skp.milp.SKPGenericDistributionMILP;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
+
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.randvar.UniformGen;
 
 public class SimulateGenericDistributionReceding extends Simulate {
    SKPGenericDistribution instance;
@@ -182,12 +182,6 @@ public class SimulateGenericDistributionReceding extends Simulate {
       default:
          sampleMatrix = SampleFactory.getNextSimpleRandomSample(instance.getWeights(), nbSamples, randGenerator);
       }
-      /*double[][] sampleMatrix = new double[nbSamples][instance.getWeights().length];
-      for(int i = 0; i < sampleMatrix.length; i++){
-         for(int j = 0; j < sampleMatrix[i].length; j++){
-            sampleMatrix[i][j] = instance.getWeights()[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
-         }
-      }*/
       return sampleMatrix;
    }
    

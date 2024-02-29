@@ -22,8 +22,8 @@ import skp.milp.SKPPoissonMILP;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
+
 import umontreal.ssj.probdist.PoissonDist;
-import umontreal.ssj.randvar.UniformGen;
 
 public class SimulatePoisson extends Simulate {
    
@@ -65,12 +65,6 @@ public class SimulatePoisson extends Simulate {
       default:
          sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, randGenerator);
       }
-      /*double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
-      for(int i = 0; i < sampleMatrix.length; i++){
-         for(int j = 0; j < sampleMatrix[i].length; j++){
-            sampleMatrix[i][j] = reducedWeights[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
-         }
-      }*/
       return sampleMatrix;
    }
    

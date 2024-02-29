@@ -8,8 +8,8 @@ import skp.milp.SKPGenericDistributionMILP;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
+
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.randvar.UniformGen;
 
 public class SimulateGenericDistribution extends Simulate {
 
@@ -51,12 +51,6 @@ public class SimulateGenericDistribution extends Simulate {
       default:
          sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, randGenerator);
       }
-      /*double[][] sampleMatrix = new double[nbSamples][reducedWeights.length];
-      for(int i = 0; i < sampleMatrix.length; i++){
-         for(int j = 0; j < sampleMatrix[i].length; j++){
-            sampleMatrix[i][j] = reducedWeights[j].inverseF(UniformGen.nextDouble(this.randGenerator, 0, 1));
-         }
-      }*/
       return sampleMatrix;
    }
    
