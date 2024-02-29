@@ -57,6 +57,7 @@ public class SimulateMultinormal extends Simulate {
       
       this.randGenerator.resetStartStream();
       NormalGen standardNormal = new NormalGen(this.randGenerator, 0, 1);
+      //MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
       MultinormalGen gen = new MultinormalPCAGen(standardNormal, mu, sigma);
       double[][] points = new double[nbSamples][this.instance.getItems()];
       for(int i = 0; i < nbSamples; i++)
