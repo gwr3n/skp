@@ -106,9 +106,9 @@ public class SKPMultinormalBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedValue = new UniformDist(75,275);
             Distribution expectedWeight = new UniformDist(15,70);
-            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             Distribution correlationCoefficient = new UniformDist(0, 1);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);
@@ -142,7 +142,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(5,10);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             Distribution correlationCoefficient = new UniformDist(0, 1);

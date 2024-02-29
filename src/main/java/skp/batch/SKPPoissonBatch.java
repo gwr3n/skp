@@ -93,7 +93,7 @@ public class SKPPoissonBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValue = new UniformDist(0.1,10);
+            Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(15,70);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);

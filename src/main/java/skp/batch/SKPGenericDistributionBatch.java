@@ -81,7 +81,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValue = new UniformDist(75,350);
+            Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);

@@ -53,7 +53,7 @@ public class SKPNormalBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/normal_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
+      generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
@@ -70,7 +70,6 @@ public class SKPNormalBatch extends SKPBatch {
    
    enum INSTANCE_TYPE {
       NORMAL,
-      MULTINORMAL,
       P05_UNCORRELATED/*,
       P05_WEEKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -91,7 +90,7 @@ public class SKPNormalBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValue = new UniformDist(0.1,10);
+            Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
@@ -112,33 +111,6 @@ public class SKPNormalBatch extends SKPBatch {
                              .toArray(SKPNormal[]::new);
             
             GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
-            break;
-         }
-         case MULTINORMAL: {
-            int instances = 10;
-            int instanceSize = 10;
-            
-            Distribution expectedValue = new UniformDist(0.1,10);
-            Distribution expectedWeight = new UniformDist(15,70);
-            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
-            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-            Distribution shortageCost = new UniformDist(50,150);
-            
-            SKPMultinormal[] batch = new SKPMultinormal[instances];
-            
-            randGenerator.setSeed(seed);
-            randGenerator.resetStartStream();
-            batch = IntStream.iterate(0, i -> i + 1)
-                             .limit(instances)
-                             .mapToObj(i -> new SKPMultinormal(
-                                                    (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
-                                                    (new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize),
-                                                    (new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble(),
-                                                    (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
-                                                    (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
-                             .toArray(SKPMultinormal[]::new);
-            
-            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_UNCORRELATED: {
