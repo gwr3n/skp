@@ -55,6 +55,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
       ArrayList<SKPGenericDistributionRecedingSolvedInstance>solved = new ArrayList<SKPGenericDistributionRecedingSolvedInstance>();
       for(SKPGenericDistribution instance : instances) {
          solved.add(new SimulateGenericDistributionReceding(instance).solve(simulationRuns, linearizationSamples));
+         System.out.println("Solved instance number "+solved.size());
          GSONUtility.<SKPGenericDistributionRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPGenericDistributionRecedingSolvedInstance[solved.size()]);

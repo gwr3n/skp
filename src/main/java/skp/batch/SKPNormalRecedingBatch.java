@@ -59,7 +59,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       ArrayList<SKPNormalRecedingSolvedInstance>solved = new ArrayList<SKPNormalRecedingSolvedInstance>();
       for(SKPNormal instance : instances) {
          solved.add(new SimulateNormalReceding(instance, partitions).solve(simulationRuns));
-         System.out.println("Solved "+solved.size()+" instances.");
+         System.out.println("Solved instance number "+solved.size());
          GSONUtility.<SKPNormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPNormalRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPNormalRecedingSolvedInstance[solved.size()]);

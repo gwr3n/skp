@@ -115,7 +115,7 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED: {
-            int instances = 100;
+            int instances = 10;
             int instanceSize = 10;
             int R = 100;
             double cv = 0.2;

@@ -60,6 +60,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       ArrayList<SKPPoissonRecedingSolvedInstance>solved = new ArrayList<SKPPoissonRecedingSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new SimulatePoissonReceding(instance, partitions).solve(simulationRuns, linearizationSamples));
+         System.out.println("Solved instance number "+solved.size());
          GSONUtility.<SKPPoissonRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPPoissonRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPPoissonRecedingSolvedInstance[solved.size()]);
