@@ -49,8 +49,9 @@ public class SKPPoissonMILP extends SKPMILP{
    
    void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException {
       double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
-      this.milpMaxLinearizationError = instance.getShortageCost()*
-            errors[(int)Math.round(cplex.getValue(opl.getElement("M").asNumVar()))];
+      int expKnapWeight = (int)Math.round(cplex.getValue(opl.getElement("M").asNumVar()));
+      // If expKnapWeight >= errors.length, then errors[errors.length - 1] applies (Edmundson-Madansky)
+      this.milpMaxLinearizationError = instance.getShortageCost()*errors[Math.min(expKnapWeight, errors.length - 1)];
    }
    
    public void solve() throws IloException {
