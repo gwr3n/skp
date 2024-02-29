@@ -115,11 +115,11 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED: {
-            int instances = 10;
+            int instances = 100;
             int instanceSize = 10;
-            int R = 1000;
-            double cv = 0.1;
-            double shortageCost = 100;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[instances];
             
@@ -129,7 +129,7 @@ public class SKPNormalBatch extends SKPBatch {
             for(int i = 0; i < instances; i++) {
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
-               double capacity = (i/(instances+1))*Arrays.stream(expectedWeights).sum();
+               double capacity = ((i+1.0)/(instances+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPNormal(
                      expectedValues,
                      expectedWeights,
