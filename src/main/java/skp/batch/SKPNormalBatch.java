@@ -93,9 +93,9 @@ public class SKPNormalBatch extends SKPBatch {
             
             Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(15,70);
-            Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
+            Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-            Distribution shortageCost = new UniformDist(50,150);
+            Distribution shortageCost = new UniformDist(5,25);
             
             SKPNormal[] batch = new SKPNormal[instances];
             
