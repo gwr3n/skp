@@ -89,7 +89,7 @@ public class SimulatePoissonReceding extends Simulate {
       System.arraycopy(expWeight, t, shortExpWeight, 0, Nbperiods);
       
       double[] shortExpValues = new double[Nbperiods];
-      System.arraycopy(instance.getExpectedValuesPerUnit(), t, shortExpValues, 0, Nbperiods);
+      System.arraycopy(instance.getExpectedValues(), t, shortExpValues, 0, Nbperiods);
 
       SKPPoisson reducedInstance = new SKPPoisson(shortExpValues, shortExpWeight, remainingCapacity, instance.getShortageCost());
 
@@ -115,7 +115,7 @@ public class SimulatePoissonReceding extends Simulate {
       for(int i = 0; i < realizations.length; i++) {
          if(simulateOneItem(i, realizations, remainingCapacity, partitions, linearisationSamples) == 1) {
             remainingCapacity -= realizations[i];
-            knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*realizations[i];
+            knapsackValue += this.instance.getExpectedValues()[i];
          }
       }
       knapsackValue -= Math.max(-remainingCapacity*instance.getShortageCost(), 0);
@@ -133,7 +133,7 @@ public class SimulatePoissonReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations) {
-      KP instanceEVwPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVwPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -154,7 +154,7 @@ public class SimulatePoissonReceding extends Simulate {
    }
    
    double computeEVP() {
-      KP instanceEVP = new KP(instance.getExpectedValuesPerUnit(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVP = new KP(instance.getExpectedValues(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -169,7 +169,7 @@ public class SimulatePoissonReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations, int selectFirstObject) {
-      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {

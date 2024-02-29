@@ -95,13 +95,13 @@ public class SKPPoissonMILP extends SKPMILP{
          IloOplDataHandler handler = getDataHandler();
 
          handler.startElement("N");
-         handler.addIntItem(instance.getExpectedValuesPerUnit().length);
+         handler.addIntItem(instance.getItems());
          handler.endElement();
 
          handler.startElement("expectedValues");
          handler.startArray();
-         for (int j = 0 ; j<instance.getExpectedValuesPerUnit().length ; j++)
-            handler.addNumItem(instance.getExpectedValuesPerUnit()[j]*instance.getWeights()[j].getMean());
+         for (int j = 0 ; j<instance.getExpectedValues().length ; j++)
+            handler.addNumItem(instance.getExpectedValues()[j]);
          handler.endArray();
          handler.endElement();
 

@@ -79,7 +79,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
    
    private static void storeSolvedBatchToCSV(SKPNormalRecedingSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, "
+            "instanceID, expectedValues, expectedWeights, stdWeights, "
             + "capacity, shortageCost, simulatedSolutionMean, simulatedSolutionStd, "
             + "simulationRuns, piecewisePartitions, "
             + "piecewiseSamples, evp, evwpi,"
@@ -88,7 +88,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       
       for(SKPNormalRecedingSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getSigma()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +

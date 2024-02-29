@@ -85,14 +85,14 @@ public class SKPMultinormalBatch extends SKPBatch {
       int instances = 10;
       int instanceSize = 10;
       
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedValue = new UniformDist(75,350);
       Distribution expectedWeight = new UniformDist(15,70);
       Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
       Distribution correlationCoefficient = new UniformDist(0, 1);
       DiscreteDistributionInt capacity = new UniformIntDist(100,200);
       Distribution shortageCost = new UniformDist(50,150);
       
-      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValue, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
       batch.generateBatch(instances, instanceSize, batchFileName);
    }
    
@@ -108,14 +108,14 @@ public class SKPMultinormalBatch extends SKPBatch {
       int instances = 10;
       int instanceSize = 10;
       
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedValue = new UniformDist(75,350);
       Distribution expectedWeight = new UniformDist(5,10);
       Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
       Distribution correlationCoefficient = new UniformDist(0, 1);
       DiscreteDistributionInt capacity = new UniformIntDist(25,50);
       Distribution shortageCost = new UniformDist(20,50);
       
-      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
+      SKPMultinormalBatch batch = new SKPMultinormalBatch(expectedValue, expectedWeight, coefficientOfVariation, correlationCoefficient, capacity, shortageCost);
       batch.generateBatchSpecialStructure(instances, instanceSize, batchFileName);
    }
    
@@ -123,13 +123,13 @@ public class SKPMultinormalBatch extends SKPBatch {
    protected Distribution correlationCoefficient;
    
    public SKPMultinormalBatch(
-         Distribution expectedValuePerUnit,
+         Distribution expectedValue,
          Distribution expectedWeight,
          Distribution coefficientOfVariation,
          Distribution correlationCoefficient,
          DiscreteDistributionInt capacity,
          Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+      super(expectedValue, expectedWeight, capacity, shortageCost);
       this.coefficientOfVariation = coefficientOfVariation;
       this.correlationCoefficient = correlationCoefficient;
    }
@@ -162,7 +162,7 @@ public class SKPMultinormalBatch extends SKPBatch {
 
    private static void storeSolvedBatchToCSV(SKPMultinormalMILPSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, "
+            "instanceID, expectedValues, expectedWeights, covarianceWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
             + "simulationRuns, milpSolutionValue, milpOptimalityGap, piecewisePartitions, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
@@ -171,7 +171,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       
       for(SKPMultinormalMILPSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(s.instance.getWeights().getMean()).replace(",", "\t")+ ", " +
                  Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
@@ -233,12 +233,12 @@ public class SKPMultinormalBatch extends SKPBatch {
    }
 
    private static void storeSolvedBatchToCSV(DSKPMultinormalSolvedInstance[] instances, String fileName) {
-      String header = "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String header = "instanceID, expectedValues, expectedWeights, covarianceWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
       
       for(DSKPMultinormalSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights().getMean()).toArray()).replace(",", "\t")+ ", " +
                  Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
@@ -288,7 +288,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
                                             .limit(numberOfInstances)
                                             .mapToObj(i -> new SKPMultinormal(
-                                                  (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                                  (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
                                                   (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
                                                   (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
                                                   (new RandomVariateGen(randGenerator, this.correlationCoefficient)).nextDouble(),
@@ -304,10 +304,10 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
                                             .limit(numberOfInstances)
                                             .mapToObj(i -> {
-                                                  double[] expectedValuePerUnit = (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize);
+                                                  double[] expectedValue = (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize);
                                                   double[] expectedWeight = (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize);
                                                   return new SKPMultinormal(
-                                                  expectedValuePerUnit,
+                                                  expectedValue,
                                                   expectedWeight,
                                                   SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeight, 
                                                                                       (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(), 

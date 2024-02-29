@@ -10,16 +10,16 @@ public class SKPNormal extends SKP {
    double[] stdWeights;
    double capacity;
    
-   public SKPNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double[] stdWeights, double capacity, double shortageCost) {
-      super(expectedValuesPerUnit, expectedWeights, shortageCost);
+   public SKPNormal(double[] expectedValues, double[] expectedWeights, double[] stdWeights, double capacity, double shortageCost) {
+      super(expectedValues, expectedWeights, shortageCost);
       this.stdWeights = stdWeights;
       this.capacity = capacity;
       
       generateInstanceID();
    }
    
-   public SKPNormal(double[] expectedValuesPerUnit, double[] expectedWeights, double coefficientOfVariation, double capacity, double shortageCost) {
-      this(expectedValuesPerUnit, 
+   public SKPNormal(double[] expectedValues, double[] expectedWeights, double coefficientOfVariation, double capacity, double shortageCost) {
+      this(expectedValues, 
             expectedWeights,
             IntStream.iterate(0, i -> i + 1)
                      .limit(expectedWeights.length)
@@ -29,8 +29,8 @@ public class SKPNormal extends SKP {
             shortageCost);
    }
    
-   public SKPNormal(double[] expectedValuesPerUnit, NormalDist[] weights, double capacity, double shortageCost) {
-      this(expectedValuesPerUnit,
+   public SKPNormal(double[] expectedValues, NormalDist[] weights, double capacity, double shortageCost) {
+      this(expectedValues,
             IntStream.iterate(0, i -> i + 1)
                      .limit(weights.length)
                      .mapToDouble(i -> weights[i].getMean())
@@ -55,7 +55,7 @@ public class SKPNormal extends SKP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValuesPerUnit),
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValues),
                                         Arrays.hashCode(this.expectedWeights),
                                         Arrays.hashCode(this.stdWeights),
                                         Double.hashCode(this.capacity),
@@ -66,7 +66,7 @@ public class SKPNormal extends SKP {
    public boolean equals(Object obj) {
       if(obj instanceof SKPNormal) {
          SKPNormal o = (SKPNormal) obj;
-         return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
+         return Arrays.equals(this.expectedValues, o.expectedValues) &&
                 Arrays.equals(this.expectedWeights, o.expectedWeights) &&
                 Arrays.equals(this.stdWeights, o.stdWeights) &&
                 this.capacity == o.capacity &&
@@ -76,11 +76,11 @@ public class SKPNormal extends SKP {
    }
    
    public static SKPNormal getTestInstance() {
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedValues = {111, 111, 21, 117, 123, 34, 3, 121, 112, 12};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       double cv = 0.2;
       int capacity = 100;
-      int shortageCost = 100;
-      return new SKPNormal(expectedValuesPerUnit, expectedWeights, cv, capacity, shortageCost);
+      int shortageCost = 10;
+      return new SKPNormal(expectedValues, expectedWeights, cv, capacity, shortageCost);
    }
 }

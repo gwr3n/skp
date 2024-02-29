@@ -36,7 +36,7 @@ public class SimulatePoisson extends Simulate {
    public double simulate(int[] knapsack, int nbSamples) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
-         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*this.instance.getWeights()[i].getMean(); 
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
       }
       double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)

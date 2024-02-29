@@ -12,8 +12,8 @@ public class SKPGenericDistribution extends SKP{
    Distribution[] weights;
    double capacity;
    
-   public SKPGenericDistribution(double[] expectedValuesPerUnit, Distribution[] weights, double capacity, double shortageCost) {
-      super(expectedValuesPerUnit, Arrays.stream(weights).mapToDouble(w -> w.getMean()).toArray(), shortageCost);
+   public SKPGenericDistribution(double[] expectedValues, Distribution[] weights, double capacity, double shortageCost) {
+      super(expectedValues, Arrays.stream(weights).mapToDouble(w -> w.getMean()).toArray(), shortageCost);
       this.weights = weights;
       this.capacity = capacity;
       
@@ -30,7 +30,7 @@ public class SKPGenericDistribution extends SKP{
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValuesPerUnit),
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValues),
                                         Arrays.hashCode(Arrays.stream(this.weights).map(w -> w.toString()).toArray(String[]::new)),
                                         Double.hashCode(this.capacity),
                                         Double.hashCode(this.shortageCost)});
@@ -40,7 +40,7 @@ public class SKPGenericDistribution extends SKP{
    public boolean equals(Object obj) {
       if(obj instanceof SKPGenericDistribution) {
          SKPGenericDistribution o = (SKPGenericDistribution) obj;
-         return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
+         return Arrays.equals(this.expectedValues, o.expectedValues) &&
                 Arrays.equals(Arrays.stream(this.weights).map(w -> w.toString()).toArray(String[]::new), Arrays.stream(o.weights).map(w -> w.toString()).toArray(String[]::new)) &&
                 this.capacity == o.capacity &&
                 this.shortageCost == o.shortageCost;
@@ -49,8 +49,7 @@ public class SKPGenericDistribution extends SKP{
    }
    
    public static SKPGenericDistribution getTestInstance() {
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 
-                                        2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedValues = {111, 111, 21, 117, 123, 34, 3, 121, 112, 12};
       Distribution[] expectedWeights = {new NormalDist(44,10),
                                         new PoissonDist(42),
                                         new BinomialDist(73,0.5),
@@ -62,7 +61,7 @@ public class SKPGenericDistribution extends SKP{
                                         new PoissonDist(23),
                                         new PoissonDist(15)};
       int capacity = 100;
-      int shortageCost = 100;
-      return new SKPGenericDistribution(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
+      int shortageCost = 10;
+      return new SKPGenericDistribution(expectedValues, expectedWeights, capacity, shortageCost);
    }
 }

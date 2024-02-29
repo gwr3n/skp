@@ -5,12 +5,12 @@ import skp.utilities.hash.SHA;
 public abstract class SKP {
 
    protected String instanceID;
-   protected double[] expectedValuesPerUnit;
+   protected double[] expectedValues;
    protected double[] expectedWeights;
    protected double shortageCost;
    
-   SKP(double[] expectedValuesPerUnit, double[] expectedWeights, double shortageCost){
-      this.expectedValuesPerUnit = expectedValuesPerUnit;
+   SKP(double[] expectedValues, double[] expectedWeights, double shortageCost){
+      this.expectedValues = expectedValues;
       this.expectedWeights = expectedWeights;
       this.shortageCost = shortageCost;
    }
@@ -25,22 +25,14 @@ public abstract class SKP {
    }
 
    public int getItems() {
-      return this.expectedValuesPerUnit.length;
+      return this.expectedValues.length;
    }
 
    public double getShortageCost() {
       return this.shortageCost;
    }
 
-   public double[] getExpectedValuesPerUnit() {
-      return this.expectedValuesPerUnit;
-   }
-   
    public double[] getExpectedValues() {
-      double[] ev = new double[this.getItems()];
-      for(int i = 0; i < this.getItems(); i++) {
-         ev[i] = this.getExpectedValuesPerUnit()[i]*this.expectedWeights[i];
-      }
-      return ev;
+      return this.expectedValues;
    }
 }

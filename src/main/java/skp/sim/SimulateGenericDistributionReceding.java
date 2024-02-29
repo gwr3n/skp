@@ -70,7 +70,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
       System.arraycopy(instance.getWeights(), t, shortWeight, 0, Nbperiods);
       
       double[] shortExpValues = new double[Nbperiods];
-      System.arraycopy(instance.getExpectedValuesPerUnit(), t, shortExpValues, 0, Nbperiods);
+      System.arraycopy(instance.getExpectedValues(), t, shortExpValues, 0, Nbperiods);
 
       SKPGenericDistribution reducedInstance = new SKPGenericDistribution(shortExpValues, shortWeight, remainingCapacity, instance.getShortageCost());
 
@@ -96,7 +96,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
       for(int i = 0; i < realizations.length; i++) {
          if(simulateOneItem(i, realizations, remainingCapacity, linearisationSamples) == 1) {
             remainingCapacity -= realizations[i];
-            knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*realizations[i];
+            knapsackValue += this.instance.getExpectedValues()[i];
          }
       }
       knapsackValue -= Math.max(-remainingCapacity*instance.getShortageCost(), 0);
@@ -114,7 +114,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations) {
-      KP instanceEVwPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVwPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -135,7 +135,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
    }
    
    double computeEVP() {
-      KP instanceEVP = new KP(instance.getExpectedValuesPerUnit(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVP = new KP(instance.getExpectedValues(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -150,7 +150,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations, int selectFirstObject) {
-      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {

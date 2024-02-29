@@ -6,13 +6,13 @@ import skp.utilities.hash.SHA;
 
 public class KP {
    String instanceID;
-   double[] valuesPerUnit;
+   double[] values;
    double[] weights;
    double capacity;
    double shortageCost;
    
-   public KP(double[] valuesPerUnit, double[] weights, double capacity, double shortageCost) {
-      this.valuesPerUnit = valuesPerUnit;
+   public KP(double[] values, double[] weights, double capacity, double shortageCost) {
+      this.values = values;
       this.weights = weights;
       this.capacity = capacity;
       this.shortageCost = shortageCost;
@@ -30,7 +30,7 @@ public class KP {
    }
    
    public int getItems() {
-      return this.valuesPerUnit.length;
+      return this.values.length;
    }
    
    public double getCapacity() {
@@ -42,7 +42,7 @@ public class KP {
    }
    
    public double[] getValues() {
-      return this.valuesPerUnit;
+      return this.values;
    }
    
    public double[] getWeights() {
@@ -51,7 +51,7 @@ public class KP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(new int[] {Arrays.hashCode(this.valuesPerUnit),
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.values),
                                         Arrays.hashCode(this.weights),
                                         Double.hashCode(this.capacity),
                                         Double.hashCode(this.shortageCost)});
@@ -61,7 +61,7 @@ public class KP {
    public boolean equals(Object obj) {
       if(obj instanceof KP) {
          KP o = (KP) obj;
-         return Arrays.equals(this.valuesPerUnit, o.valuesPerUnit) &&
+         return Arrays.equals(this.values, o.values) &&
                 Arrays.equals(this.weights, o.weights) &&
                 this.capacity == o.capacity &&
                 this.shortageCost == o.shortageCost;

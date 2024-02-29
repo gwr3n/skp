@@ -63,25 +63,25 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       int instances = 10;
       int instanceSize = 10;
       
-      Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+      Distribution expectedValue = new UniformDist(75,350);
       Distribution expectedWeight = new UniformDist(15,70);
       Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
       DiscreteDistributionInt capacity = new UniformIntDist(100,200);
       Distribution shortageCost = new UniformDist(50,150);
       
-      SKPGenericDistributionBatch batch = new SKPGenericDistributionBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+      SKPGenericDistributionBatch batch = new SKPGenericDistributionBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
       return batch.generateBatch(instances, instanceSize, batchFileName);
    }
    
    protected Distribution coefficientOfVariation;
    
    public SKPGenericDistributionBatch(
-         Distribution expectedValuePerUnit,
+         Distribution expectedValue,
          Distribution expectedWeight,
          Distribution coefficientOfVariation,
          DiscreteDistributionInt capacity,
          Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+      super(expectedValue, expectedWeight, capacity, shortageCost);
       this.coefficientOfVariation = coefficientOfVariation;
    }
    
@@ -101,7 +101,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       SKPGenericDistribution[] instances = IntStream.iterate(0, i -> i + 1)
                                                     .limit(numberOfInstances)
                                                     .mapToObj(i -> new SKPGenericDistribution(
-                                                          (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                                          (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
                                                           Arrays.stream((new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(w, Math.sqrt(w/Math.pow((new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble()*w,2)))).toArray(GammaDist[]::new),
                                                           (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
                                                           (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))
@@ -149,7 +149,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    
    private static void storeSolvedBatchToCSV(SKPGenericDistributionMILPSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, "
+            "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
             + "simulationRuns, milpSolutionValue, milpOptimalityGap, cuts, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
@@ -158,7 +158,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       for(SKPGenericDistributionMILPSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +
@@ -214,12 +214,12 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
 
    private static void storeSolvedBatchToCSV(DSKPGenericDistributionSolvedInstance[] instances, String fileName) {
-      String header = "instanceID, expectedValuesPerUnit, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String header = "instanceID, expectedValues, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
       
       for(DSKPGenericDistributionSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +

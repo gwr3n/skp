@@ -173,7 +173,7 @@ public class KPMILP {
          handler.startElement("values");
          handler.startArray();
          for (int j = 0 ; j<instance.getValues().length ; j++)
-            handler.addNumItem(instance.getValues()[j]*instance.getWeights()[j]);
+            handler.addNumItem(instance.getValues()[j]);
          handler.endArray();
          handler.endElement();
 

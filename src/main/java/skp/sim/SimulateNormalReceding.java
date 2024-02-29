@@ -41,6 +41,8 @@ public class SimulateNormalReceding extends Simulate {
       
       System.out.println("Simulation (mean): "+simSolutionMean);
       System.out.println("Simulation (std): "+simSolutionStd);
+      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
+                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
@@ -76,7 +78,7 @@ public class SimulateNormalReceding extends Simulate {
       System.arraycopy(stdWeight, t, shortStdWeight, 0, Nbperiods);
       
       double[] shortExpValues = new double[Nbperiods];
-      System.arraycopy(instance.getExpectedValuesPerUnit(), t, shortExpValues, 0, Nbperiods);
+      System.arraycopy(instance.getExpectedValues(), t, shortExpValues, 0, Nbperiods);
       
       SKPNormal reducedInstance = new SKPNormal(shortExpValues, shortExpWeight, shortStdWeight, remainingCapacity, instance.getShortageCost());
       
@@ -102,7 +104,7 @@ public class SimulateNormalReceding extends Simulate {
       for(int i = 0; i < realizations.length; i++) {
          if(simulateOneItem(i, realizations, remainingCapacity, partitions) == 1) {
             remainingCapacity -= realizations[i];
-            knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*realizations[i];
+            knapsackValue += this.instance.getExpectedValues()[i];
          }
       }
       knapsackValue -= Math.max(-remainingCapacity*instance.getShortageCost(), 0);
@@ -120,7 +122,7 @@ public class SimulateNormalReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations) {
-      KP instanceEVwPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVwPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -141,7 +143,7 @@ public class SimulateNormalReceding extends Simulate {
    }
    
    double computeEVP() {
-      KP instanceEVP = new KP(instance.getExpectedValuesPerUnit(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVP = new KP(instance.getExpectedValues(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {
@@ -156,7 +158,7 @@ public class SimulateNormalReceding extends Simulate {
    }
    
    private double simulateOneRunEVwPI(double[] realizations, int selectFirstObject) {
-      KP instanceEVPI = new KP(instance.getExpectedValuesPerUnit(), realizations, instance.getCapacity(), instance.getShortageCost());
+      KP instanceEVPI = new KP(instance.getExpectedValues(), realizations, instance.getCapacity(), instance.getShortageCost());
       KPMILP milp = null;
       int[] knapsack = null;
       try {

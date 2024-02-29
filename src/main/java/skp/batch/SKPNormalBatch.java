@@ -88,13 +88,13 @@ public class SKPNormalBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+            Distribution expectedValue = new UniformDist(0.1,10);
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);
             
-            SKPNormalBatch batch = new SKPNormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            SKPNormalBatch batch = new SKPNormalBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
             
             batch.generateBatch(instances, instanceSize, batchFileName);
             break;
@@ -103,13 +103,13 @@ public class SKPNormalBatch extends SKPBatch {
             int instances = 10;
             int instanceSize = 10;
             
-            Distribution expectedValuePerUnit = new UniformDist(0.1,10);
+            Distribution expectedValue = new UniformDist(0.1,10);
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.5);
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(50,150);
             
-            SKPNormalBatch batch = new SKPNormalBatch(expectedValuePerUnit, expectedWeight, coefficientOfVariation, capacity, shortageCost);
+            SKPNormalBatch batch = new SKPNormalBatch(expectedValue, expectedWeight, coefficientOfVariation, capacity, shortageCost);
             
             batch.generateMultinormalBatch(instances, instanceSize, batchFileName);
             break;
@@ -127,11 +127,11 @@ public class SKPNormalBatch extends SKPBatch {
             randGenerator.resetStartStream();
             
             for(int i = 0; i < instances; i++) {
-               double[] expectedValuesPerUnit = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double capacity = (i/(instances+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPNormal(
-                     expectedValuesPerUnit,
+                     expectedValues,
                      expectedWeights,
                      cv,
                      capacity,
@@ -147,12 +147,12 @@ public class SKPNormalBatch extends SKPBatch {
    protected Distribution coefficientOfVariation;
    
    public SKPNormalBatch(
-         Distribution expectedValuePerUnit,
+         Distribution expectedValue,
          Distribution expectedWeight,
          Distribution coefficientOfVariation,
          DiscreteDistributionInt capacity,
          Distribution shortageCost) {
-      super(expectedValuePerUnit, expectedWeight, capacity, shortageCost);
+      super(expectedValue, expectedWeight, capacity, shortageCost);
       this.coefficientOfVariation = coefficientOfVariation;
    }
    
@@ -184,7 +184,7 @@ public class SKPNormalBatch extends SKPBatch {
 
    private static void storeSolvedBatchToCSV(SKPNormalMILPSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, "
+            "instanceID, expectedValues, expectedWeights, stdWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
             + "simulationRuns, milpSolutionValue, milpOptimalityGap, piecewisePartitions, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
@@ -193,7 +193,7 @@ public class SKPNormalBatch extends SKPBatch {
       
       for(SKPNormalMILPSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getSigma()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
@@ -255,12 +255,12 @@ public class SKPNormalBatch extends SKPBatch {
    }
 
    private static void storeSolvedBatchToCSV(DSKPNormalSolvedInstance[] instances, String fileName) {
-      String header = "instanceID, expectedValuesPerUnit, expectedWeights, stdWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String header = "instanceID, expectedValues, expectedWeights, stdWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
       
       for(DSKPNormalSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getSigma()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
@@ -300,7 +300,7 @@ public class SKPNormalBatch extends SKPBatch {
       SKPNormal[] instances = IntStream.iterate(0, i -> i + 1)
                                         .limit(numberOfInstances)
                                         .mapToObj(i -> new SKPNormal(
-                                              (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
                                               (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
@@ -320,7 +320,7 @@ public class SKPNormalBatch extends SKPBatch {
       SKPMultinormal[] instances = IntStream.iterate(0, i -> i + 1)
                                         .limit(numberOfInstances)
                                         .mapToObj(i -> new SKPMultinormal(
-                                              (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGen(randGenerator, this.coefficientOfVariation)).nextDouble(),
                                               (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),

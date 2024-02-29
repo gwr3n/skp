@@ -93,7 +93,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    private static void storeSolvedBatchToCSV(SKPMultinormalRecedingSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, covarianceWeights, "
+            "instanceID, expectedValues, expectedWeights, covarianceWeights, "
             + "capacity, shortageCost, simulatedSolutionMean, simulatedSolutionStd, "
             + "simulationRuns, piecewisePartitions, "
             + "piecewiseSamples, evp, evwpi,"
@@ -102,7 +102,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       
       for(SKPMultinormalRecedingSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(s.instance.getWeights().getMean()).replace(",", "\t")+ ", " +
                  Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +

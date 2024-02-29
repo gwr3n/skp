@@ -38,7 +38,7 @@ public class SimulateMultinormal extends Simulate {
    public double simulate(int[] knapsack, int nbSamples) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
-         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValuesPerUnit()[i]*this.instance.getWeights().getMean()[i]; 
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
       }
       double[][] sampleMatrix = sampleWeights(nbSamples);
       knapsackValue -= Arrays.stream(sampleMatrix)
@@ -66,7 +66,7 @@ public class SimulateMultinormal extends Simulate {
    
    public static void main(String args[]) {
       
-      SKPMultinormal instance = SKPMultinormal.getTestInstance();
+      SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
       int partitions = 20;
       int simulationRuns = 10000;

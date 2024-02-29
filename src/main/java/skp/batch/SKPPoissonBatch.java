@@ -118,7 +118,7 @@ public class SKPPoissonBatch extends SKPBatch {
 
    private static void storeSolvedBatchToCSV(SKPPoissonMILPSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValuesPerUnit, expectedWeights, "
+            "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
             + "simulationRuns, milpSolutionValue, milpOptimalityGap, piecewisePartitions, "
             + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
@@ -127,7 +127,7 @@ public class SKPPoissonBatch extends SKPBatch {
       
       for(SKPPoissonMILPSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +
@@ -188,12 +188,12 @@ public class SKPPoissonBatch extends SKPBatch {
    }
 
    private static void storeSolvedBatchToCSV(DSKPPoissonSolvedInstance[] instances, String fileName) {
-      String header = "instanceID, expectedValuesPerUnit, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String header = "instanceID, expectedValues, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
       String body = "";
       
       for(DSKPPoissonSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValuesPerUnit()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(Arrays.stream(s.instance.getWeights()).mapToDouble(d -> d.getMean()).toArray()).replace(",", "\t")+ ", " +
                  s.instance.getCapacity()+ ", " +
                  s.instance.getShortageCost()+ ", " +
@@ -237,7 +237,7 @@ public class SKPPoissonBatch extends SKPBatch {
       SKPPoisson[] instances = IntStream.iterate(0, i -> i + 1)
                                         .limit(numberOfInstances)
                                         .mapToObj(i -> new SKPPoisson(
-                                              (new RandomVariateGen(randGenerator, this.expectedValuePerUnit)).nextArrayOfDouble(instanceSize),
+                                              (new RandomVariateGen(randGenerator, this.expectedValue)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGen(randGenerator, this.expectedWeight)).nextArrayOfDouble(instanceSize),
                                               (new RandomVariateGenInt(randGenerator, this.capacity)).nextInt(),
                                               (new RandomVariateGen(randGenerator, this.shortageCost)).nextDouble()))

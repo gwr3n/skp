@@ -9,15 +9,15 @@ public class SKPPoisson extends SKP {
    
    int capacity;
    
-   public SKPPoisson(double[] expectedValuesPerUnit, double[] expectedWeights, int capacity, double shortageCost) {
-      super(expectedValuesPerUnit, expectedWeights, shortageCost);
+   public SKPPoisson(double[] expectedValues, double[] expectedWeights, int capacity, double shortageCost) {
+      super(expectedValues, expectedWeights, shortageCost);
       this.capacity = capacity;
       
       generateInstanceID();
    }
    
-   public SKPPoisson(double[] expectedValuesPerUnit, PoissonDist[] weights, int capacity, double shortageCost) {
-      super(expectedValuesPerUnit, 
+   public SKPPoisson(double[] expectedValues, PoissonDist[] weights, int capacity, double shortageCost) {
+      super(expectedValues, 
             IntStream.iterate(0, i -> i + 1).limit(weights.length)
                      .mapToDouble(i -> weights[i].getLambda())
                      .toArray(), 
@@ -39,7 +39,7 @@ public class SKPPoisson extends SKP {
    
    @Override
    public int hashCode() {
-      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValuesPerUnit),
+      return Arrays.hashCode(new int[] {Arrays.hashCode(this.expectedValues),
                                         Arrays.hashCode(this.expectedWeights),
                                         Double.hashCode(this.capacity),
                                         Double.hashCode(this.shortageCost)});
@@ -49,7 +49,7 @@ public class SKPPoisson extends SKP {
    public boolean equals(Object obj) {
       if(obj instanceof SKPPoisson) {
          SKPPoisson o = (SKPPoisson) obj;
-         return Arrays.equals(this.expectedValuesPerUnit, o.expectedValuesPerUnit) &&
+         return Arrays.equals(this.expectedValues, o.expectedValues) &&
                 Arrays.equals(this.expectedWeights, o.expectedWeights) &&
                 this.capacity == o.capacity &&
                 this.shortageCost == o.shortageCost;
@@ -58,10 +58,10 @@ public class SKPPoisson extends SKP {
    }
    
    public static SKPPoisson getTestInstance() {
-      double[] expectedValuesPerUnit = {2.522727273, 2.642857143, 0.287671233, 7.8, 1.732394366, 2.833333333, 0.230769231, 8.642857143, 4.869565217, 0.8};
+      double[] expectedValues = {111, 111, 21, 117, 123, 34, 3, 121, 112, 12};
       double[] expectedWeights = {44,42,73,15,71,12,13,14,23,15};
       int capacity = 100;
-      int shortageCost = 100;
-      return new SKPPoisson(expectedValuesPerUnit, expectedWeights, capacity, shortageCost);
+      int shortageCost = 10;
+      return new SKPPoisson(expectedValues, expectedWeights, capacity, shortageCost);
    }
 }

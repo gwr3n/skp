@@ -56,7 +56,7 @@ public abstract class DSKP {
        * Immediate value function for a given state
        */
       this.immediateValueFunction = (state, action, realisedWeight) -> {
-            double value = action*instance.getExpectedValuesPerUnit()[state.item]*realisedWeight;
+            double value = action*instance.getExpectedValues()[state.item];
             double cost = (state.item == instance.getItems() - 1 ? instance.getShortageCost() : 0)*Math.max(realisedWeight - state.remainingCapacity, 0);
             return value - cost;
          };
