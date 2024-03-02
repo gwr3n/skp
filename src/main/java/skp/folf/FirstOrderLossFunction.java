@@ -23,7 +23,7 @@ import umontreal.ssj.rng.MRG32k3aL;
 
 public class FirstOrderLossFunction {
    Distribution[] distributions;
-   protected static final long[] seed = {123456,654321,214365,653412,654321,142356};
+   protected static final long[] seed = {123456, 246513, 264531, 425316, 635124, 326451};
    MRG32k3aL randGenerator;
    
    FirstOrderLossFunction(Distribution[] distributions){
