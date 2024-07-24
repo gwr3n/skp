@@ -59,7 +59,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       if(specialStructure)
          generateInstances(batchFileName, INSTANCE_TYPE.SPECIAL_STRUCTURE);
       else
-         generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+         generateInstances(batchFileName, INSTANCE_TYPE.MULTINORMAL);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
@@ -83,9 +83,8 @@ public class SKPMultinormalBatch extends SKPBatch {
    }
    
    enum INSTANCE_TYPE {
-      NORMAL,
-      SPECIAL_STRUCTURE/*,
       MULTINORMAL,
+      SPECIAL_STRUCTURE/*,
       P05_UNCORRELATED,
       P05_WEEKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -102,7 +101,7 @@ public class SKPMultinormalBatch extends SKPBatch {
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
       switch(type) {
-         case NORMAL: {
+         case MULTINORMAL: {
             int instances = 10;
             int instanceSize = 10;
             
