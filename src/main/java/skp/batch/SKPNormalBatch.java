@@ -54,7 +54,7 @@ public class SKPNormalBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/normal_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
+      generateInstances(batchFileName, INSTANCE_TYPE.P05_PROFIT_CEILING);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
@@ -71,13 +71,15 @@ public class SKPNormalBatch extends SKPBatch {
    
    enum INSTANCE_TYPE {
       NORMAL,
-      P05_UNCORRELATED/*,
-      P05_WEEKLY_CORRELATED,
+      P05_UNCORRELATED,
+      P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
       P05_INVERSE_STRONGLY_CORRELATED,
       P05_ALMOST_STRONGLY_CORRELATED,
       P05_SUBSET_SUM,
-      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+      P05_UNCORRELATED_SIMILAR_WEIGHTS,
+      P05_PROFIT_CEILING,
+      P05_CIRCLE_INSTANCES
    };
    
    /**
@@ -115,21 +117,247 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED: {
-            int instances = 10;
+            int H = 10;
             int instanceSize = 10;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
             
-            SKPNormal[] batch = new SKPNormal[instances];
+            SKPNormal[] batch = new SKPNormal[H];
             
             randGenerator.setSeed(seed);
             randGenerator.resetStartStream();
             
-            for(int i = 0; i < instances; i++) {
+            for(int i = 0; i < H; i++) {
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
-               double capacity = ((i+1.0)/(instances+1))*Arrays.stream(expectedWeights).sum();
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_WEAKLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double U = Math.max(1.0, Arrays.stream(expectedWeights).map(v -> v - R/10.0).max().getAsDouble());
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(U,U+2*R/10.0)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> v + R/10.0).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_INVERSE_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = Arrays.stream(expectedValues).map(v -> v + R/10.0).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_ALMOST_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> new RandomVariateGen(randGenerator, new UniformDist(v + R/10.0 - R/500.0, v + R/10.0 + R/500.0)).nextDouble()).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_SUBSET_SUM: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.copyOf(expectedWeights, instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(R,R+10)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_PROFIT_CEILING: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double d = 3;
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> d*Math.ceil(v/d)).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPNormal(
+                     expectedValues,
+                     expectedWeights,
+                     cv,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_CIRCLE_INSTANCES: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPNormal[] batch = new SKPNormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> 2*Math.sqrt(4*R*R - Math.pow(v - 2*R,2))/3).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPNormal(
                      expectedValues,
                      expectedWeights,
