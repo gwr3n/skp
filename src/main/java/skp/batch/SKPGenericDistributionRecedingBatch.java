@@ -23,7 +23,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
       
       String batchFileName = "batch/generic_distribution_instances.json";
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.GAMMA);
       
       int linearizationSamples = 10000;
       int simulationRuns = 100; 

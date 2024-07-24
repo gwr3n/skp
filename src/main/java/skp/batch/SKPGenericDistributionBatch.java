@@ -47,7 +47,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       String batchFileName = "batch/generic_distribution_instances.json";
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.GAMMA);
       
       int linearizationSamples = 100000;
       int simulationRuns = 100000;   
@@ -61,7 +61,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    enum INSTANCE_TYPE {
-      NORMAL/*,
+      GAMMA/*,
       P05_UNCORRELATED,
       P05_WEEKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -78,7 +78,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    protected static SKPGenericDistribution[] generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
       switch(type) {
-         case NORMAL: {
+         case GAMMA: {
             int instances = 10;
             int instanceSize = 10;
             
