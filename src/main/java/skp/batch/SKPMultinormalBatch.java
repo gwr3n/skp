@@ -173,10 +173,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -202,10 +202,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_WEAKLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -232,10 +232,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -261,10 +261,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -290,10 +290,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -319,10 +319,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_SUBSET_SUM: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -348,10 +348,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -377,10 +377,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_PROFIT_CEILING: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
@@ -407,10 +407,10 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_CIRCLE_INSTANCES: {
             int H = 10;
-            int instanceSize = 15;
+            int instanceSize = 10;
             int R = 10;
-            double cv = 0.3;
-            double rho = 0.95;
+            double cv = 0.2;
+            double rho = 0.9;
             double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
