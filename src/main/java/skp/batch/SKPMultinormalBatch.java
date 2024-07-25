@@ -69,7 +69,7 @@ public class SKPMultinormalBatch extends SKPBatch {
          e.printStackTrace();
       }
       /*
-       * Note that this will only work if an instance covariance matrix takes the special structure 
+       * Note that solveDSKP will only work if an instance covariance matrix takes the special structure 
        * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.
        *
        * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
