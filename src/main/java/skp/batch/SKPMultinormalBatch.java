@@ -53,13 +53,9 @@ public class SKPMultinormalBatch extends SKPBatch {
         folder.mkdir();
       } 
       
-      boolean specialStructure = true;
-      
+      INSTANCE_TYPE type = INSTANCE_TYPE.P05_UNCORRELATED;
       String batchFileName = "batch/multinormal_instances.json";
-      if(specialStructure)
-         generateInstances(batchFileName, INSTANCE_TYPE.SPECIAL_STRUCTURE);
-      else
-         generateInstances(batchFileName, INSTANCE_TYPE.MULTINORMAL);
+      generateInstances(batchFileName, type);
       
       int partitions = 10;
       String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
@@ -79,19 +75,26 @@ public class SKPMultinormalBatch extends SKPBatch {
        * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
        * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
        */
-      if(specialStructure) solveDSKP(batchFileName);
+      switch(type) {
+         case MULTINORMAL: 
+            return;
+         default:
+            solveDSKP(batchFileName);
+      }
    }
    
    enum INSTANCE_TYPE {
       MULTINORMAL,
-      SPECIAL_STRUCTURE/*,
+      SPECIAL_STRUCTURE,
       P05_UNCORRELATED,
-      P05_WEEKLY_CORRELATED,
+      P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
       P05_INVERSE_STRONGLY_CORRELATED,
       P05_ALMOST_STRONGLY_CORRELATED,
       P05_SUBSET_SUM,
-      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+      P05_UNCORRELATED_SIMILAR_WEIGHTS,
+      P05_PROFIT_CEILING,
+      P05_CIRCLE_INSTANCES
    };
    
    /**
@@ -166,6 +169,59 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                      (new RandomVariateGen(randGenerator, shortageCost)).nextDouble());})
                              .toArray(SKPMultinormal[]::new);
             GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_UNCORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_WEAKLY_CORRELATED: {
+            break;
+         }
+         case P05_STRONGLY_CORRELATED: {
+            break;
+         }
+         case P05_INVERSE_STRONGLY_CORRELATED: {
+            break;
+         }
+         case P05_ALMOST_STRONGLY_CORRELATED: {
+            break;
+         }
+         case P05_SUBSET_SUM: {
+            break;
+         }
+         case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            break;
+         }
+         case P05_PROFIT_CEILING: {
+            break;
+         }
+         case P05_CIRCLE_INSTANCES: {
             break;
          }
       }  
