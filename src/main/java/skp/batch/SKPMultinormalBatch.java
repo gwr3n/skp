@@ -202,27 +202,237 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_WEAKLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double U = Math.max(1.0, Arrays.stream(expectedWeights).map(v -> v - R/10.0).max().getAsDouble());
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(U,U+2*R/10.0)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> v + R/10.0).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = Arrays.stream(expectedValues).map(v -> v + R/10.0).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> new RandomVariateGen(randGenerator, new UniformDist(v + R/10.0 - R/500.0, v + R/10.0 + R/500.0)).nextDouble()).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_SUBSET_SUM: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.copyOf(expectedWeights, instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(R,R+10)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_PROFIT_CEILING: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double d = 3;
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> d*Math.ceil(v/d)).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
          case P05_CIRCLE_INSTANCES: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 10;
+            double cv = 0.2;
+            double rho = 0.95;
+            double shortageCost = 10;
+            
+            SKPMultinormal[] batch = new SKPMultinormal[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> 2*Math.sqrt(4*R*R - Math.pow(v - 2*R,2))/3).toArray();
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPMultinormal(
+                     expectedValues,
+                     expectedWeights,
+                     SKPMultinormal.calculateCovarianceSpecialStructure(expectedWeights,cv,rho),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }
       }  
