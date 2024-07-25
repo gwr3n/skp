@@ -34,7 +34,7 @@ dvar float+ P;			 // Expected capacity shortage
 /**
  * Piecewise linearisation of sqrt()
  */
-range breakpoints = 1..ftoi(ceil(sum(i in objects)varianceCovarianceWeights[i][i]));
+range breakpoints = 1..ftoi(ceil(sum(i in objects, j in objects)varianceCovarianceWeights[i][j]));
 float slopes[i in breakpoints] = sqrt(i) - sqrt(i - 1); 
 
 maximize sum(i in objects) X[i]*expectedValues[i] - c*P; // Maximize profit minus expected capacity shortage cost
