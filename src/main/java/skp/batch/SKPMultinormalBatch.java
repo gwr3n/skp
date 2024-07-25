@@ -535,6 +535,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       for(SKPMultinormal instance : instances) {
          solved.add(new DSKPMultinormal(instance, truncationQuantile).solve());
          GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]), fileName);
+         System.out.println("Solved DSKP instance "+instance.getInstanceID());
       }
       return solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]);
    }
