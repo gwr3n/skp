@@ -54,7 +54,7 @@ public class SKPPoissonBatch extends SKPBatch {
       } 
       
       String batchFileName = "batch/poisson_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.NORMAL);
+      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
       
       String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
       int partitions = 10;
@@ -72,14 +72,16 @@ public class SKPPoissonBatch extends SKPBatch {
    }
    
    enum INSTANCE_TYPE {
-      NORMAL/*,
+      POISSON,
       P05_UNCORRELATED,
-      P05_WEEKLY_CORRELATED,
+      P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
       P05_INVERSE_STRONGLY_CORRELATED,
       P05_ALMOST_STRONGLY_CORRELATED,
       P05_SUBSET_SUM,
-      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+      P05_UNCORRELATED_SIMILAR_WEIGHTS,
+      P05_PROFIT_CEILING,
+      P05_CIRCLE_INSTANCES
    };
    
    /**
@@ -89,7 +91,7 @@ public class SKPPoissonBatch extends SKPBatch {
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
       
       switch(type) {
-         case NORMAL: {
+         case POISSON: {
             int instances = 10;
             int instanceSize = 10;
             
@@ -111,6 +113,242 @@ public class SKPPoissonBatch extends SKPBatch {
                                                     (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
                              .toArray(SKPPoisson[]::new);
             
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_UNCORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_WEAKLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double U = Math.max(1.0, Arrays.stream(expectedWeights).map(v -> v - R/10.0).max().getAsDouble());
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(U,U+2*R/10.0)).nextArrayOfDouble(instanceSize);
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> v + R/10.0).toArray();
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_INVERSE_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = Arrays.stream(expectedValues).map(v -> v + R/10.0).toArray();
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_ALMOST_STRONGLY_CORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> new RandomVariateGen(randGenerator, new UniformDist(v + R/10.0 - R/500.0, v + R/10.0 + R/500.0)).nextDouble()).toArray();
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_SUBSET_SUM: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.copyOf(expectedWeights, instanceSize);
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(R,R+10)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_PROFIT_CEILING: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double d = 3;
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> d*Math.ceil(v/d)).toArray();
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
+            GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
+            break;
+         }
+         case P05_CIRCLE_INSTANCES: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double shortageCost = 10;
+            
+            SKPPoisson[] batch = new SKPPoisson[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> 2*Math.sqrt(4*R*R - Math.pow(v - 2*R,2))/3).toArray();
+               
+               int capacity = (int)Math.round(((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum());
+               batch[i] = new SKPPoisson(
+                     expectedValues,
+                     expectedWeights,
+                     capacity,
+                     shortageCost
+                     );
+            }
             GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
             break;
          }

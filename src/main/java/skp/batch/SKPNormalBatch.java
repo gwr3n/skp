@@ -131,6 +131,7 @@ public class SKPNormalBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPNormal(
                      expectedValues,
