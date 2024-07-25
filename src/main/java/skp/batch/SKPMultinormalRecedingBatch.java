@@ -59,13 +59,13 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_multinormal_instances_MILP_receding.json";
+      String fileNameSolved = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.json" : "batch/solved_multinormal_instances_MILP_receding.json";
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_multinormal_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding.csv" : "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
