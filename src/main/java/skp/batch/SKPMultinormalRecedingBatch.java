@@ -65,7 +65,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding.csv" : "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.csv";
+      String fileNameSolvedCSV = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.csv" : "batch/solved_multinormal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
