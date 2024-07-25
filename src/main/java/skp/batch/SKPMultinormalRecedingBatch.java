@@ -73,7 +73,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       ArrayList<SKPMultinormalRecedingSolvedInstance>solved = new ArrayList<SKPMultinormalRecedingSolvedInstance>();
       for(SKPMultinormal instance : instances) {
          solved.add(new SimulateMultinormalReceding(instance, partitions).solve(simulationRuns, ignoreCorrelation));
-         System.out.println("Solved instance number "+solved.size());
+         System.out.println("Solved receding horizon instance number "+solved.size());
          GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]);
