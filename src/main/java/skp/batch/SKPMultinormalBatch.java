@@ -175,7 +175,7 @@ public class SKPMultinormalBatch extends SKPBatch {
          case P05_UNCORRELATED: {
             int H = 10;
             int instanceSize = 10;
-            int R = 100;
+            int R = 10;
             double cv = 0.2;
             double rho = 0.95;
             double shortageCost = 10;
