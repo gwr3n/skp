@@ -47,7 +47,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       String batchFileName = "batch/generic_distribution_instances.json";
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.GAMMA);
+      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
       
       int linearizationSamples = 100000;
       int simulationRuns = 100000;   
@@ -61,14 +61,16 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    enum INSTANCE_TYPE {
-      GAMMA/*,
+      GAMMA,
       P05_UNCORRELATED,
-      P05_WEEKLY_CORRELATED,
+      P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
       P05_INVERSE_STRONGLY_CORRELATED,
       P05_ALMOST_STRONGLY_CORRELATED,
       P05_SUBSET_SUM,
-      P05_UNCORRELATED_SIMILAR_WEIGHTS*/
+      P05_UNCORRELATED_SIMILAR_WEIGHTS,
+      P05_PROFIT_CEILING,
+      P05_CIRCLE_INSTANCES
    };
    
    /**
@@ -84,7 +86,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             
             Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(15,70);
-            Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
+            double coefficientOfVariation = 0.2;
             DiscreteDistributionInt capacity = new UniformIntDist(100,200);
             Distribution shortageCost = new UniformDist(2,10);
             
@@ -96,12 +98,62 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                              .limit(instances)
                              .mapToObj(i -> new SKPGenericDistribution(
                                                                 (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
-                                                                Arrays.stream((new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(w, Math.sqrt(w/Math.pow((new RandomVariateGen(randGenerator, coefficientOfVariation)).nextDouble()*w,2)))).toArray(GammaDist[]::new),
+                                                                Arrays.stream((new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(1/Math.pow(coefficientOfVariation,2), 1/(w*Math.pow(coefficientOfVariation,2)))).toArray(GammaDist[]::new),
                                                                 (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
                                                                 (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
                              .toArray(SKPGenericDistribution[]::new);
             
             return batch;
+         }
+         case P05_UNCORRELATED: {
+            int H = 10;
+            int instanceSize = 10;
+            int R = 100;
+            double cv = 0.2;
+            double shortageCost = 10;
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_WEAKLY_CORRELATED: {
+            
+         }
+         case P05_STRONGLY_CORRELATED: {
+            
+         }
+         case P05_INVERSE_STRONGLY_CORRELATED: {
+            
+         }
+         case P05_ALMOST_STRONGLY_CORRELATED: {
+            
+         }
+         case P05_SUBSET_SUM: {
+            
+         }
+         case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            
+         }
+         case P05_PROFIT_CEILING: {
+            
+         }
+         case P05_CIRCLE_INSTANCES: {
+            
          }
          default:
             return null;
