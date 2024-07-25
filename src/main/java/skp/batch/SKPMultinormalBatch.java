@@ -62,8 +62,9 @@ public class SKPMultinormalBatch extends SKPBatch {
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100000;
+      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
       try {
-         solveMILP(batchFileName, partitions, simulationRuns);
+         solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation);
       } catch (IloException e) {
          e.printStackTrace();
       }
@@ -236,11 +237,11 @@ public class SKPMultinormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "batch/solved_multinormal_instances_MILP.json";
-      SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+      SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -249,10 +250,10 @@ public class SKPMultinormalBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
       for(SKPMultinormal instance : instances) {
-         solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
+         solved.add(new SKPMultinormalMILP(instance, partitions, ignoreCorrelation).solve(simulationRuns));
          GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);

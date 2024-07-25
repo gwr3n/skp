@@ -14,16 +14,18 @@ import skp.sim.SimulateMultinormal;
 
 public class SKPMultinormalMILP extends SKPMILP{
    SKPMultinormal instance;
+   boolean ignoreCorrelation;
 
-   public SKPMultinormalMILP(SKPMultinormal instance, int partitions)  throws IloException{
+   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, boolean ignoreCorrelation)  throws IloException{
       this.instance = instance;
       this.partitions = partitions;
+      this.ignoreCorrelation = ignoreCorrelation;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model = "sk_mvnormal";
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
-      return new SKPMultinormalMILP.MyData(oplF);
+      return new SKPMultinormalMILP.MyData(oplF, this.ignoreCorrelation);
    }
    
    void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException{
@@ -65,8 +67,11 @@ public class SKPMultinormalMILP extends SKPMILP{
    
    class MyData extends IloCustomOplDataSource
    {
-      MyData(IloOplFactory oplF){
+      boolean ignoreCorrelation;
+      
+      MyData(IloOplFactory oplF, boolean ignoreCorrelation){
          super(oplF);
+         this.ignoreCorrelation = ignoreCorrelation;
       }
 
       public void customRead(){
@@ -95,7 +100,12 @@ public class SKPMultinormalMILP extends SKPMILP{
          for (int i = 0 ; i<instance.getItems() ; i++) {
             handler.startArray();
             for (int j = 0 ; j<instance.getItems() ; j++) {
-               handler.addNumItem(instance.getWeights().getCovariance()[i][j]);
+               if(i == j)
+                  handler.addNumItem(instance.getWeights().getCovariance()[i][j]);
+               else if (i != j && !ignoreCorrelation)
+                  handler.addNumItem(instance.getWeights().getCovariance()[i][j]);
+               else if (i != j && ignoreCorrelation)
+                  handler.addNumItem(0);
             }
             handler.endArray();
          }

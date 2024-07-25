@@ -73,7 +73,7 @@ public class SimulateMultinormal extends Simulate {
       int simulationRuns = 10000;
       
       try {
-         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions);
+         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, false);
          SKPMultinormalMILPSolvedInstance solved = milp.solve(simulationRuns);
          System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {

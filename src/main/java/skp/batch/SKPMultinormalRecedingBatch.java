@@ -44,8 +44,9 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       
       int partitions = 10;
       int simulationRuns = 100;
+      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
       try {
-         solveMILP(batchFileName, partitions, simulationRuns);
+         solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation);
       } catch (IloException e) {
          e.printStackTrace();
       } 
@@ -55,11 +56,11 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "batch/solved_multinormal_instances_MILP_receding.json";
-      SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+      SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -68,10 +69,10 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPMultinormalRecedingSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPMultinormalRecedingSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       ArrayList<SKPMultinormalRecedingSolvedInstance>solved = new ArrayList<SKPMultinormalRecedingSolvedInstance>();
       for(SKPMultinormal instance : instances) {
-         solved.add(new SimulateMultinormalReceding(instance, partitions).solve(simulationRuns));
+         solved.add(new SimulateMultinormalReceding(instance, partitions).solve(simulationRuns, ignoreCorrelation));
          System.out.println("Solved instance number "+solved.size());
          GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
       }

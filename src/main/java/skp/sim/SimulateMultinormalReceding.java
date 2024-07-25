@@ -47,11 +47,11 @@ public class SimulateMultinormalReceding extends Simulate {
       this.partitions = partitions;
    }
    
-   public SKPMultinormalRecedingSolvedInstance solve(int simulationRuns) {
+   public SKPMultinormalRecedingSolvedInstance solve(int simulationRuns, boolean ignoreCorrelation) {
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
       
-      double[] realisations = sim.simulate(simulationRuns, partitions);
+      double[] realisations = sim.simulate(simulationRuns, partitions, ignoreCorrelation);
       Mean m = new Mean();
       double simSolutionMean = m.evaluate(realisations);
       StandardDeviation std = new StandardDeviation();
@@ -83,7 +83,7 @@ public class SimulateMultinormalReceding extends Simulate {
       return solvedInstance;
    }
    
-   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions) {
+   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions, boolean ignoreCorrelation) {
       double[] previousRealizations = new double[t];
       System.arraycopy(realizations, 0, previousRealizations, 0, t);
       
@@ -116,7 +116,7 @@ public class SimulateMultinormalReceding extends Simulate {
       SKPMultinormalMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPMultinormalMILP(reducedInstance, partitions);
+         milp = new SKPMultinormalMILP(reducedInstance, partitions, ignoreCorrelation);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
@@ -129,11 +129,11 @@ public class SimulateMultinormalReceding extends Simulate {
       return knapsack[0];
    }
    
-   private double simulateOneRun(double[] realizations, int partitions) {
+   private double simulateOneRun(double[] realizations, int partitions, boolean ignoreCorrelation) {
       double knapsackValue = 0;
       double remainingCapacity = instance.getCapacity();
       for(int i = 0; i < realizations.length; i++) {
-         if(simulateOneItem(i, realizations, remainingCapacity, partitions) == 1) {
+         if(simulateOneItem(i, realizations, remainingCapacity, partitions, ignoreCorrelation) == 1) {
             remainingCapacity -= realizations[i];
             knapsackValue += this.instance.getExpectedValues()[i];
          }
@@ -142,11 +142,11 @@ public class SimulateMultinormalReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int simulationRuns, int partitions) {
+   double[] simulate(int simulationRuns, int partitions, boolean ignoreCorrelation) {
       double[][] sampleMatrix = sampleWeights(simulationRuns);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
-                                      .mapToDouble(r -> simulateOneRun(r, partitions))
+                                      .mapToDouble(r -> simulateOneRun(r, partitions, ignoreCorrelation))
                                       .peek(r -> System.out.println("Simulation run completed: "+r))
                                       .toArray();
       return knapsackValues;
@@ -230,9 +230,10 @@ public class SimulateMultinormalReceding extends Simulate {
       
       int partitions = 10;
       int simulationRuns = 100;
+      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
       
       SimulateMultinormalReceding sim = new SimulateMultinormalReceding(instance, partitions);
-      System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns)));
+      System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns, ignoreCorrelation)));
    }
    
    private static class MatrixAlgebra {
