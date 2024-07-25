@@ -49,7 +49,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
       
-      int linearizationSamples = 1000;
+      int linearizationSamples = 100;
       int simulationRuns = 100000;   
       int maxCuts = 1000;
       try {
