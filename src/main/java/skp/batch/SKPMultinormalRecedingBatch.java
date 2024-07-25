@@ -44,7 +44,7 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       
       int partitions = 10;
       int simulationRuns = 100;
-      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
+      boolean ignoreCorrelation = true; // switch to ignore correlation while solving MILP model
       try {
          solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation);
       } catch (IloException e) {

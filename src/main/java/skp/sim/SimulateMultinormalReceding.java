@@ -89,6 +89,11 @@ public class SimulateMultinormalReceding extends Simulate {
       
       double[] expWeight = instance.getWeights().getMean();
       double[][] covariance = instance.getWeights().getCovariance();
+      if(ignoreCorrelation) {
+         for(int i = 0; i < covariance.length; i++)
+            for(int j = 0; j < covariance.length; j++)
+               if(i != j) covariance[i][j] = 0;
+      }
       
       int Nbperiods = expWeight.length-t;
       
@@ -116,7 +121,7 @@ public class SimulateMultinormalReceding extends Simulate {
       SKPMultinormalMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPMultinormalMILP(reducedInstance, partitions, ignoreCorrelation);
+         milp = new SKPMultinormalMILP(reducedInstance, partitions);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));

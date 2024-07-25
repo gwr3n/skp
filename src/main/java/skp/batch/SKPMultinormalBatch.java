@@ -62,9 +62,8 @@ public class SKPMultinormalBatch extends SKPBatch {
       storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
       
       int simulationRuns = 100000;
-      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
       try {
-         solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation);
+         solveMILP(batchFileName, partitions, simulationRuns);
       } catch (IloException e) {
          e.printStackTrace();
       }
@@ -174,9 +173,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -203,9 +202,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_WEAKLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -233,9 +232,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -262,9 +261,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -291,9 +290,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -320,9 +319,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_SUBSET_SUM: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -349,9 +348,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -378,9 +377,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_PROFIT_CEILING: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -408,9 +407,9 @@ public class SKPMultinormalBatch extends SKPBatch {
          }
          case P05_CIRCLE_INSTANCES: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 15;
             int R = 10;
-            double cv = 0.2;
+            double cv = 0.3;
             double rho = 0.95;
             double shortageCost = 10;
             
@@ -447,11 +446,11 @@ public class SKPMultinormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = "batch/solved_multinormal_instances_MILP.json";
-      SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
+      SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -460,10 +459,10 @@ public class SKPMultinormalBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
+   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
       ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
       for(SKPMultinormal instance : instances) {
-         solved.add(new SKPMultinormalMILP(instance, partitions, ignoreCorrelation).solve(simulationRuns));
+         solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
          GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
