@@ -42,7 +42,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
                int partitions = 10;
                int simulationRuns = 100;
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns);
+                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
                } catch (IloException e) {
                   e.printStackTrace();
                } 
@@ -55,16 +55,16 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder) throws IloException {
       SKPNormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_normal_instances_MILP_receding.json";
+      String fileNameSolved = folder+"/solved_normal_instances_MILP_receding.json";
       SKPNormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_normal_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = folder+"/solved_normal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
