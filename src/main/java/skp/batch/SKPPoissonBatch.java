@@ -29,7 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-
+import skp.batch.SKPNormalBatch.INSTANCE_TYPE;
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
@@ -48,31 +48,51 @@ import umontreal.ssj.randvar.RandomVariateGenInt;
 public class SKPPoissonBatch extends SKPBatch {
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      String batchFileName = "batch/poisson_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
-      
-      String OPLDataFileZipArchive = "batch/poisson_instances_opl.zip";
-      int partitions = 10;
-      int linearizationSamples = 1000;
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
-      
-      int simulationRuns = 100000;
-      try {
-         solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns);
-      } catch (IloException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
+               if (!folder.exists()) {
+                  folder.mkdirs();
+               }
+               
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances.json";
+               generateInstances(batchFileName, t, size, cv);
+               
+               String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances_opl.zip";
+               int partitions = 10;
+               int linearizationSamples = 1000;
+               storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
+               
+               int simulationRuns = 100000;
+               try {
+                  solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
+               } catch (IloException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+               }
+               solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+            }
+         }
       }
-      solveDSKP(batchFileName);
+      
+      
    }
    
    enum INSTANCE_TYPE {
-      POISSON,
       P05_UNCORRELATED,
       P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -88,10 +108,13 @@ public class SKPPoissonBatch extends SKPBatch {
     * Generate a batch of instances
     */
    
-   private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv) {
+      int H = 10;
+      int R = 100;
+      double shortageCost = 10;
       
       switch(type) {
-         case POISSON: {
+         /*case POISSON: {
             int instances = 10;
             int instanceSize = 10;
             
@@ -115,12 +138,8 @@ public class SKPPoissonBatch extends SKPBatch {
             
             GSONUtility.<SKPPoisson[]>saveInstanceToJSON(batch, batchFileName);
             break;
-         }
+         }*/
          case P05_UNCORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -143,10 +162,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_WEAKLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -170,10 +185,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -196,10 +207,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -222,10 +229,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -248,10 +251,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_SUBSET_SUM: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -274,10 +273,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -300,10 +295,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_PROFIT_CEILING: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -327,10 +318,6 @@ public class SKPPoissonBatch extends SKPBatch {
             break;
          }
          case P05_CIRCLE_INSTANCES: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double shortageCost = 10;
             
             SKPPoisson[] batch = new SKPPoisson[H];
             
@@ -364,16 +351,16 @@ public class SKPPoissonBatch extends SKPBatch {
     * MILP
     */
    
-   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns, String folder) throws IloException {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_poisson_instances_MILP.json";
+      String fileNameSolved = folder+"/solved_poisson_instances_MILP.json";
       SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_poisson_instances_MILP.csv";
+      String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -434,16 +421,16 @@ public class SKPPoissonBatch extends SKPBatch {
     * DSKP
     */
    
-   public static void solveDSKP(String fileName) {
+   public static void solveDSKP(String fileName, String folder) {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_poisson_instances_DSKP.json";
+      String fileNameSolved = folder+"/solved_poisson_instances_DSKP.json";
       DSKPPoissonSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPPoissonSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_poisson_instances_DSKP.csv";
+      String fileNameSolvedCSV = folder+"/solved_poisson_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

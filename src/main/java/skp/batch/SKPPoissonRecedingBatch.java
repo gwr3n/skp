@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
-
+import skp.batch.SKPNormalBatch.INSTANCE_TYPE;
 import skp.instance.SKPPoisson;
 import skp.sim.SimulatePoissonReceding;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;
@@ -16,43 +16,60 @@ import skp.utilities.gson.GSONUtility;
 public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES}; 
       
-      String batchFileName = "batch/poisson_instances.json";
-      
-      /**
-       *  Generate instances using SKPPoissonBatch
-       *  
-       *  generateInstances(batchFileName);
-       */
-      
-      int partitions = 10;
-      int linearizationSamples = 1000;
-      int simulationRuns = 100;
-      try {
-         solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples);
-      } catch (IloException e) {
-         e.printStackTrace();
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances.json";
+               
+               /**
+                *  Generate instances using SKPPoissonBatch
+                *  
+                *  generateInstances(batchFileName);
+                */
+               
+               int partitions = 10;
+               int linearizationSamples = 1000;
+               int simulationRuns = 100;
+               try {
+                  solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, "batch/"+t.toString()+"/"+size+"/"+cv);
+               } catch (IloException e) {
+                  e.printStackTrace();
+               }
+            }
+         }
       }
+      
+      
    }
 
    /*
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, int linearizationSamples) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, int linearizationSamples, String folder) throws IloException {
       SKPPoisson[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_poisson_instances_MILP_receding.json";
+      String fileNameSolved = folder+"/solved_poisson_instances_MILP_receding.json";
       SKPPoissonRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, linearizationSamples);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPPoissonRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_poisson_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
