@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
-
+import skp.batch.SKPNormalBatch.INSTANCE_TYPE;
 import skp.instance.SKPNormal;
 import skp.sim.SimulateNormalReceding;
 import skp.sim.instance.SKPNormalRecedingSolvedInstance;
@@ -16,26 +16,40 @@ import skp.utilities.gson.GSONUtility;
 public class SKPNormalRecedingBatch extends SKPNormalBatch{
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES}; 
       
-      String batchFileName = "batch/normal_instances.json";
-      
-      /**
-       *  Generate instances using SKPNormalBatch
-       *  
-       *  generateInstances(batchFileName);
-       */
-      
-      int partitions = 10;
-      int simulationRuns = 100;
-      try {
-         solveMILP(batchFileName, partitions, simulationRuns);
-      } catch (IloException e) {
-         e.printStackTrace();
-      } 
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
+               
+               /**
+                *  Generate instances using SKPNormalBatch
+                *  
+                *  generateInstances(batchFileName);
+                */
+               
+               int partitions = 10;
+               int simulationRuns = 100;
+               try {
+                  solveMILP(batchFileName, partitions, simulationRuns);
+               } catch (IloException e) {
+                  e.printStackTrace();
+               } 
+            }
+         }
+      }
    }
 
    /*
