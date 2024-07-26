@@ -452,6 +452,7 @@ public class SKPPoissonBatch extends SKPBatch {
       ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new DSKPPoisson(instance, truncationQuantile).solve());
+         System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);

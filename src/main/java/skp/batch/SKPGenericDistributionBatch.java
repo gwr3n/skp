@@ -444,6 +444,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       ArrayList<DSKPGenericDistributionSolvedInstance>solved = new ArrayList<DSKPGenericDistributionSolvedInstance>();
       for(SKPGenericDistribution instance : instances) {
          solved.add(new DSKPGenericDistribution(instance, truncationQuantile).solve());
+         System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]);

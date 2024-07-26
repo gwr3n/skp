@@ -470,6 +470,7 @@ public class SKPNormalBatch extends SKPBatch {
       ArrayList<DSKPNormalSolvedInstance>solved = new ArrayList<DSKPNormalSolvedInstance>();
       for(SKPNormal instance : instances) {
          solved.add(new DSKPNormal(instance, truncationQuantile).solve());
+         System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPNormalSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPNormalSolvedInstance[solved.size()]), fileName);
       }
       return solved.toArray(new DSKPNormalSolvedInstance[solved.size()]);
