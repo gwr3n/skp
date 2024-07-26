@@ -24,12 +24,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
@@ -38,54 +36,65 @@ import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
-import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPMultinormalBatch extends SKPBatch {
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      double[] coeff_of_cor  = {0.75, 0.95};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      INSTANCE_TYPE type = INSTANCE_TYPE.P05_UNCORRELATED;
-      String batchFileName = "batch/multinormal_instances.json";
-      generateInstances(batchFileName, type);
-      
-      int partitions = 10;
-      String OPLDataFileZipArchive = "batch/multinormal_instances_opl.zip";
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
-      
-      int simulationRuns = 100000;
-      try {
-         solveMILP(batchFileName, partitions, simulationRuns);
-      } catch (IloException e) {
-         e.printStackTrace();
-      }
-      /*
-       * Note that solveDSKP will only work if an instance covariance matrix takes the special structure 
-       * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.
-       *
-       * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
-       * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
-       * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
-       */
-      switch(type) {
-         case MULTINORMAL: 
-            return;
-         default:
-            solveDSKP(batchFileName);
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               for(double rho : coeff_of_cor) {
+                  File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                  if (!folder.exists()) {
+                     folder.mkdirs();
+                  }
+                  
+                  String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances.json";
+                  generateInstances(batchFileName, t, size, cv, rho);
+                  
+                  int partitions = 10;
+                  String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances_opl.zip";
+                  storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
+                  
+                  int simulationRuns = 100000;
+                  try {
+                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                  } catch (IloException e) {
+                     e.printStackTrace();
+                  }
+                  /*
+                   * Note that solveDSKP will only work if an instance covariance matrix takes the special structure 
+                   * $\rho^{|j-i|}\sigma_i\sigma_j$ discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$.
+                   *
+                   * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
+                   * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>," 
+                   * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
+                   */
+                  if(size == instanceSize[0])
+                     solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+               }
+            }
+         }
       }
    }
    
    enum INSTANCE_TYPE {
-      MULTINORMAL,
-      SPECIAL_STRUCTURE,
       P05_UNCORRELATED,
       P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -101,13 +110,15 @@ public class SKPMultinormalBatch extends SKPBatch {
     * Generate a batch of instances
     */
       
-   private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv, double rho) {
+      int H = 10;
+      int R = 100;
+      double shortageCost = 10;
       
       switch(type) {
-         case MULTINORMAL: {
+         /*case MULTINORMAL: {
             int instances = 10;
-            int instanceSize = 10;
-            
+                       
             Distribution expectedValue = new UniformDist(75,275);
             Distribution expectedWeight = new UniformDist(15,70);
             Distribution coefficientOfVariation = new UniformDist(0.1, 0.3);
@@ -131,7 +142,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                              .toArray(SKPMultinormal[]::new);
             GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
-         }
+         }*/
          /**
           * Generate a batch of instances whose covariance matrix takes the special structure $\rho^{|j-i|}\sigma_i\sigma_j$ 
           * discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$
@@ -140,9 +151,8 @@ public class SKPMultinormalBatch extends SKPBatch {
           * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>,
           * " European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023
           */
-         case SPECIAL_STRUCTURE: {
+         /*case SPECIAL_STRUCTURE: {
             int instances = 10;
-            int instanceSize = 10;
             
             Distribution expectedValue = new UniformDist(2.75,275);
             Distribution expectedWeight = new UniformDist(5,10);
@@ -170,14 +180,16 @@ public class SKPMultinormalBatch extends SKPBatch {
                              .toArray(SKPMultinormal[]::new);
             GSONUtility.<SKPMultinormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
-         }
+         }*/
+         /**
+          * Generate a batch of instances whose covariance matrix takes the special structure $\rho^{|j-i|}\sigma_i\sigma_j$ 
+          * discussed in [1], which ensures $P(d_t=x|d_{t-1}=y) = P(d_t=x|d_{t-1}=y,d_{t-2}=z,...)$
+          * 
+          * [1] M. Xiang, R. Rossi, B. Martin-Barragan, S. A. Tarim, "<a href="https://doi.org/10.1016/j.ejor.2022.04.011">
+          * A mathematical programming-based solution method for the nonstationary inventory problem under correlated demand</a>,
+          * " European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023
+          */
          case P05_UNCORRELATED: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -201,12 +213,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_WEAKLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -231,12 +237,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -260,12 +260,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -289,12 +283,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -318,12 +306,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_SUBSET_SUM: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -347,12 +329,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -376,12 +352,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_PROFIT_CEILING: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -406,12 +376,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             break;
          }
          case P05_CIRCLE_INSTANCES: {
-            int H = 10;
-            int instanceSize = 20;
-            int R = 10;
-            double cv = 0.2;
-            double rho = 0.9;
-            double shortageCost = 10;
             
             SKPMultinormal[] batch = new SKPMultinormal[H];
             
@@ -446,16 +410,16 @@ public class SKPMultinormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_multinormal_instances_MILP.json";
+      String fileNameSolved = folder+"/solved_multinormal_instances_MILP.json";
       SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_multinormal_instances_MILP.csv";
+      String fileNameSolvedCSV = folder+"/solved_multinormal_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -516,16 +480,16 @@ public class SKPMultinormalBatch extends SKPBatch {
     * DSKP
     */
    
-   public static void solveDSKP(String fileName) {
+   public static void solveDSKP(String fileName, String folder) {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_multinormal_instances_DSKP.json";
+      String fileNameSolved = folder+"/solved_multinormal_instances_DSKP.json";
       DSKPMultinormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPMultinormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_multinormal_instances_DSKP.csv";
+      String fileNameSolvedCSV = folder+"/solved_multinormal_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    

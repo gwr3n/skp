@@ -29,43 +29,64 @@ import skp.utilities.gson.GSONUtility;
 public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      double[] coeff_of_cor  = {0.75, 0.95};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      String batchFileName = "batch/multinormal_instances.json";
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               for(double rho : coeff_of_cor) {
+                  for(boolean ignoreCorrelation : new boolean[] {false, true}) { // switch to ignore correlation while solving MILP model
+                  
+                     String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances.json";
+                     
+                     /**
+                      *  Generate instances using SKPMultinormalBatch
+                      *  
+                      *  generateInstances(batchFileName);
+                      */
+                     
+                     int partitions = 10;
+                     int simulationRuns = 100;
+                     try {
+                        solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                     } catch (IloException e) {
+                        e.printStackTrace();
+                     }
+                  }
+               }
+            }
+         }
+      }
       
-      /**
-       *  Generate instances using SKPMultinormalBatch
-       *  
-       *  generateInstances(batchFileName);
-       */
-      
-      int partitions = 10;
-      int simulationRuns = 100;
-      boolean ignoreCorrelation = false; // switch to ignore correlation while solving MILP model
-      try {
-         solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation);
-      } catch (IloException e) {
-         e.printStackTrace();
-      } 
+       
    }
 
    /*
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation, String folder) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.json" : "batch/solved_multinormal_instances_MILP_receding.json";
+      String fileNameSolved = ignoreCorrelation ? folder+"/solved_multinormal_instances_MILP_receding_ignore_correlation.json" : folder+"/solved_multinormal_instances_MILP_receding.json";
       SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = ignoreCorrelation ? "batch/solved_multinormal_instances_MILP_receding_ignore_correlation.csv" : "batch/solved_multinormal_instances_MILP_receding.csv";
+      String fileNameSolvedCSV = ignoreCorrelation ? folder+"/solved_multinormal_instances_MILP_receding_ignore_correlation.csv" : folder+"/solved_multinormal_instances_MILP_receding.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
