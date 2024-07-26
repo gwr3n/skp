@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -38,39 +37,55 @@ import skp.sdp.DSKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
-import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPNormalBatch extends SKPBatch {
 
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
       
-      String batchFileName = "batch/normal_instances.json";
-      generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      int partitions = 10;
-      String OPLDataFileZipArchive = "batch/normal_instances_opl.zip";
-      storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, 10);
-      
-      int simulationRuns = 100000;
-      try {
-         solveMILP(batchFileName, partitions, simulationRuns);
-      } catch (IloException e) {
-         e.printStackTrace();
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
+               if (!folder.exists()) {
+                  folder.mkdirs();
+               }
+               
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
+               generateInstances(batchFileName, t, size, cv);
+               
+               int partitions = 10;
+               String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances_opl.zip";
+               storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, 10);
+               
+               int simulationRuns = 100000;
+               try {
+                  solveMILP(batchFileName, partitions, simulationRuns);
+               } catch (IloException e) {
+                  e.printStackTrace();
+               }
+               if(size == instanceSize[0]) 
+                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+            }
+         }
       }
-      solveDSKP(batchFileName);
    }
    
    enum INSTANCE_TYPE {
-      NORMAL,
       P05_UNCORRELATED,
       P05_WEAKLY_CORRELATED,
       P05_STRONGLY_CORRELATED,
@@ -86,10 +101,13 @@ public class SKPNormalBatch extends SKPBatch {
     * Generate a batch of instances
     */
    
-   private static void generateInstances(String batchFileName, INSTANCE_TYPE type) {
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv) {
+      int H = 10;
+      int R = 100;
+      double shortageCost = 10;
       
       switch(type) {
-         case NORMAL: {
+         /*case NORMAL: {
             int instances = 10;
             int instanceSize = 10;
             
@@ -115,13 +133,8 @@ public class SKPNormalBatch extends SKPBatch {
             
             GSONUtility.<SKPNormal[]>saveInstanceToJSON(batch, batchFileName);
             break;
-         }
+         }*/
          case P05_UNCORRELATED: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -145,11 +158,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_WEAKLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -174,11 +182,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -202,11 +205,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -230,11 +228,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -258,11 +251,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_SUBSET_SUM: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -286,11 +274,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -314,11 +297,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_PROFIT_CEILING: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -343,11 +321,6 @@ public class SKPNormalBatch extends SKPBatch {
             break;
          }
          case P05_CIRCLE_INSTANCES: {
-            int H = 10;
-            int instanceSize = 25;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPNormal[] batch = new SKPNormal[H];
             
@@ -452,16 +425,16 @@ public class SKPNormalBatch extends SKPBatch {
     * DSKP
     */
    
-   public static void solveDSKP(String fileName) {
+   public static void solveDSKP(String fileName, String folder) {
       SKPNormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_normal_instances_DSKP.json";
+      String fileNameSolved = folder+"/solved_normal_instances_DSKP.json";
       DSKPNormalSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved);
       System.out.println(GSONUtility.<DSKPNormalSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_normal_instances_DSKP.csv";
+      String fileNameSolvedCSV = folder+"/solved_normal_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
