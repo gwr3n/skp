@@ -74,7 +74,7 @@ public class SKPNormalBatch extends SKPBatch {
                
                int simulationRuns = 100000;
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns);
+                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -355,16 +355,16 @@ public class SKPNormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder) throws IloException {
       SKPNormal[] batch = retrieveBatch(fileName);
       
-      String fileNameSolved = "batch/solved_normal_instances_MILP.json";
+      String fileNameSolved = folder+"/solved_normal_instances_MILP.json";
       SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_normal_instances_MILP.csv";
+      String fileNameSolvedCSV = folder+"/solved_normal_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
