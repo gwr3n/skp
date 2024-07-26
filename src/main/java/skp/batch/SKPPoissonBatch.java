@@ -84,7 +84,8 @@ public class SKPPoissonBatch extends SKPBatch {
                   // TODO Auto-generated catch block
                   e.printStackTrace();
                }
-               solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+               if(size == instanceSize[0])
+                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
