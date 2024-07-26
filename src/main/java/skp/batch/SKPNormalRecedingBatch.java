@@ -31,6 +31,7 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
             for(double cv : coeff_of_var) {
+               
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
                
                /**
