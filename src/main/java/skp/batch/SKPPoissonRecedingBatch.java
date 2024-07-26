@@ -16,7 +16,7 @@ import skp.utilities.gson.GSONUtility;
 public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
    
    public static void main(String args[]) {
-      int[] instanceSize = {25, 50, 100, 500};
+      int[] instanceSize = {25, 50};
       double[] coeff_of_var  = {0.1, 0.2};
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
