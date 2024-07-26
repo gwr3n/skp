@@ -118,7 +118,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -146,7 +146,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_WEAKLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -175,7 +175,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -203,7 +203,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -231,7 +231,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -259,7 +259,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_SUBSET_SUM: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -287,7 +287,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -315,7 +315,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_PROFIT_CEILING: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
@@ -344,7 +344,7 @@ public class SKPNormalBatch extends SKPBatch {
          }
          case P05_CIRCLE_INSTANCES: {
             int H = 10;
-            int instanceSize = 10;
+            int instanceSize = 25;
             int R = 100;
             double cv = 0.2;
             double shortageCost = 10;
