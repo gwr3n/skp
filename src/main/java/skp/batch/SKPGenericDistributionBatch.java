@@ -18,10 +18,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
-
 import skp.instance.SKPGenericDistribution;
 import skp.milp.SKPGenericDistributionMILP;
 import skp.milp.instance.SKPGenericDistributionMILPSolvedInstance;
@@ -29,35 +27,53 @@ import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.UniformDist;
-import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPGenericDistributionBatch extends SKPBatch {
    
    public static void main(String args[]) {
-      File folder = new File("batch");
-      if (!folder.exists()) {
-        folder.mkdir();
-      } 
       
-      String batchFileName = "batch/generic_distribution_instances.json";
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      SKPGenericDistribution[] instances = generateInstances(batchFileName, INSTANCE_TYPE.P05_UNCORRELATED);
-      
-      int linearizationSamples = 100;
-      int simulationRuns = 100000;   
-      int maxCuts = 1000;
-      try {
-         solveMILP(instances, linearizationSamples, simulationRuns, maxCuts);
-      } catch (IloException e) {
-         e.printStackTrace();
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
+               if (!folder.exists()) {
+                  folder.mkdirs();
+               }
+               
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/generic_distribution_instances.json";
+               
+               SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
+               
+               int linearizationSamples = 100;
+               int simulationRuns = 100000;   
+               int maxCuts = 1000;
+               try {
+                  solveMILP(instances, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv);
+               } catch (IloException e) {
+                  e.printStackTrace();
+               }
+               if(size == instanceSize[0])
+                  solveDSKP(instances, "batch/"+t.toString()+"/"+size+"/"+cv);
+            }
+         }
       }
-      solveDSKP(instances);
+      
    }
    
    enum INSTANCE_TYPE {
@@ -77,10 +93,13 @@ public class SKPGenericDistributionBatch extends SKPBatch {
     * Generate a batch of instances
     */
 
-   protected static SKPGenericDistribution[] generateInstances(String batchFileName, INSTANCE_TYPE type) {
+   protected static SKPGenericDistribution[] generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv) {
+      int H = 10;
+      int R = 100;
+      double shortageCost = 10;
       
       switch(type) {
-         case GAMMA: {
+         /*case GAMMA: {
             int instances = 10;
             int instanceSize = 10;
             
@@ -104,13 +123,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                              .toArray(SKPGenericDistribution[]::new);
             
             return batch;
-         }
+         }*/
          case P05_UNCORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -132,11 +146,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_WEAKLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -159,11 +168,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -185,11 +189,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_INVERSE_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -211,11 +210,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_ALMOST_STRONGLY_CORRELATED: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -237,11 +231,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_SUBSET_SUM: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -263,11 +252,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -289,11 +273,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_PROFIT_CEILING: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -316,11 +295,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             return batch;
          }
          case P05_CIRCLE_INSTANCES: {
-            int H = 10;
-            int instanceSize = 10;
-            int R = 100;
-            double cv = 0.2;
-            double shortageCost = 10;
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
             
@@ -354,16 +328,16 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }*/
    
-   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, int maxCuts) throws IloException {
+   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, int maxCuts, String folder) throws IloException {
       // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
-      String fileNameSolved = "batch/solved_generic_distribution_instances_MILP.json";
+      String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
       SKPGenericDistributionMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns, maxCuts);
       
       // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<SKPGenericDistributionMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_generic_distribution_instances_MILP.csv";
+      String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
@@ -426,16 +400,16 @@ public class SKPGenericDistributionBatch extends SKPBatch {
     * DSKP
     */
    
-   public static void solveDSKP(SKPGenericDistribution[] batch) {
+   public static void solveDSKP(SKPGenericDistribution[] batch, String folder) {
       // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
-      String fileNameSolved = "batch/solved_generic_distribution_instances_DSKP.json";
+      String fileNameSolved = folder+"/solved_generic_distribution_instances_DSKP.json";
       DSKPGenericDistributionSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
       
       // solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<DSKPGenericDistributionSolvedInstance[]>printInstanceAsJSON(solvedBatch));
       
-      String fileNameSolvedCSV = "batch/solved_generic_distribution_instances_DSKP.csv";
+      String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_DSKP.csv";
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
