@@ -112,7 +112,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv, double rho) {
       int H = 10;
-      int R = 100;
+      int R = 10;
       double shortageCost = 10;
       
       switch(type) {
