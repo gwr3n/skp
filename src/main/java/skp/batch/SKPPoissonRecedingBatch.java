@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
-import skp.batch.SKPNormalBatch.INSTANCE_TYPE;
+
 import skp.instance.SKPPoisson;
 import skp.sim.SimulatePoissonReceding;
 import skp.sim.instance.SKPPoissonRecedingSolvedInstance;

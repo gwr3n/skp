@@ -24,12 +24,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-import skp.batch.SKPNormalBatch.INSTANCE_TYPE;
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
@@ -38,12 +36,8 @@ import skp.sdp.DSKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.UniformDist;
-import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.randvar.RandomVariateGen;
-import umontreal.ssj.randvar.RandomVariateGenInt;
 
 public class SKPPoissonBatch extends SKPBatch {
    
