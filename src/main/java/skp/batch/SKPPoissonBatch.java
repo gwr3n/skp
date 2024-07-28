@@ -67,8 +67,8 @@ public class SKPPoissonBatch extends SKPBatch {
                generateInstances(batchFileName, t, size, cv);
                
                String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances_opl.zip";
-               int partitions = 5;
-               int linearizationSamples = 1000;
+               int partitions = 10;
+               int linearizationSamples = 10000;
                storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
                
                int simulationRuns = 100000;
