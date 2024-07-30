@@ -43,7 +43,6 @@ public class SKPPoissonBatch extends SKPBatch {
    
    public static void main(String args[]) {
       int[] instanceSize = {25, 50, 100, 500};
-      double[] coeff_of_var  = {0.1, 0.2};
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
             INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
@@ -57,30 +56,28 @@ public class SKPPoissonBatch extends SKPBatch {
       
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
-            for(double cv : coeff_of_var) {
-               File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
-               if (!folder.exists()) {
-                  folder.mkdirs();
-               }
-               
-               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances.json";
-               generateInstances(batchFileName, t, size, cv);
-               
-               String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances_opl.zip";
-               int partitions = 10;
-               int linearizationSamples = 10000;
-               storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
-               
-               int simulationRuns = 100000;
-               try {
-                  solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
-               } catch (IloException e) {
-                  // TODO Auto-generated catch block
-                  e.printStackTrace();
-               }
-               if(size == instanceSize[0])
-                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+            File folder = new File("batch/"+t.toString()+"/"+size);
+            if (!folder.exists()) {
+               folder.mkdirs();
             }
+
+            String batchFileName = "batch/"+t.toString()+"/"+size+"/poisson_instances.json";
+            generateInstances(batchFileName, t, size);
+
+            String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/poisson_instances_opl.zip";
+            int partitions = 10;
+            int linearizationSamples = 10000;
+            storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
+
+            int simulationRuns = 100000;
+            try {
+               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size);
+            } catch (IloException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+            if(size == instanceSize[0])
+               solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size);
          }
       }
       
@@ -103,7 +100,7 @@ public class SKPPoissonBatch extends SKPBatch {
     * Generate a batch of instances
     */
    
-   private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv) {
+   private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize) {
       int H = 10;
       int R = 100;
       double shortageCost = 10;

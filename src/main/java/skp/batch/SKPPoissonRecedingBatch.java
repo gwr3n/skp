@@ -17,7 +17,6 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
    
    public static void main(String args[]) {
       int[] instanceSize = {25};
-      double[] coeff_of_var  = {0.1, 0.2};
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
             INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
@@ -31,24 +30,22 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
       
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
-            for(double cv : coeff_of_var) {
                
-               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/poisson_instances.json";
-               
-               /**
-                *  Generate instances using SKPPoissonBatch
-                *  
-                *  generateInstances(batchFileName);
-                */
-               
-               int partitions = 10;
-               int linearizationSamples = 1000;
-               int simulationRuns = 100;
-               try {
-                  solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, "batch/"+t.toString()+"/"+size+"/"+cv);
-               } catch (IloException e) {
-                  e.printStackTrace();
-               }
+            String batchFileName = "batch/"+t.toString()+"/"+size+"/poisson_instances.json";
+
+            /**
+             *  Generate instances using SKPPoissonBatch
+             *  
+             *  generateInstances(batchFileName);
+             */
+
+            int partitions = 10;
+            int linearizationSamples = 1000;
+            int simulationRuns = 100;
+            try {
+               solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, "batch/"+t.toString()+"/"+size);
+            } catch (IloException e) {
+               e.printStackTrace();
             }
          }
       }
