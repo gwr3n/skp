@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
@@ -249,18 +250,38 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
     * Poisson knapsack
     */
    
+   /**
+    *  Memoization
+    */
+   static Hashtable<String,double[]> poisson_ce = new Hashtable<String,double[]>();
+   static Hashtable<String,Double> poisson_ae = new Hashtable<String,Double>();
+   
    public static double[][] poissonKnapsackPiecewiseFOLFConditionalExpectations(int capacity, double[] probabilityMasses, int nbSamples) {
       ArrayList<double[]> conditionalExpectations = new ArrayList<double[]>();
       ArrayList<Double> approximationErrors = new ArrayList<Double>();
       
       int demand = 0;
       while(true) {
+         String hash = demand + "_" + Arrays.toString(probabilityMasses) + "_" + nbSamples;
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
          PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
-         double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+         double[] ce = null;
+         if(poisson_ce.containsKey(hash)) {
+            ce = poisson_ce.get(hash);
+         } else {
+            ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+            poisson_ce.put(hash, ce);
+         }
          conditionalExpectations.add(ce);
-         approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
+         double ae;
+         if(poisson_ae.containsKey(hash)) {
+            ae = poisson_ae.get(hash);
+         } else {
+            ae = pwfolf.getMaxApproximationError(probabilityMasses, nbSamples);
+            poisson_ae.put(hash, ae);
+         }
+         approximationErrors.add(ae);
          if(ce[0] > capacity) break;
          else demand++;
       }
@@ -273,12 +294,26 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       
       int demand = 0;
       while(true) {
+         String hash = demand + "_" + Arrays.toString(probabilityMasses) + "_" + nbSamples;
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
          PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
-         double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+         double[] ce = null;
+         if(poisson_ce.containsKey(hash)) {
+            ce = poisson_ce.get(hash);
+         } else {
+            ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+            poisson_ce.put(hash, ce);
+         }
          conditionalExpectations.add(ce);
-         approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
+         double ae;
+         if(poisson_ae.containsKey(hash)) {
+            ae = poisson_ae.get(hash);
+         } else {
+            ae = pwfolf.getMaxApproximationError(probabilityMasses, nbSamples);
+            poisson_ae.put(hash, ae);
+         }
+         approximationErrors.add(ae);
          if(ce[0] > capacity) break;
          else demand++;
       }
@@ -291,12 +326,26 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
       
       int demand = 0;
       while(true) {
+         String hash = demand + "_" + Arrays.toString(probabilityMasses) + "_" + nbSamples;
          Distribution[] distributions = new Distribution[1];
          distributions[0] = new PoissonDist(demand);
          PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(distributions);
-         double[] ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+         double[] ce = null;
+         if(poisson_ce.containsKey(hash)) {
+            ce = poisson_ce.get(hash);
+         } else {
+            ce = pwfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+            poisson_ce.put(hash, ce);
+         }
          conditionalExpectations.add(ce);
-         approximationErrors.add(pwfolf.getMaxApproximationError(probabilityMasses, nbSamples));
+         double ae;
+         if(poisson_ae.containsKey(hash)) {
+            ae = poisson_ae.get(hash);
+         } else {            
+            ae = pwfolf.getMaxApproximationError(probabilityMasses, nbSamples);
+            poisson_ae.put(hash, ae);
+         }
+         approximationErrors.add(ae);
          if(ce[0] > capacity) break;
          else demand++;
       }
