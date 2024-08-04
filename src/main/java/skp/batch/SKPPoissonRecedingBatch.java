@@ -82,7 +82,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
    
    private static void storeSolvedBatchToCSV(SKPPoissonRecedingSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValues, expectedWeights "
+            "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, simulatedSolutionMean, simulatedSolutionStd, "
             + "simulationRuns, piecewisePartitions, "
             + "piecewiseSamples, evp, evwpi,"
