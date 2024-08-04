@@ -40,7 +40,7 @@ public class SKPPoissonRecedingBatch extends SKPPoissonBatch{
              */
 
             int partitions = 10;
-            int linearizationSamples = 1000;
+            int linearizationSamples = 10000;
             int simulationRuns = 100;
             try {
                solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, "batch/"+t.toString()+"/"+size);
