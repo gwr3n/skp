@@ -99,7 +99,7 @@ public class SKPGenericDistributionMILP {
          cplex.addEq(cplex.scalProd(Arrays.stream(this.instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), X), M);
 
          // Expected capacity shortage (Jensen's loss): P >= - (C-M)
-         //                                    P-M >= -C
+         //                                           P-M >= -C
          cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
 
          //Cuts
