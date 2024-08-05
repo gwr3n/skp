@@ -2,7 +2,7 @@ package skp.milp.instance;
 
 import skp.instance.SKPGenericDistribution;
 
-public class SKPGenericDistributionMILPSolvedInstance {
+public class SKPGenericDistributionCutsSolvedInstance {
    public SKPGenericDistribution instance;
    public int[] optimalKnapsack;
    public double simulatedSolutionValue;
@@ -17,7 +17,7 @@ public class SKPGenericDistributionMILPSolvedInstance {
    public int simplexIterations;
    public int exploredNodes;
    
-   public SKPGenericDistributionMILPSolvedInstance(
+   public SKPGenericDistributionCutsSolvedInstance(
          SKPGenericDistribution instance,
          int[] optimalKnapsack,
          double simulatedSolutionValue,
