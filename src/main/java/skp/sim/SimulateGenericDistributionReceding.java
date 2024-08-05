@@ -10,7 +10,7 @@ import ilog.concert.IloException;
 import skp.instance.KP;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.KPMILP;
-import skp.milp.SKPGenericDistributionMILP;
+import skp.milp.SKPGenericDistributionBandB;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
@@ -74,10 +74,10 @@ public class SimulateGenericDistributionReceding extends Simulate {
 
       SKPGenericDistribution reducedInstance = new SKPGenericDistribution(shortExpValues, shortWeight, remainingCapacity, instance.getShortageCost());
 
-      SKPGenericDistributionMILP milp = null;
+      SKPGenericDistributionBandB milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPGenericDistributionMILP(reducedInstance, linearisationSamples, maxCuts);
+         milp = new SKPGenericDistributionBandB(reducedInstance, linearisationSamples, maxCuts);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
@@ -189,7 +189,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
 
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
       
-      int linearisationSamples = 1000;
+      int linearisationSamples = 10000;
       int simulationRuns = 100;
       int maxCuts = 1000;
       
