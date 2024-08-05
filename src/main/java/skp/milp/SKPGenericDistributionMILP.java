@@ -22,7 +22,7 @@ public class SKPGenericDistributionMILP {
    int maxCuts;
    
    int[] optimalKnapsack;
-   double milpSolutionValue;
+   double milpSolutionValue = Double.MAX_VALUE;
    double milpOptimalityGap;
    double milpMaxLinearizationError;
    
@@ -109,14 +109,18 @@ public class SKPGenericDistributionMILP {
             cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
          }
 
+         // Bound objective function value
+         cplex.add(cplex.le(cplex.sum(
+               cplex.scalProd(this.instance.getExpectedValues(), X),
+               cplex.prod(-instance.getShortageCost(), P)), this.milpSolutionValue));
+         
          // The objective is to maximize the profit minus the expected capacity shortage
          cplex.addMaximize(cplex.sum(
                cplex.scalProd(this.instance.getExpectedValues(), X),
                cplex.prod(-instance.getShortageCost(), P))
                );
 
-         cplex.setParam(IloCplex.Param.MIP.Strategy.Search,
-               IloCplex.MIPSearch.Traditional);
+         cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
 
          double start = cplex.getCplexImpl().getCplexTime();
          boolean status =  cplex.solve();
@@ -189,6 +193,11 @@ public class SKPGenericDistributionMILP {
             cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
          }
 
+         // Bound objective function value
+         cplex.add(cplex.le(cplex.sum(
+               cplex.scalProd(this.instance.getExpectedValues(), X),
+               cplex.prod(-instance.getShortageCost(), P)), this.milpSolutionValue));
+         
          // The objective is to maximize the profit minus the expected capacity shortage
          cplex.addMaximize(cplex.sum(
                cplex.scalProd(this.instance.getExpectedValues(), X),
