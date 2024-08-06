@@ -390,12 +390,27 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    private static SKPGenericDistributionBandBSolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns) throws IloException {
-      ArrayList<SKPGenericDistributionBandBSolvedInstance>solved = new ArrayList<SKPGenericDistributionBandBSolvedInstance>();
+      /*ArrayList<SKPGenericDistributionBandBSolvedInstance>solved = new ArrayList<SKPGenericDistributionBandBSolvedInstance>();
       for(SKPGenericDistribution instance : instances) {
          solved.add(new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns).solve());
-         GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionBandBSolvedInstance[solved.size()]), fileName);
+         
       }
+      GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionBandBSolvedInstance[solved.size()]), fileName);
       return solved.toArray(new SKPGenericDistributionBandBSolvedInstance[solved.size()]);
+      */
+      SKPGenericDistributionBandBSolvedInstance[] solved = Arrays.stream(instances)
+                                                                 .parallel()
+                                                                 .map(instance -> {
+         try {
+            return new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns).solve();
+         } catch (IloException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+         }
+      }).toArray(SKPGenericDistributionBandBSolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
    
    /*
