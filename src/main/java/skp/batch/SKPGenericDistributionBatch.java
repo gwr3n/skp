@@ -89,7 +89,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       P05_CIRCLE_INSTANCES
    };
    
-   public static void bubbleSort(double[] expectedValues, double[] expectedWeights) {
+   private static void bubbleSort(double[] expectedValues, double[] expectedWeights) {
       if (expectedValues.length != expectedWeights.length) {
          throw new IllegalArgumentException("Arrays must be of the same length");
       }
