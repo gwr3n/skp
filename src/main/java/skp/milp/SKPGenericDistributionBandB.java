@@ -128,7 +128,7 @@ public class SKPGenericDistributionBandB {
       System.gc();
    }
    
-   private static long time_limitMs = 60000; 
+   private static long time_limitMs = 180000; 
    
    // Branch and bound algorithm
    public SKPGenericDistributionBandBSolvedInstance solve() throws IloException {
