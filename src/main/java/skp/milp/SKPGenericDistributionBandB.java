@@ -186,7 +186,7 @@ public class SKPGenericDistributionBandB {
               System.out.println("Solution time: "+(System.currentTimeMillis() - start));
               System.out.println("UB: "+this.bestUB);
               System.out.println("Max profit: "+this.maxProfit);
-              System.out.printf("Opt gap: %.2f\n", 100*this.optGap);
+              System.out.printf("Opt gap: %.2f%%\n", 100*this.optGap);
               System.out.println();
            }
            
