@@ -6,7 +6,6 @@ import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
 import ilog.opl.IloCplex;
-import ilog.opl.IloOplFactory;
 
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
@@ -36,6 +35,7 @@ public class SKPGenericDistributionBandB {
       this.instance = instance;
       this.linearizationSamples = linearizationSamples;
       this.simulationRuns = simulationRuns;
+      this.optimalKnapsack = new int[instance.getItems()];
    }
    
    public int[] getOptimalKnapsack() {
@@ -66,9 +66,8 @@ public class SKPGenericDistributionBandB {
    
    // Calculate the bound value for a given node
    private static void bound(Node u, SKPGenericDistribution instance, int linearizationSamples, int simulationRuns) throws IloException {
-      
-      IloOplFactory.setDebugMode(false);
       IloCplex cplex = new IloCplex();
+      cplex.setParam(IloCplex.Param.TimeLimit, 60);
       cplex.setOut(null);
 
       // Create decision variables
@@ -117,7 +116,12 @@ public class SKPGenericDistributionBandB {
          u.bestKnapsack = optimalKnapsack;
          SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
          u.profit = sim.simulate(optimalKnapsack, simulationRuns);
-      }
+      } else {
+         System.out.println("No solution!");
+      } 
+      // Release all resources
+      cplex.end();
+      System.gc();
    }
    
    // Branch and bound algorithm
