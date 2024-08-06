@@ -178,9 +178,11 @@ public class SKPGenericDistributionBandB {
            }
            
            if(exploredNodes % 10 == 0) {
+              System.out.println(instance.getInstanceID());
               System.out.println("Explored nodes: "+exploredNodes);
               System.out.println("Solution time: "+(System.currentTimeMillis() - start));
               System.out.println("Opt gap: "+this.optGap);
+              System.out.println();
            }
            if(System.currentTimeMillis() - start >= time_limitMs)
               break;
