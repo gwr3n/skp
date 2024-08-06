@@ -16,7 +16,6 @@ package skp.batch;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
