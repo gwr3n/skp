@@ -25,6 +25,7 @@ public class SKPGenericDistributionBandB {
    
    int[] optimalKnapsack;
    double maxProfit = 0;
+   double optGap = Double.MAX_VALUE;
    
    double BandBSolutionTimeMs = 0;
    int exploredNodes = 0;
@@ -137,6 +138,8 @@ public class SKPGenericDistributionBandB {
        int[] knapsack = new int[instance.getItems()];
        Node rootNode = new Node(-1, knapsack);
        bound(rootNode, this.instance, this.linearizationSamples, this.simulationRuns);
+       SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
+       this.optGap = (rootNode.bound - sim.simulate(knapsack, simulationRuns))/rootNode.bound;
        stack.push(rootNode);
        exploredNodes++;
 
@@ -147,10 +150,11 @@ public class SKPGenericDistributionBandB {
                continue;
            }
            
-           int[] branch_1 = Arrays.copyOf(knapsack, instance.getItems());
+           int[] branch_1 = Arrays.copyOf(u.knapsack, instance.getItems());
            branch_1[u.level + 1] = 1;
            v = new Node(u.level + 1, branch_1);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
+           this.optGap = (rootNode.bound - sim.simulate(knapsack, simulationRuns))/rootNode.bound;
 
            if (v.profit > maxProfit) {
                maxProfit = v.profit;
@@ -162,10 +166,11 @@ public class SKPGenericDistributionBandB {
                exploredNodes++;
            }
 
-           int[] branch_0 = Arrays.copyOf(knapsack, instance.getItems());
+           int[] branch_0 = Arrays.copyOf(u.knapsack, instance.getItems());
            branch_0[u.level + 1] = 0;
            v = new Node(u.level + 1, branch_0);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
+           this.optGap = (rootNode.bound - sim.simulate(knapsack, simulationRuns))/rootNode.bound;
 
            if (v.bound > maxProfit) {
                stack.push(v);
@@ -175,12 +180,13 @@ public class SKPGenericDistributionBandB {
            if(exploredNodes % 10 == 0) {
               System.out.println("Explored nodes: "+exploredNodes);
               System.out.println("Solution time: "+(System.currentTimeMillis() - start));
+              System.out.println("Opt gap: "+this.optGap);
            }
            if(System.currentTimeMillis() - start >= time_limitMs)
               break;
        }
        long end = System.currentTimeMillis();
-       return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes);
+       return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes, this.optGap);
    }
    
    public static void main(String args[]) {
