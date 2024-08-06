@@ -189,6 +189,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double U = Math.max(1.0, Arrays.stream(expectedWeights).map(v -> v - R/10.0).max().getAsDouble());
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(U,U+2*R/10.0)).nextArrayOfDouble(instanceSize);
                
+               bubbleSort(expectedValues, expectedWeights);
+               
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
@@ -209,6 +211,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedValues = Arrays.stream(expectedWeights).map(v -> v + R/10.0).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
                
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
@@ -231,6 +235,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = Arrays.stream(expectedValues).map(v -> v + R/10.0).toArray();
                
+               bubbleSort(expectedValues, expectedWeights);
+               
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
@@ -251,6 +257,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedValues = Arrays.stream(expectedWeights).map(v -> new RandomVariateGen(randGenerator, new UniformDist(v + R/10.0 - R/500.0, v + R/10.0 + R/500.0)).nextDouble()).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
                
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
@@ -273,6 +281,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedValues = Arrays.copyOf(expectedWeights, instanceSize);
                
+               bubbleSort(expectedValues, expectedWeights);
+               
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
@@ -293,6 +303,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(R,R+10)).nextArrayOfDouble(instanceSize);
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
                
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
@@ -316,6 +328,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double d = 3;
                double[] expectedValues = Arrays.stream(expectedWeights).map(v -> d*Math.ceil(v/d)).toArray();
                
+               bubbleSort(expectedValues, expectedWeights);
+               
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
@@ -336,6 +350,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedValues = Arrays.stream(expectedWeights).map(v -> 2*Math.sqrt(4*R*R - Math.pow(v - 2*R,2))/3).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
                
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
