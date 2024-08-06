@@ -89,6 +89,36 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       P05_CIRCLE_INSTANCES
    };
    
+   public static void bubbleSort(double[] expectedValues, double[] expectedWeights) {
+      if (expectedValues.length != expectedWeights.length) {
+         throw new IllegalArgumentException("Arrays must be of the same length");
+      }
+
+      boolean swapped;
+      do {
+         swapped = false;
+         for (int i = 0; i < expectedValues.length - 1; i++) {
+            double ratioA = expectedValues[i] / expectedWeights[i];
+            double ratioB = expectedValues[i + 1] / expectedWeights[i + 1];
+
+            if (ratioA < ratioB) {
+               // Swap values
+               double tempValue = expectedValues[i];
+               expectedValues[i] = expectedValues[i + 1];
+               expectedValues[i + 1] = tempValue;
+
+               // Swap weights
+               double tempWeight = expectedWeights[i];
+               expectedWeights[i] = expectedWeights[i + 1];
+               expectedWeights[i + 1] = tempWeight;
+
+               swapped = true;
+            }
+         }
+      } while (swapped);
+   }
+   
+   
    /**
     * Generate a batch of instances
     */
@@ -134,6 +164,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             for(int i = 0; i < H; i++) {
                double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
                double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
                
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
