@@ -193,6 +193,8 @@ public class SKPGenericDistributionBandB {
               break;
        }
        long end = System.currentTimeMillis();
+       if(stack.isEmpty())
+          this.bestUB = this.maxProfit;
        return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes, this.optGap);
    }
    
