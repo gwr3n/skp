@@ -154,7 +154,7 @@ public class SKPGenericDistributionBandB {
            branch_1[u.level + 1] = 1;
            v = new Node(u.level + 1, branch_1);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           this.optGap = (rootNode.bound - sim.simulate(knapsack, simulationRuns))/rootNode.bound;
+           this.optGap = (v.bound - sim.simulate(v.bestKnapsack, simulationRuns))/rootNode.bound;
 
            if (v.profit > maxProfit) {
                maxProfit = v.profit;
@@ -170,7 +170,7 @@ public class SKPGenericDistributionBandB {
            branch_0[u.level + 1] = 0;
            v = new Node(u.level + 1, branch_0);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           this.optGap = (rootNode.bound - sim.simulate(knapsack, simulationRuns))/rootNode.bound;
+           this.optGap = (v.bound - sim.simulate(v.bestKnapsack, simulationRuns))/rootNode.bound;
 
            if (v.bound > maxProfit) {
                stack.push(v);
