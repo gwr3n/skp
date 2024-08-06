@@ -25,23 +25,23 @@ public class SimulateGenericDistributionReceding extends Simulate {
       this.instance = instance;
    }
    
-   public SKPGenericDistributionRecedingSolvedInstance solve(int simulationRuns, int linearisationSamples, int maxCuts) {
+   public SKPGenericDistributionRecedingSolvedInstance solve(int simulationRunsRH, int linearisationSamples, int simulationRuns) {
       
       SimulateGenericDistributionReceding sim = new SimulateGenericDistributionReceding(instance);
       
-      double[] realisations = sim.simulate(simulationRuns, linearisationSamples, maxCuts);
+      double[] realisations = sim.simulate(simulationRunsRH, linearisationSamples, simulationRuns);
       Mean m = new Mean();
       double simSolutionMean = m.evaluate(realisations);
       StandardDeviation std = new StandardDeviation();
       double simSolutionStd = std.evaluate(realisations);
-      double simEVwPI = sim.simulateEVwPI(simulationRuns);
+      double simEVwPI = sim.simulateEVwPI(simulationRunsRH);
       double EVP = sim.computeEVP();
-      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRuns);
+      double EVwPI_obj_2_n = sim.simulateEVwPI_obj_2_n(simulationRunsRH);
       
       System.out.println("Simulation (mean): "+simSolutionMean);
       System.out.println("Simulation (std): "+simSolutionStd);
-      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRuns))+","+
-                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRuns))+"]");
+      System.out.println("Simulation (CI): ["+(simSolutionMean-1.96*simSolutionStd/Math.sqrt(simulationRunsRH))+","+
+                                              (simSolutionMean+1.96*simSolutionStd/Math.sqrt(simulationRunsRH))+"]");
       System.out.println("EVwPI: "+simEVwPI);
       System.out.println("EVP: "+EVP);
       System.out.println("EVwPI on items 2-n: "+EVwPI_obj_2_n);
@@ -50,7 +50,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
             this.instance,
             simSolutionMean,
             simSolutionStd,
-            simulationRuns,
+            simulationRunsRH,
             EVP,
             simEVwPI,
             EVwPI_obj_2_n,
@@ -60,7 +60,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
       return solvedInstance;
    }
    
-   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int linearisationSamples, int maxCuts) {
+   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int linearisationSamples, int simulationRuns) {
       double[] previousRealizations = new double[t];
       System.arraycopy(realizations, 0, previousRealizations, 0, t);
 
@@ -77,7 +77,7 @@ public class SimulateGenericDistributionReceding extends Simulate {
       SKPGenericDistributionBandB milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPGenericDistributionBandB(reducedInstance, linearisationSamples, maxCuts);
+         milp = new SKPGenericDistributionBandB(reducedInstance, linearisationSamples, simulationRuns);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
@@ -90,11 +90,11 @@ public class SimulateGenericDistributionReceding extends Simulate {
       return knapsack[0];
    }
    
-   private double simulateOneRun(double[] realizations, int linearisationSamples, int maxCuts) {
+   private double simulateOneRun(double[] realizations, int linearisationSamples, int simulationRuns) {
       double knapsackValue = 0;
       double remainingCapacity = instance.getCapacity();
       for(int i = 0; i < realizations.length; i++) {
-         if(simulateOneItem(i, realizations, remainingCapacity, linearisationSamples, maxCuts) == 1) {
+         if(simulateOneItem(i, realizations, remainingCapacity, linearisationSamples, simulationRuns) == 1) {
             remainingCapacity -= realizations[i];
             knapsackValue += this.instance.getExpectedValues()[i];
          }
@@ -103,11 +103,11 @@ public class SimulateGenericDistributionReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int simulationRuns, int linearisationSamples, int maxCuts) {
-      double[][] sampleMatrix = sampleWeights(simulationRuns);
+   double[] simulate(int simulationRunsRH, int linearisationSamples, int simulationRuns) {
+      double[][] sampleMatrix = sampleWeights(simulationRunsRH);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
-                                      .mapToDouble(r -> simulateOneRun(r, linearisationSamples, maxCuts))
+                                      .mapToDouble(r -> simulateOneRun(r, linearisationSamples, simulationRuns))
                                       .peek(r -> System.out.println("Simulation run completed: "+r))
                                       .toArray();
       return knapsackValues;
@@ -190,10 +190,10 @@ public class SimulateGenericDistributionReceding extends Simulate {
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
       
       int linearisationSamples = 10000;
-      int simulationRuns = 100;
-      int maxCuts = 1000;
+      int simulationRunsRH = 10;
+      int simulationRuns = 10000;
       
       SimulateGenericDistributionReceding sim = new SimulateGenericDistributionReceding(instance);
-      System.out.println(GSONUtility.<SKPGenericDistributionRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns, linearisationSamples, maxCuts)));
+      System.out.println(GSONUtility.<SKPGenericDistributionRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRunsRH, linearisationSamples, simulationRuns)));
    }
 }

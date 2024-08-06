@@ -62,10 +62,9 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
                
                int linearizationSamples = 10000;
-               int simulationRuns = 100000;   
-               int maxCuts = 1000;
+               int simulationRuns = 10000;   
                try {
-                  solveMILP(instances, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -329,11 +328,11 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }*/
    
-   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, int maxCuts, String folder) throws IloException {
+   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, String folder) throws IloException {
       // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
       
       String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
-      SKPGenericDistributionBandBSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns, maxCuts);
+      SKPGenericDistributionBandBSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, linearizationSamples, simulationRuns);
       
       // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
       System.out.println(GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -342,7 +341,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPGenericDistributionBandBSolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns, int maxCuts) throws IloException {
+   private static SKPGenericDistributionBandBSolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns) throws IloException {
       ArrayList<SKPGenericDistributionBandBSolvedInstance>solved = new ArrayList<SKPGenericDistributionBandBSolvedInstance>();
       for(SKPGenericDistribution instance : instances) {
          solved.add(new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns).solve());
