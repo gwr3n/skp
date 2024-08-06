@@ -189,6 +189,7 @@ public class SKPGenericDistributionBandB {
               System.out.println("Opt gap: "+this.optGap);
               System.out.println();
            }
+           
            if(System.currentTimeMillis() - start >= time_limitMs)
               break;
        }
