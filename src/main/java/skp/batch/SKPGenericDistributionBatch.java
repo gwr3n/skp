@@ -404,7 +404,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          try {
             return new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns).solve();
          } catch (IloException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             return null;
          }
@@ -508,14 +507,21 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    private static DSKPGenericDistributionSolvedInstance[] solveBatchDSKP(SKPGenericDistribution[] instances, String fileName) {
-      double truncationQuantile = 0.999999999999999;
+      /*double truncationQuantile = 0.999999999999999;
       ArrayList<DSKPGenericDistributionSolvedInstance>solved = new ArrayList<DSKPGenericDistributionSolvedInstance>();
       for(SKPGenericDistribution instance : instances) {
          solved.add(new DSKPGenericDistribution(instance, truncationQuantile).solve());
          System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]);
+      return solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]);*/
+      double truncationQuantile = 0.999999999999999;
+      DSKPGenericDistributionSolvedInstance[] solved = Arrays.stream(instances)
+                                                             .parallel()
+                                                             .map(instance -> new DSKPGenericDistribution(instance, truncationQuantile).solve())
+                                                             .toArray(DSKPGenericDistributionSolvedInstance[]::new);
+      GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
 
    private static void storeSolvedBatchToCSV(DSKPGenericDistributionSolvedInstance[] instances, String fileName) {
