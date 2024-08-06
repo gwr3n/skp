@@ -126,6 +126,8 @@ public class SKPGenericDistributionBandB {
       System.gc();
    }
    
+   private static long time_limitMs = 60000; 
+   
    // Branch and bound algorithm
    public SKPGenericDistributionBandBSolvedInstance solve() throws IloException {
        long start = System.currentTimeMillis();
@@ -169,6 +171,13 @@ public class SKPGenericDistributionBandB {
                stack.push(v);
                exploredNodes++;
            }
+           
+           if(exploredNodes % 10 == 0) {
+              System.out.println("Explored nodes: "+exploredNodes);
+              System.out.println("Solution time: "+(System.currentTimeMillis() - start));
+           }
+           if(System.currentTimeMillis() - start >= time_limitMs)
+              break;
        }
        long end = System.currentTimeMillis();
        return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes);
