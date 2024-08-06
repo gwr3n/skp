@@ -154,30 +154,30 @@ public class SKPGenericDistributionBandB {
            branch_1[u.level + 1] = 1;
            v = new Node(u.level + 1, branch_1);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           if(v.bound > this.bestUB) this.bestUB = v.bound;
 
            if (v.profit > maxProfit) {
                maxProfit = v.profit;
                optimalKnapsack = v.bestKnapsack;
+               this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
            }
-           
-           this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
 
            if (v.bound > maxProfit) {
                stack.push(v);
                exploredNodes++;
+               this.bestUB = Math.min(this.bestUB, v.bound);
+               this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
            }
 
            int[] branch_0 = Arrays.copyOf(u.knapsack, instance.getItems());
            branch_0[u.level + 1] = 0;
            v = new Node(u.level + 1, branch_0);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           if(v.bound > this.bestUB) this.bestUB = v.bound;
-           this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
 
            if (v.bound > maxProfit) {
                stack.push(v);
                exploredNodes++;
+               this.bestUB = Math.min(this.bestUB, v.bound);
+               this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
            }
            
            if(exploredNodes % 10 == 0) {
