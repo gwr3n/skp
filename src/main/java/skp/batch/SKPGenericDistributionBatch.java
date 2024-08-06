@@ -401,7 +401,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       String header = 
             "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
-            + "simulationRuns, solutionTimeMs, exploredNodes\n";
+            + "simulationRuns, solutionTimeMs, exploredNodes, optGap\n";
       String body = "";
       
       for(SKPGenericDistributionBandBSolvedInstance s : instances) {
@@ -414,7 +414,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                  s.simulatedSolutionValue + ", " +
                  s.simulationRuns + ", " +
                  s.solutionTimeMs + ", " +
-                 s.exploredNodes +"\n";
+                 s.exploredNodes + ", " +
+                 s.optGap +"\n";
       }
       PrintWriter pw;
       try {
