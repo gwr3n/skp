@@ -128,7 +128,7 @@ public class SKPGenericDistributionBandB {
       System.gc();
    }
    
-   private static long time_limitMs = 120000; 
+   private static long time_limitMs = 60000; 
    
    // Branch and bound algorithm
    public SKPGenericDistributionBandBSolvedInstance solve() throws IloException {
@@ -154,7 +154,7 @@ public class SKPGenericDistributionBandB {
            branch_1[u.level + 1] = 1;
            v = new Node(u.level + 1, branch_1);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           if(v.bound < this.bestUB) this.bestUB = v.bound;
+           if(v.bound > this.bestUB) this.bestUB = v.bound;
 
            if (v.profit > maxProfit) {
                maxProfit = v.profit;
@@ -172,7 +172,7 @@ public class SKPGenericDistributionBandB {
            branch_0[u.level + 1] = 0;
            v = new Node(u.level + 1, branch_0);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
-           if(v.bound < this.bestUB) this.bestUB = v.bound;
+           if(v.bound > this.bestUB) this.bestUB = v.bound;
            this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
 
            if (v.bound > maxProfit) {
