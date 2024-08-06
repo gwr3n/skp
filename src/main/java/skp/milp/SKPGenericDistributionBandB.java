@@ -186,7 +186,7 @@ public class SKPGenericDistributionBandB {
               System.out.println("Solution time: "+(System.currentTimeMillis() - start));
               System.out.println("UB: "+this.bestUB);
               System.out.println("Max profit: "+this.maxProfit);
-              System.out.println("Opt gap: "+this.optGap);
+              System.out.printf("Opt gap: %.2f\n", 100*this.optGap);
               System.out.println();
            }
            
@@ -194,8 +194,10 @@ public class SKPGenericDistributionBandB {
               break;
        }
        long end = System.currentTimeMillis();
-       if(stack.isEmpty())
+       if(stack.isEmpty()) {
           this.bestUB = this.maxProfit;
+          this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
+       }
        return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes, this.optGap);
    }
    
