@@ -26,7 +26,7 @@ public class SKPGenericDistributionBandB {
    int[] optimalKnapsack;
    double maxProfit = 0;
    double bestUB;
-   double optGap = Double.MAX_VALUE;
+   double optGap = 1.0;
    
    double BandBSolutionTimeMs = 0;
    int exploredNodes = 0;
@@ -140,8 +140,7 @@ public class SKPGenericDistributionBandB {
        Node rootNode = new Node(-1, knapsack);
        bound(rootNode, this.instance, this.linearizationSamples, this.simulationRuns);
        this.bestUB = rootNode.bound;
-       SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
-       this.optGap = (this.bestUB - sim.simulate(knapsack, simulationRuns))/this.bestUB;
+       this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
        stack.push(rootNode);
        exploredNodes++;
 
@@ -163,7 +162,7 @@ public class SKPGenericDistributionBandB {
                optimalKnapsack = v.bestKnapsack;
            }
            
-           this.optGap = (this.bestUB - sim.simulate(optimalKnapsack, simulationRuns))/this.bestUB;
+           this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
 
            if (v.bound > maxProfit) {
                stack.push(v);
@@ -175,7 +174,7 @@ public class SKPGenericDistributionBandB {
            v = new Node(u.level + 1, branch_0);
            bound(v, this.instance, this.linearizationSamples, this.simulationRuns);
            if(v.bound < this.bestUB) this.bestUB = v.bound;
-           this.optGap = (this.bestUB - sim.simulate(optimalKnapsack, simulationRuns))/this.bestUB;
+           this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
 
            if (v.bound > maxProfit) {
                stack.push(v);
