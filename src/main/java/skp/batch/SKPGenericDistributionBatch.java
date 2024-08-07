@@ -389,21 +389,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    private static SKPGenericDistributionBandBSolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns) throws IloException {
-      /*
-       * Sequential
-       * 
-      ArrayList<SKPGenericDistributionBandBSolvedInstance>solved = new ArrayList<SKPGenericDistributionBandBSolvedInstance>();
-      for(SKPGenericDistribution instance : instances) {
-         solved.add(new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns).solve());
-         
-      }
-      GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionBandBSolvedInstance[solved.size()]), fileName);
-      return solved.toArray(new SKPGenericDistributionBandBSolvedInstance[solved.size()]);
-      */
-      
-      /*
-       * Parallel
-       */
       SKPGenericDistributionBandBSolvedInstance[] solved = Arrays.stream(instances)
                                                                  .parallel()
                                                                  .map(instance -> {
@@ -513,21 +498,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    private static DSKPGenericDistributionSolvedInstance[] solveBatchDSKP(SKPGenericDistribution[] instances, String fileName) {
-      /*
-       * Sequential
-       * 
-      double truncationQuantile = 0.999999999999999;
-      ArrayList<DSKPGenericDistributionSolvedInstance>solved = new ArrayList<DSKPGenericDistributionSolvedInstance>();
-      for(SKPGenericDistribution instance : instances) {
-         solved.add(new DSKPGenericDistribution(instance, truncationQuantile).solve());
-         System.out.println("Solved DSKP instance number "+solved.size());
-         GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]);*/
-      
-      /*
-       * Parallel
-       */
       double truncationQuantile = 0.999999999999999;
       DSKPGenericDistributionSolvedInstance[] solved = Arrays.stream(instances)
                                                              .parallel()
