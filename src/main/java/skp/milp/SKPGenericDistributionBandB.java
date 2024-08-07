@@ -129,6 +129,7 @@ public class SKPGenericDistributionBandB {
    }
    
    private static long time_limitMs = 60*10*1000; 
+   boolean logging = false;
    
    // Branch and bound algorithm
    public SKPGenericDistributionBandBSolvedInstance solve() throws IloException {
@@ -176,7 +177,7 @@ public class SKPGenericDistributionBandB {
                this.exploredNodes++;
            }
            
-           if(exploredNodes % 10 == 0) {
+           if(exploredNodes % 10 == 0 && logging) {
               System.out.println(instance.getInstanceID());
               System.out.println("Explored nodes: "+exploredNodes);
               System.out.println("Solution time: "+(System.currentTimeMillis() - start));
