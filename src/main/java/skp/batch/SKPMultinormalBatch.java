@@ -87,7 +87,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                    * European Journal of Operational Research, Elsevier, Vol. 304(2): 515–524, 2023 
                    */
                   if(size == instanceSize[0])
-                     solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                     solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho); // Can only be solved if R=20
                }
             }
          }
@@ -112,7 +112,8 @@ public class SKPMultinormalBatch extends SKPBatch {
       
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv, double rho) {
       int H = 10;
-      int R = 100;
+      int R = 100; // for MILP experiments
+      //int R = 20; // for rolling horizon
       double shortageCost = 10;
       
       switch(type) {
@@ -530,7 +531,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       /*
        *  Parallel
        */
-      double truncationQuantile = 0.999999999999999;
+      double truncationQuantile = 0.9999;
       DSKPMultinormalSolvedInstance[] solved = Arrays.stream(instances)
                                                      .parallel()
                                                      .map(instance -> new DSKPMultinormal(instance, truncationQuantile).solve())
