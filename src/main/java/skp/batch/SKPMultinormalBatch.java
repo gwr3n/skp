@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
+
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalMILP;
@@ -424,12 +424,33 @@ public class SKPMultinormalBatch extends SKPBatch {
    }
    
    private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+      /*
+       * Sequential
+       *
       ArrayList<SKPMultinormalMILPSolvedInstance>solved = new ArrayList<SKPMultinormalMILPSolvedInstance>();
       for(SKPMultinormal instance : instances) {
          solved.add(new SKPMultinormalMILP(instance, partitions).solve(simulationRuns));
          GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]);
+      return solved.toArray(new SKPMultinormalMILPSolvedInstance[solved.size()]); */
+      
+      /*
+       * Parallel
+       */
+      SKPMultinormalMILPSolvedInstance[] solved = Arrays.stream(instances)
+            .parallel()
+            .map(instance -> {
+               try {
+                  return new SKPMultinormalMILP(instance, partitions).solve(simulationRuns);
+               } catch (IloException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+                  return null;
+               }
+            })
+            .toArray(SKPMultinormalMILPSolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
 
    private static void storeSolvedBatchToCSV(SKPMultinormalMILPSolvedInstance[] instances, String fileName) {
@@ -494,6 +515,9 @@ public class SKPMultinormalBatch extends SKPBatch {
    }
    
    private static DSKPMultinormalSolvedInstance[] solveBatchDSKP(SKPMultinormal[] instances, String fileName) {
+      /*
+       * Sequential
+       * 
       double truncationQuantile = 0.999999999999999;
       ArrayList<DSKPMultinormalSolvedInstance>solved = new ArrayList<DSKPMultinormalSolvedInstance>();
       for(SKPMultinormal instance : instances) {
@@ -501,7 +525,18 @@ public class SKPMultinormalBatch extends SKPBatch {
          System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]);
+      return solved.toArray(new DSKPMultinormalSolvedInstance[solved.size()]);*/
+      
+      /*
+       *  Parallel
+       */
+      double truncationQuantile = 0.999999999999999;
+      DSKPMultinormalSolvedInstance[] solved = Arrays.stream(instances)
+                                                             .parallel()
+                                                             .map(instance -> new DSKPMultinormal(instance, truncationQuantile).solve())
+                                                             .toArray(DSKPMultinormalSolvedInstance[]::new);
+      GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
 
    private static void storeSolvedBatchToCSV(DSKPMultinormalSolvedInstance[] instances, String fileName) {
