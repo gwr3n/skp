@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -357,12 +356,33 @@ public class SKPPoissonBatch extends SKPBatch {
    }
    
    private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {      
+      /*
+       * Sequential
+       *
       ArrayList<SKPPoissonMILPSolvedInstance>solved = new ArrayList<SKPPoissonMILPSolvedInstance>();
       for(SKPPoisson instance : instances) {
          solved.add(new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns));
          GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);
+      return solved.toArray(new SKPPoissonMILPSolvedInstance[solved.size()]);*/
+      
+      /*
+       * Parallel
+       */
+      SKPPoissonMILPSolvedInstance[] solved = Arrays.stream(instances)
+                                                                 .parallel()
+                                                                 .map(instance -> {
+                                                                  try {
+                                                                     return new SKPPoissonMILP(instance, partitions, linearizationSamples).solve(simulationRuns);
+                                                                  } catch (IloException e) {
+                                                                     // TODO Auto-generated catch block
+                                                                     e.printStackTrace();
+                                                                     return null;
+                                                                  }
+                                                               })
+                                                                 .toArray(SKPPoissonMILPSolvedInstance[]::new);
+      GSONUtility.<SKPPoissonMILPSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
 
    private static void storeSolvedBatchToCSV(SKPPoissonMILPSolvedInstance[] instances, String fileName) {
@@ -427,6 +447,9 @@ public class SKPPoissonBatch extends SKPBatch {
    }
    
    private static DSKPPoissonSolvedInstance[] solveBatchDSKP(SKPPoisson[] instances, String fileName) {
+      /*
+       * Sequential
+       *
       double truncationQuantile = 0.999999999999999;
       ArrayList<DSKPPoissonSolvedInstance>solved = new ArrayList<DSKPPoissonSolvedInstance>();
       for(SKPPoisson instance : instances) {
@@ -434,7 +457,18 @@ public class SKPPoissonBatch extends SKPBatch {
          System.out.println("Solved DSKP instance number "+solved.size());
          GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);
+      return solved.toArray(new DSKPPoissonSolvedInstance[solved.size()]);*/
+      
+      /*
+       * Parallel
+       */
+      double truncationQuantile = 0.999999999999999;
+      DSKPPoissonSolvedInstance[] solved = Arrays.stream(instances)
+                                                 .parallel()
+                                                 .map(instance -> new DSKPPoisson(instance, truncationQuantile).solve())
+                                                 .toArray(DSKPPoissonSolvedInstance[]::new);
+      GSONUtility.<DSKPPoissonSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
    }
 
    private static void storeSolvedBatchToCSV(DSKPPoissonSolvedInstance[] instances, String fileName) {

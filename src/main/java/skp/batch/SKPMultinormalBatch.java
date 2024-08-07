@@ -438,17 +438,17 @@ public class SKPMultinormalBatch extends SKPBatch {
        * Parallel
        */
       SKPMultinormalMILPSolvedInstance[] solved = Arrays.stream(instances)
-            .parallel()
-            .map(instance -> {
-               try {
-                  return new SKPMultinormalMILP(instance, partitions).solve(simulationRuns);
-               } catch (IloException e) {
-                  // TODO Auto-generated catch block
-                  e.printStackTrace();
-                  return null;
-               }
-            })
-            .toArray(SKPMultinormalMILPSolvedInstance[]::new);
+                                                        .parallel()
+                                                        .map(instance -> {
+                                                           try {
+                                                              return new SKPMultinormalMILP(instance, partitions).solve(simulationRuns);
+                                                           } catch (IloException e) {
+                                                              // TODO Auto-generated catch block
+                                                              e.printStackTrace();
+                                                              return null;
+                                                           }
+                                                        })
+                                                        .toArray(SKPMultinormalMILPSolvedInstance[]::new);
       GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
@@ -532,9 +532,9 @@ public class SKPMultinormalBatch extends SKPBatch {
        */
       double truncationQuantile = 0.999999999999999;
       DSKPMultinormalSolvedInstance[] solved = Arrays.stream(instances)
-                                                             .parallel()
-                                                             .map(instance -> new DSKPMultinormal(instance, truncationQuantile).solve())
-                                                             .toArray(DSKPMultinormalSolvedInstance[]::new);
+                                                     .parallel()
+                                                     .map(instance -> new DSKPMultinormal(instance, truncationQuantile).solve())
+                                                     .toArray(DSKPMultinormalSolvedInstance[]::new);
       GSONUtility.<DSKPMultinormalSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
