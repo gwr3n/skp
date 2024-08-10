@@ -113,7 +113,7 @@ public class SKPMultinormalBatch extends SKPBatch {
    private static void generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv, double rho) {
       int H = 10;
       int R = 100; // for MILP experiments
-      //int R = 20; // for rolling horizon
+      //int R = 10; // for rolling horizon
       double shortageCost = 10;
       
       switch(type) {
