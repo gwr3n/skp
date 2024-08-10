@@ -531,7 +531,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       /*
        *  Parallel
        */
-      double truncationQuantile = 0.9999;
+      double truncationQuantile = 0.999999999999999;
       DSKPMultinormalSolvedInstance[] solved = Arrays.stream(instances)
                                                      .parallel()
                                                      .map(instance -> new DSKPMultinormal(instance, truncationQuantile).solve())
