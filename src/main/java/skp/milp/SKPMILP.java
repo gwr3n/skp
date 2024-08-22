@@ -76,7 +76,7 @@ public abstract class SKPMILP {
       IloOplModel opl=oplF.createOplModel(def,cplex);
       cplex.setParam(IloCplex.Param.Threads, 8);
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
-      cplex.setParam(IloCplex.Param.TimeLimit, 60);
+      cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
       //cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 1.0e-4); //this is the default value
       /*cplex.setParam(IloCplex.IntParam.VarSel, 1);
       cplex.setParam(IloCplex.IntParam.ZeroHalfCuts, 2);
