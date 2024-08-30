@@ -86,7 +86,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
    
    private static void storeSolvedBatchToCSV(SKPGenericDistributionRecedingSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValues, expectedWeights "
+            "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, simulatedSolutionMean, simulatedSolutionStd, "
             + "simulationRuns, "
             + "piecewiseSamples, evp, evwpi,"
