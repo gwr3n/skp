@@ -79,9 +79,9 @@ public class SKPGenericDistributionBandB {
       // Object selectors
       IloNumVar[] X = new IloNumVar[instance.getItems()];
       for(int i = 0; i <= u.level; i++)
-         X[i] = cplex.numVar(u.knapsack[i], u.knapsack[i], IloNumVarType.Int);
+         X[i] = cplex.numVar(u.knapsack[i], u.knapsack[i], IloNumVarType.Float);
       for(int i = u.level + 1; i < instance.getItems(); i++)
-         X[i] = cplex.numVar(0, 1, IloNumVarType.Int);
+         X[i] = cplex.numVar(0, 1, IloNumVarType.Float);
 
       // Expected knapsack weight
       IloNumVar M = cplex.numVar(0, Double.POSITIVE_INFINITY);
@@ -202,8 +202,8 @@ public class SKPGenericDistributionBandB {
 
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
       
-      int linearizationSamples = 10000;
-      int simulationRuns = 100000;
+      int linearizationSamples = 1000;
+      int simulationRuns = 1000;
       
       try {
          SKPGenericDistributionBandB sskp = new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns);
