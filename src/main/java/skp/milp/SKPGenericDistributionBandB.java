@@ -1,13 +1,13 @@
 package skp.milp;
 
-import java.util.stream.IntStream;
-
 import ilog.concert.IloException;
+import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
+
 import ilog.opl.IloCplex;
 
-import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.folf.FirstOrderLossFunctionScalarProduct;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionBandBSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
@@ -15,6 +15,7 @@ import skp.utilities.gson.GSONUtility;
 
 import umontreal.ssj.probdist.Distribution;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Stack;
 
@@ -24,9 +25,9 @@ public class SKPGenericDistributionBandB {
    int simulationRuns;
    
    int[] optimalKnapsack;
-   double maxProfit = 0;
+   double maxProfit;
    double bestUB;
-   double optGap = 1.0;
+   double optGap;
    
    double BandBSolutionTimeMs = 0;
    int exploredNodes = 0;
@@ -48,23 +49,26 @@ public class SKPGenericDistributionBandB {
       return this.maxProfit;
    }
    
-   private static double computeCutRHS(SKPGenericDistribution instance, int[] knapsack, int linearizationSamples) {
+   private static final double step = 0.1;
+   
+   private static double[] computeDirectionalDerivative(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
       Distribution[] weights = instance.getWeights();
-      Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
-            .limit(weights.length)
-            .filter(i -> knapsack[i] == 1)
-            .mapToObj(i -> weights[i])
-            .toArray(Distribution[]::new);
-
-      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(reducedWeights);
-
-      double a = pwfolf.getFirstOrderLossFunctionValue(instance.getCapacity(), linearizationSamples)-
-            (pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(instance.getCapacity())-1)*instance.getCapacity();
-      double b = pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(instance.getCapacity())-1; //slope
-      
-      return b*instance.getCapacity()+a;
+      FirstOrderLossFunctionScalarProduct folfsp = new FirstOrderLossFunctionScalarProduct(weights);
+      double[] dd = new double[weights.length];
+      for(int i = 0; i < dd.length; i++) {
+         double[] kp = Arrays.copyOf(knapsack, knapsack.length);
+         kp[i] = kp[i] + step;
+         dd[i] = (folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), kp, linearizationSamples) -
+                  folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples))/step;
+      }
+      return dd;
    }
    
+   private static double computeLX(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
+      Distribution[] weights = instance.getWeights();
+      FirstOrderLossFunctionScalarProduct folfsp = new FirstOrderLossFunctionScalarProduct(weights);
+      return folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples);
+   }
    
    // Calculate the bound value for a given node
    private static void bound(Node u, SKPGenericDistribution instance, int linearizationSamples, int simulationRuns) throws IloException {
@@ -97,10 +101,26 @@ public class SKPGenericDistributionBandB {
       // Expected capacity shortage (loss): P >= - (C-M)
       //                                    P-M >= -C
       cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -instance.getCapacity());
-
-      //Cut
-      Cut cut = new Cut(u.knapsack, computeCutRHS(instance, u.knapsack, linearizationSamples));
-      cplex.add(cplex.ge(P, cut.getRHS()));
+      
+      //Existing cuts
+      for(LPNLPCut cut: u.cutList) {
+         IloNumExpr[] sum = new IloNumExpr[u.knapsack.length];
+         for(int i = 0; i < cut.X.length; i++)
+            sum[i] = cplex.sum(-cut.getDirectionalDerivative()[i]*cut.X[i], cplex.prod(cut.getDirectionalDerivative()[i], X[i]));
+         IloNumExpr rhs = cplex.sum(cut.getKnapsackLoss(), cplex.sum(sum));
+         cplex.add(cplex.ge(P, rhs));
+      }
+         
+      //New cut
+      LPNLPCut cut = new LPNLPCut(Arrays.stream(u.knapsack).asDoubleStream().toArray(), 
+                                  computeLX(instance, Arrays.stream(u.knapsack).asDoubleStream().toArray(), linearizationSamples), 
+                                  computeDirectionalDerivative(instance, Arrays.stream(u.knapsack).asDoubleStream().toArray(), linearizationSamples));
+      u.cutList.add(cut);
+      IloNumExpr[] sum = new IloNumExpr[u.knapsack.length];
+      for(int i = 0; i < u.knapsack.length; i++)
+         sum[i] = cplex.sum(-cut.getDirectionalDerivative()[i]*u.knapsack[i], cplex.prod(cut.getDirectionalDerivative()[i], X[i]));
+      IloNumExpr rhs = cplex.sum(cut.getKnapsackLoss(), cplex.sum(sum));
+      cplex.add(cplex.ge(P, rhs));
       
       // The objective is to maximize the profit minus the expected capacity shortage
       cplex.addMaximize(cplex.sum(
@@ -136,6 +156,7 @@ public class SKPGenericDistributionBandB {
        long start = System.currentTimeMillis();
        Stack<Node> stack = new Stack<>();
        Node u, v;
+       this.maxProfit = 0; 
 
        Node rootNode = new Node(-1, new int[instance.getItems()]);
        bound(rootNode, this.instance, this.linearizationSamples, this.simulationRuns);
@@ -195,12 +216,18 @@ public class SKPGenericDistributionBandB {
           this.bestUB = this.maxProfit;
           this.optGap = (this.bestUB - this.maxProfit)/this.bestUB;
        }
-       return new SKPGenericDistributionBandBSolvedInstance(this.instance, this.optimalKnapsack, this.maxProfit, this.simulationRuns, end-start, this.exploredNodes, this.optGap);
+       return new SKPGenericDistributionBandBSolvedInstance(this.instance, 
+                                                            this.optimalKnapsack, 
+                                                            this.maxProfit, 
+                                                            this.simulationRuns, 
+                                                            end-start, 
+                                                            this.exploredNodes, 
+                                                            this.optGap);
    }
    
    public static void main(String args[]) {
 
-      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
+      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
       
       int linearizationSamples = 1000;
       int simulationRuns = 1000;
@@ -224,10 +251,20 @@ class Node {
    int[] bestKnapsack;
    double bound;
    double profit;
+   
+   ArrayList<LPNLPCut> cutList;
 
    public Node(int level, int[] knapsack) {
        this.level = level;
        this.knapsack = knapsack;
+       this.cutList = new ArrayList<LPNLPCut>();
    }
+   
+   @SuppressWarnings("unchecked")
+   public Node(int level, int[] knapsack, ArrayList<Cut> cutList) {
+      this.level = level;
+      this.knapsack = knapsack;
+      this.cutList = (ArrayList<LPNLPCut>) cutList.clone();
+  }
 }
 

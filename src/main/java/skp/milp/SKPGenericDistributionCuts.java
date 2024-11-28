@@ -2,14 +2,14 @@ package skp.milp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
+import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
 import ilog.opl.*;
 
-import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.folf.FirstOrderLossFunctionScalarProduct;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
@@ -19,10 +19,12 @@ import umontreal.ssj.probdist.Distribution;
 public class SKPGenericDistributionCuts {    
    
    int linearizationSamples;
+   int simulationRuns;
    int maxCuts;
    
    int[] optimalKnapsack;
-   double milpSolutionValue = Double.MAX_VALUE;
+   int[] lastKnapsack;
+   double milpSolutionValue;
    double milpOptimalityGap;
    double milpMaxLinearizationError;
    
@@ -31,14 +33,14 @@ public class SKPGenericDistributionCuts {
    double cplexSolutionTimeMs = 0;
    int simplexIterations = 0;
    int exploredNodes = 0;
-   int[] lastKnapsack = null;
    
-   ArrayList<Cut> cutList = new ArrayList<Cut>();
+   ArrayList<LPNLPCut> cutList = new ArrayList<LPNLPCut>();
    
-   public SKPGenericDistributionCuts(SKPGenericDistribution instance, int linearizationSamples, int maxCuts){
+   public SKPGenericDistributionCuts(SKPGenericDistribution instance, int linearizationSamples, int maxCuts, int simulationRuns){
       this.instance = instance;
       this.linearizationSamples = linearizationSamples;
       this.maxCuts = maxCuts;
+      this.simulationRuns = simulationRuns;
    }
    
    public int[] getOptimalKnapsack() {
@@ -57,24 +59,28 @@ public class SKPGenericDistributionCuts {
       return this.milpMaxLinearizationError;
    }
    
-   private double computeCutRHS(int[] knapsack) {
-      Distribution[] weights = this.instance.getWeights();
-      Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
-            .limit(weights.length)
-            .filter(i -> knapsack[i] == 1)
-            .mapToObj(i -> weights[i])
-            .toArray(Distribution[]::new);
-
-      PiecewiseFirstOrderLossFunction pwfolf = new PiecewiseFirstOrderLossFunction(reducedWeights);
-
-      double a = pwfolf.getFirstOrderLossFunctionValue(this.instance.getCapacity(), linearizationSamples)-
-            (pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(this.instance.getCapacity())-1)*this.instance.getCapacity();
-      double b = pwfolf.getEmpiricalDistribution(linearizationSamples).cdf(this.instance.getCapacity())-1; //slope
-      
-      return b*this.instance.getCapacity()+a;
+   private static final double step = 0.1;
+   
+   private static double[] computeDirectionalDerivative(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
+      Distribution[] weights = instance.getWeights();
+      FirstOrderLossFunctionScalarProduct folfsp = new FirstOrderLossFunctionScalarProduct(weights);
+      double[] dd = new double[weights.length];
+      for(int i = 0; i < dd.length; i++) {
+         double[] kp = Arrays.copyOf(knapsack, knapsack.length);
+         kp[i] = kp[i] + step;
+         dd[i] = (folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), kp, linearizationSamples) -
+                  folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples))/step;
+      }
+      return dd;
    }
    
-   public void solve() throws IloException {
+   private static double computeLX(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
+      Distribution[] weights = instance.getWeights();
+      FirstOrderLossFunctionScalarProduct folfsp = new FirstOrderLossFunctionScalarProduct(weights);
+      return folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples);
+   }
+   
+   /*public void solve() throws IloException {
       IloOplFactory.setDebugMode(false);
       
       boolean stop = false;
@@ -156,9 +162,12 @@ public class SKPGenericDistributionCuts {
          cplex.end();
          System.gc();
       }
-   }
+   }*/
    
-   public SKPGenericDistributionCutsSolvedInstance solve(int simulationRuns) throws IloException {
+   public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
+      this.milpSolutionValue = Double.MAX_VALUE;
+      this.lastKnapsack = null;
+      
       SKPGenericDistributionCutsSolvedInstance solvedInstance = null;
       IloOplFactory.setDebugMode(false);
       boolean stop = false;
@@ -185,12 +194,14 @@ public class SKPGenericDistributionCuts {
          // Expected capacity shortage (loss): P >= - (C-M)
          //                                    P-M >= -C
          cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
-
+         
          //Cuts
-         for(int i = 0; i < this.cutList.size(); i++) {
-            Cut cut = this.cutList.get(i);
-            // if all objects in the knapsack are selected, then P should be greater or equal than cut RHS
-            cplex.add(cplex.ifThen(cplex.ge(cplex.scalProd(X, cut.getKnapsack()), Arrays.stream(cut.getKnapsack()).sum()), cplex.ge(P, cut.getRHS())));
+         for(LPNLPCut cut: this.cutList) {
+            IloNumExpr[] sum = new IloNumExpr[this.instance.getItems()];
+            for(int i = 0; i < cut.X.length; i++)
+               sum[i] = cplex.sum(-cut.getDirectionalDerivative()[i]*cut.X[i], cplex.prod(cut.getDirectionalDerivative()[i], X[i]));
+            IloNumExpr rhs = cplex.sum(cut.getKnapsackLoss(), cplex.sum(sum));
+            cplex.add(cplex.ge(P, rhs));
          }
 
          // Bound objective function value
@@ -204,8 +215,7 @@ public class SKPGenericDistributionCuts {
                cplex.prod(-instance.getShortageCost(), P))
                );
 
-         cplex.setParam(IloCplex.Param.MIP.Strategy.Search,
-               IloCplex.MIPSearch.Traditional);
+         cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
 
          double start = cplex.getCplexImpl().getCplexTime();
          boolean status =  cplex.solve();
@@ -232,14 +242,14 @@ public class SKPGenericDistributionCuts {
                stop = true;
                
                SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
-               double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
+               double simulatedSolutionValue = sim.simulate(optimalKnapsack, this.simulationRuns);
                double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
 
                solvedInstance = new SKPGenericDistributionCutsSolvedInstance(
                      instance,
-                     this.getOptimalKnapsack(),
+                     this.optimalKnapsack,
                      simulatedSolutionValue,
-                     simulationRuns,
+                     this.simulationRuns,
                      this.getMILPSolutionValue(),
                      this.getMILPOptimalityGap(),
                      this.cutList.size(),
@@ -252,7 +262,11 @@ public class SKPGenericDistributionCuts {
                      );
             } else {
                this.lastKnapsack = this.optimalKnapsack;
-               this.cutList.add(new Cut(this.optimalKnapsack, this.computeCutRHS(this.optimalKnapsack)));
+               //New cut
+               LPNLPCut cut = new LPNLPCut(Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), 
+                                           computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples), 
+                                           computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples));
+               this.cutList.add(cut);
                if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
             }
 
@@ -267,37 +281,20 @@ public class SKPGenericDistributionCuts {
    
    public static void main(String args[]) {
 
-      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstance();
+      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
       
-      int linearizationSamples = 100000;
-      int maxCuts = 100000;
+      int linearizationSamples = 1000;
+      int maxCuts = 1000;
+      int simulationRuns = 1000;
       
       try {
-         SKPGenericDistributionCuts sskp = new SKPGenericDistributionCuts(instance, linearizationSamples, maxCuts);
+         SKPGenericDistributionCuts sskp = new SKPGenericDistributionCuts(instance, linearizationSamples, maxCuts, simulationRuns);
          
-         SKPGenericDistributionCutsSolvedInstance solvedInstance = sskp.solve(100000);
+         SKPGenericDistributionCutsSolvedInstance solvedInstance = sskp.solve();
          System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance>printInstanceAsJSON(solvedInstance));
       } catch (Exception e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-   }
-}
-
-class Cut {
-   int[] X;
-   double rhs;
-   
-   public Cut(int[] X, double rhs) {
-      this.X = X;
-      this.rhs = rhs;
-   }
-   
-   public int[] getKnapsack() {
-      return X;
-   }
-   
-   public double getRHS() {
-      return rhs;
    }
 }
