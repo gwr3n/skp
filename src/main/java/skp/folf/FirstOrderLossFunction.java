@@ -32,7 +32,7 @@ public class FirstOrderLossFunction {
       this.randGenerator.setSeed(seed);
    }
    
-   private double[][] sample(int nbSamples){
+   double[][] sample(int nbSamples){
       this.randGenerator.resetStartStream();
       double[][] sampleMatrix;
       switch(Simulate.samplingStrategy) {
