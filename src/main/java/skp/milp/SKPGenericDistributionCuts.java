@@ -164,7 +164,10 @@ public class SKPGenericDistributionCuts {
       }
    }*/
    
+   private static long time_limitMs = 60*10*1000; 
+   
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
+      long startGlobal = System.currentTimeMillis();
       this.milpSolutionValue = Double.MAX_VALUE;
       this.lastKnapsack = null;
       
@@ -264,6 +267,9 @@ public class SKPGenericDistributionCuts {
                      exploredNodes
                      );
             } else {
+               if(System.currentTimeMillis() - startGlobal >= time_limitMs)
+                  stop = true;
+               
                this.lastKnapsack = this.optimalKnapsack;
                //New cut
                LPNLPCut cut = new LPNLPCut(Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), 
@@ -272,7 +278,6 @@ public class SKPGenericDistributionCuts {
                this.cutList.add(cut);
                if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
             }
-
          } else {
             System.out.println("No solution!");
          } 
