@@ -73,7 +73,7 @@ public class SKPGenericDistributionBandB {
    // Calculate the bound value for a given node
    private static void bound(Node u, SKPGenericDistribution instance, int linearizationSamples, int simulationRuns) throws IloException {
       IloCplex cplex = new IloCplex();
-      cplex.setParam(IloCplex.Param.TimeLimit, 60);
+      cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
       cplex.setParam(IloCplex.Param.Threads, 8);
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setOut(null);
