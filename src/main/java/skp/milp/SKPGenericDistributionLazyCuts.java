@@ -91,7 +91,7 @@ public class SKPGenericDistributionLazyCuts {
       
       cplex = new IloCplex();
       cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
-      cplex.setParam(IloCplex.Param.Threads, 8);
+      cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
       cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
