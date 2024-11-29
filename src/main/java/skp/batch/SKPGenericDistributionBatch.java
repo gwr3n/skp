@@ -426,7 +426,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return solvedInstances;
    }*/
    
-   @SuppressWarnings("unused")
    private static void storeSolvedBatchToCSV(SKPGenericDistributionCutsSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValues, expectedWeights, "
