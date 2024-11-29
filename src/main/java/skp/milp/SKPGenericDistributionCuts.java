@@ -244,7 +244,9 @@ public class SKPGenericDistributionCuts {
 
             this.milpMaxLinearizationError = 0; // cuts are tight
 
-            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || this.cutList.size() > this.maxCuts) {
+            if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
+                  this.cutList.size() > this.maxCuts ||
+                  System.currentTimeMillis() - startGlobal >= time_limitMs) {
                stop = true;
                
                SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
@@ -266,10 +268,7 @@ public class SKPGenericDistributionCuts {
                      simplexIterations,
                      exploredNodes
                      );
-            } else {
-               if(System.currentTimeMillis() - startGlobal >= time_limitMs)
-                  stop = true;
-               
+            } else {               
                this.lastKnapsack = this.optimalKnapsack;
                //New cut
                LPNLPCut cut = new LPNLPCut(Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), 
