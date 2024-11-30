@@ -95,6 +95,8 @@ public class SKPGenericDistributionCuts {
          cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
          cplex.setParam(IloCplex.Param.Threads, 8);
          cplex.setParam(IloCplex.Param.MIP.Display, 2);
+         cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
+         //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
          cplex.setOut(null);
 
          // Create decision variables
@@ -136,8 +138,6 @@ public class SKPGenericDistributionCuts {
                cplex.scalProd(this.instance.getExpectedValues(), X),
                cplex.prod(-instance.getShortageCost(), P))
                );
-
-         cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
 
          double start = cplex.getCplexImpl().getCplexTime();
          boolean status =  cplex.solve();
