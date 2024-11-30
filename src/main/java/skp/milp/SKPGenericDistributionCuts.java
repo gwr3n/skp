@@ -90,7 +90,7 @@ public class SKPGenericDistributionCuts {
       SKPGenericDistributionCutsSolvedInstance solvedInstance = null;
       IloOplFactory.setDebugMode(false);
       boolean stop = false;
-      while(lastKnapsack == null || !stop) {
+      while(!stop) {
          IloCplex cplex = new IloCplex();
          cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
          cplex.setParam(IloCplex.Param.Threads, 8);
@@ -198,6 +198,7 @@ public class SKPGenericDistributionCuts {
             }
          } else {
             System.out.println("No solution!");
+            stop = true;
          } 
          cplex.end();
          System.gc();
