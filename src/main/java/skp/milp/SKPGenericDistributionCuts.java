@@ -59,7 +59,7 @@ public class SKPGenericDistributionCuts {
       return this.milpMaxLinearizationError;
    }
    
-   private static final double step = 0.01;
+   private static final double step = 0.1;
    
    private static double[] computeDirectionalDerivative(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
       Distribution[] weights = instance.getWeights();
@@ -80,7 +80,7 @@ public class SKPGenericDistributionCuts {
       return folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples);
    }
    
-   private static long time_limitMs = 60*10*1000; 
+   private static long time_limitMs = 60*10*1000; //10 minutes
    
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
@@ -92,7 +92,7 @@ public class SKPGenericDistributionCuts {
       boolean stop = false;
       while(!stop) {
          IloCplex cplex = new IloCplex();
-         cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
+         cplex.setParam(IloCplex.Param.TimeLimit, 60*10); //10 minutes
          cplex.setParam(IloCplex.Param.Threads, 8);
          cplex.setParam(IloCplex.Param.MIP.Display, 2);
          //cplex.setParam(IloCplex.Param.Simplex.DGradient, 1);

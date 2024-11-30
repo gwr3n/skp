@@ -60,7 +60,7 @@ public class SKPGenericDistributionLazyCuts {
       return this.milpMaxLinearizationError;
    }
    
-   private static final double step = 0.01;
+   private static final double step = 0.1;
    
    private static double[] computeDirectionalDerivative(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
       Distribution[] weights = instance.getWeights();
