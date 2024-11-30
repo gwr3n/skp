@@ -95,10 +95,11 @@ public class SKPGenericDistributionCuts {
          cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
          cplex.setParam(IloCplex.Param.Threads, 8);
          cplex.setParam(IloCplex.Param.MIP.Display, 2);
-         cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
-         cplex.setParam(IloCplex.Param.Preprocessing.Aggregator, 1);
-         cplex.setParam(IloCplex.Param.Preprocessing.Symmetry, 0);
-         cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
+         //cplex.setParam(IloCplex.Param.Simplex.DGradient, 1);
+         //cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
+         //cplex.setParam(IloCplex.Param.Preprocessing.Aggregator, 1);
+         //cplex.setParam(IloCplex.Param.Preprocessing.Symmetry, 0);
+         //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
          cplex.setOut(null);
 
          // Create decision variables
