@@ -76,6 +76,7 @@ public class SKPGenericDistributionBandB {
       cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
       cplex.setParam(IloCplex.Param.Threads, 8);
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
+      cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
       cplex.setOut(null);
 
       // Create decision variables
@@ -127,8 +128,6 @@ public class SKPGenericDistributionBandB {
             cplex.scalProd(instance.getExpectedValues(), X),
             cplex.prod(-instance.getShortageCost(), P))
             );
-
-      cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
 
       boolean status =  cplex.solve(); 
       if(status) {
