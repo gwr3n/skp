@@ -60,8 +60,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                
                SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
                
-               int linearizationSamples = 10000;
-               int simulationRuns = 100000;   
+               int linearizationSamples = 1000;
+               int simulationRuns = 10000;   
                int maxCuts = 1000;
                try {
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
