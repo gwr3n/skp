@@ -42,9 +42,9 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
                
                SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
                
-               int linearizationSamples = 500;
+               int linearizationSamples = 10000;
                int simulationRunsRH = 100; 
-               int simulationRuns = 500;
+               int simulationRuns = 100000;
                int maxCuts = 1000;
                try {
                   solveMILP(instances, simulationRunsRH, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
