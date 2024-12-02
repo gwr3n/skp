@@ -194,7 +194,7 @@ public class SKPGenericDistributionCuts {
                                            computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples), 
                                            computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples));
                this.cutList.add(cut);
-               if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
+               //if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
             }
          } else {
             System.out.println("No solution!");
