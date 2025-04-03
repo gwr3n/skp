@@ -380,7 +380,7 @@ public class SKPNormalBatch extends SKPBatch {
          storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
       }
       
-      // Compute optimal solution
+      // Compute optimal solution using Dynamic Cut Generation
       {
          SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
          

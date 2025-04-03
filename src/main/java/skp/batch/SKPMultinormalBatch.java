@@ -30,7 +30,9 @@ import ilog.concert.IloException;
 
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
+import skp.milp.SKPGenericDistributionCutsMVN;
 import skp.milp.SKPMultinormalMILP;
+import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
@@ -73,8 +75,9 @@ public class SKPMultinormalBatch extends SKPBatch {
                   storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                   
                   int simulationRuns = 100000;
+                  int maxCuts = 1000;
                   try {
-                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
@@ -411,17 +414,31 @@ public class SKPMultinormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder) throws IloException {
-      SKPMultinormal[] batch = retrieveBatch(fileName);
-      
-      String fileNameSolved = folder+"/solved_multinormal_instances_MILP.json";
-      SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
-      
-      solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-      System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-      
-      String fileNameSolvedCSV = folder+"/solved_multinormal_instances_MILP.csv";
-      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder) throws IloException {
+      {
+         SKPMultinormal[] batch = retrieveBatch(fileName);
+         
+         String fileNameSolved = folder+"/solved_multinormal_instances_MILP.json";
+         SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+         
+         solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_multinormal_instances_MILP.csv";
+         storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
+      // Compute optimal solution using Dynamic Cut Generation
+      {
+         SKPMultinormal[] batch = retrieveBatch(fileName);
+         
+         String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+         SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
+         
+         System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+         SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
    }
    
    private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
@@ -451,6 +468,36 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                         })
                                                         .toArray(SKPMultinormalMILPSolvedInstance[]::new);
       GSONUtility.<SKPMultinormalMILPSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   private static SKPGenericDistributionCutsMVNSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>solved = new ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPGenericDistributionCutsMVN(instance, maxCuts, simulationRuns).solve());
+         GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]); */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionCutsMVNSolvedInstance[] solved = Arrays.stream(instances)
+                                                                   .parallel()
+                                                                   .map(instance -> {
+                                                                       try {
+                                                                          return new SKPGenericDistributionCutsMVN(instance, maxCuts, simulationRuns).solve();
+                                                                       } catch (IloException e) {
+                                                                          // TODO Auto-generated catch block
+                                                                          e.printStackTrace();
+                                                                          return null;
+                                                                       }
+                                                                    })
+                                                        .toArray(SKPGenericDistributionCutsMVNSolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
 
