@@ -22,6 +22,22 @@ public class SKPGenericDistribution extends SKP{
       
       generateInstanceID();
    }
+   
+   public SKPGenericDistribution(SKPNormal instance) {
+      super(instance.getExpectedValues(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getShortageCost());
+      this.weights = instance.getWeights();
+      this.capacity = instance.getCapacity();
+      
+      this.instanceID = instance.getInstanceID();
+   }
+   
+   public SKPGenericDistribution(SKPPoisson instance) {
+      super(instance.getExpectedValues(), Arrays.stream(instance.getWeights()).mapToDouble(w -> w.getMean()).toArray(), instance.getShortageCost());
+      this.weights = instance.getWeights();
+      this.capacity = instance.getCapacity();
+      
+      this.instanceID = instance.getInstanceID();
+   }
 
    public double getCapacity() {
       return this.capacity;

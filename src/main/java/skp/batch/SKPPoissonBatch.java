@@ -28,8 +28,11 @@ import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
 import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.instance.SKPGenericDistribution;
+import skp.instance.SKPNormal;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
+import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sdp.DSKPPoisson;
 import skp.sdp.instance.DSKPPoissonSolvedInstance;
@@ -63,14 +66,16 @@ public class SKPPoissonBatch extends SKPBatch {
             String batchFileName = "batch/"+t.toString()+"/"+size+"/poisson_instances.json";
             generateInstances(batchFileName, t, size);
 
-            String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/poisson_instances_opl.zip";
             int partitions = 10;
             int linearizationSamples = 10000;
+            
+            String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/poisson_instances_opl.zip";
             storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions, linearizationSamples);
-
+            
             int simulationRuns = 100000;
+            int maxCuts = 1000;
             try {
-               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size);
+               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size);
             } catch (IloException e) {
                // TODO Auto-generated catch block
                e.printStackTrace();
@@ -338,21 +343,44 @@ public class SKPPoissonBatch extends SKPBatch {
       return instances;
    }
    
+   public static SKPGenericDistribution[] convertToGenericDistributionBatch(SKPPoisson[] poissonBatch) {
+      SKPGenericDistribution[] batch = new SKPGenericDistribution[poissonBatch.length];
+      for(int i = 0; i < poissonBatch.length; i++) {
+         batch[i] = new SKPGenericDistribution(poissonBatch[i]);
+      }
+      return batch;
+   }
+   
    /*
     * MILP
     */
    
-   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns, String folder) throws IloException {
-      SKPPoisson[] batch = retrieveBatch(fileName);
+   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns, int maxCuts, String folder) throws IloException {
+      {
+         SKPPoisson[] batch = retrieveBatch(fileName);
+         
+         String fileNameSolved = folder+"/solved_poisson_instances_MILP.json";
+         SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
+         
+         solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
+         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP.csv";
+         storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
       
-      String fileNameSolved = folder+"/solved_poisson_instances_MILP.json";
-      SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
-      
-      solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-      System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-      
-      String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP.csv";
-      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      // Compute optimal solution
+      {
+         SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
+         
+         String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+         SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
+         
+         System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+         SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
    }
    
    private static SKPPoissonMILPSolvedInstance[] solveBatchMILP(SKPPoisson[] instances, String fileName, int partitions, int linearizationSamples, int simulationRuns) throws IloException {      

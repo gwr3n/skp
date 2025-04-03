@@ -67,7 +67,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                }
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/generic_distribution_instances.json";
-               
                SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
                
                int linearizationSamples = 1000;
@@ -429,7 +428,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       }
    }
    
-   private static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int maxCuts, int simulationRuns) throws IloException {
+   static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int maxCuts, int simulationRuns) throws IloException {
       /*
        * Sequential
        * 
@@ -527,7 +526,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return solvedInstances;
    }*/
    
-   private static void storeSolvedBatchToCSV(SKPGenericDistributionCutsSolvedInstance[] instances, String fileName) {
+   static void storeSolvedBatchToCSV(SKPGenericDistributionCutsSolvedInstance[] instances, String fileName) {
       String header = 
             "instanceID, expectedValues, expectedWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
