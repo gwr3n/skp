@@ -29,7 +29,6 @@ import java.util.zip.ZipOutputStream;
 import ilog.concert.IloException;
 import skp.folf.PiecewiseFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
-import skp.instance.SKPNormal;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
