@@ -140,13 +140,9 @@ public class SKPGenericDistributionCutsMVN {
                cplex.prod(-instance.getShortageCost(), P))
                );
 
-         double start = cplex.getCplexImpl().getCplexTime();
          boolean status =  cplex.solve();
-         double end = cplex.getCplexImpl().getCplexTime();
          if ( status ) {   
             this.milpSolutionValue = cplex.getObjValue();
-            this.milpOptimalityGap = cplex.getMIPRelativeGap();
-            this.cplexSolutionTimeMs += (end - start)*1000;
             this.simplexIterations += cplex.getNiterations();
             this.exploredNodes += cplex.getNnodes();
 
@@ -160,12 +156,21 @@ public class SKPGenericDistributionCutsMVN {
             //System.out.println("P: "+cplex.getValue(P));
 
             this.milpMaxLinearizationError = 0; // cuts are tight
+            
+            //Update optimality gap
+            double objValue = 0;
+            for(int i = 0; i < instance.getItems(); i++){
+               objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
+            }
+            objValue -= instance.getShortageCost()*computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
+            this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
                   this.cutList.size() > this.maxCuts ||
                   System.currentTimeMillis() - startGlobal >= time_limitMs) {
                stop = true;
                double endGlobal = System.currentTimeMillis();
+               this.cplexSolutionTimeMs = endGlobal - startGlobal;
                
                SimulateMultinormal sim = new SimulateMultinormal(instance);
                double simulatedSolutionValue = sim.simulate(optimalKnapsack, this.simulationRuns);
@@ -181,7 +186,7 @@ public class SKPGenericDistributionCutsMVN {
                      this.cutList.size(),
                      milpMaxLinearizationError,
                      simulatedLinearizationError,
-                     endGlobal - startGlobal, //cplexSolutionTimeMs,
+                     this.cplexSolutionTimeMs,
                      simplexIterations,
                      exploredNodes
                      );
@@ -193,14 +198,6 @@ public class SKPGenericDistributionCutsMVN {
                                            computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()));
                this.cutList.add(cut);
                //if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
-               
-               //Update optimality gap
-               double objValue = 0;
-               for(int i = 0; i < instance.getItems(); i++){
-                  objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
-               }
-               objValue -= instance.getShortageCost()*computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
-               this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
             }
          } else {
             System.out.println("No solution!");
