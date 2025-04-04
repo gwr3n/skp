@@ -193,6 +193,14 @@ public class SKPGenericDistributionCutsMVN {
                                            computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()));
                this.cutList.add(cut);
                //if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
+               
+               //Update optimality gap
+               double objValue = 0;
+               for(int i = 0; i < instance.getItems(); i++){
+                  objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
+               }
+               objValue -= instance.getShortageCost()*computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
+               this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
             }
          } else {
             System.out.println("No solution!");
