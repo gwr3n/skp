@@ -165,6 +165,7 @@ public class SKPGenericDistributionCutsMVN {
                   this.cutList.size() > this.maxCuts ||
                   System.currentTimeMillis() - startGlobal >= time_limitMs) {
                stop = true;
+               double endGlobal = System.currentTimeMillis();
                
                SimulateMultinormal sim = new SimulateMultinormal(instance);
                double simulatedSolutionValue = sim.simulate(optimalKnapsack, this.simulationRuns);
@@ -180,7 +181,7 @@ public class SKPGenericDistributionCutsMVN {
                      this.cutList.size(),
                      milpMaxLinearizationError,
                      simulatedLinearizationError,
-                     cplexSolutionTimeMs,
+                     endGlobal - startGlobal, //cplexSolutionTimeMs,
                      simplexIterations,
                      exploredNodes
                      );

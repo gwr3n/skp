@@ -64,6 +64,7 @@ public abstract class SKPMILP {
    abstract void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException;
    
    void solveMILP(String model_name, SKP instance) throws IloException{
+      double startGlobal = System.currentTimeMillis();
       IloOplFactory.setDebugMode(false);
       IloOplFactory oplF = new IloOplFactory();
       IloOplErrorHandler errHandler = oplF.createOplErrorHandler(System.out);
@@ -98,13 +99,14 @@ public abstract class SKPMILP {
 
       cplex.setOut(null);
 
-      double start = cplex.getCplexImpl().getCplexTime();
+      //double start = cplex.getCplexImpl().getCplexTime();
       boolean status =  cplex.solve();
-      double end = cplex.getCplexImpl().getCplexTime();
+      //double end = cplex.getCplexImpl().getCplexTime();
       if ( status ) {   
+         double endGlobal = System.currentTimeMillis();
          this.milpSolutionValue = cplex.getObjValue();
          this.milpOptimalityGap = cplex.getMIPRelativeGap();
-         this.cplexSolutionTimeMs = (end - start)*1000;
+         this.cplexSolutionTimeMs = endGlobal - startGlobal; // (end - start)*1000;
          this.simplexIterations = cplex.getNiterations();
          this.exploredNodes = cplex.getNnodes();
          

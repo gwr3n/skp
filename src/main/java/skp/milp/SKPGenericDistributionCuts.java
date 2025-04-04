@@ -167,6 +167,7 @@ public class SKPGenericDistributionCuts {
                   this.cutList.size() > this.maxCuts ||
                   System.currentTimeMillis() - startGlobal >= time_limitMs) {
                stop = true;
+               double endGlobal = System.currentTimeMillis();
                
                SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
                double simulatedSolutionValue = sim.simulate(optimalKnapsack, this.simulationRuns);
@@ -183,7 +184,7 @@ public class SKPGenericDistributionCuts {
                      this.linearizationSamples,
                      milpMaxLinearizationError,
                      simulatedLinearizationError,
-                     cplexSolutionTimeMs,
+                     endGlobal - startGlobal, //cplexSolutionTimeMs,
                      simplexIterations,
                      exploredNodes
                      );
