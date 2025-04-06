@@ -218,7 +218,7 @@ public class SKPGenericDistributionCuts {
       
       int linearizationSamples = 1000;
       int maxCuts = 1000;
-      int simulationRuns = 1000;
+      int simulationRuns = 100000;
       
       try {
          SKPGenericDistributionCuts sskp = new SKPGenericDistributionCuts(instance, linearizationSamples, maxCuts, simulationRuns);

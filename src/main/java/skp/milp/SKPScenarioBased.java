@@ -34,7 +34,7 @@ public class SKPScenarioBased {
    
    SKPGenericDistribution instance;
    int numberOfScenarios;
-   double[][] scenarios;
+   public double[][] scenarios;
    
    final String model =  "sk_scenario_based";
    

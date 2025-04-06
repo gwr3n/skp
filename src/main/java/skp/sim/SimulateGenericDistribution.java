@@ -40,11 +40,11 @@ public class SimulateGenericDistribution extends Simulate {
       }
       double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
-                             .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row)
-                             .sum() - instance.getCapacity()))
-                             .toArray();
-      for(int s = 0; s < nbSamples; s++)
-         knapsackValues[s] += knapsackValue;
+                                      .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row)
+                                                                                                       .sum() - instance.getCapacity()))
+                                      .toArray();
+      for(int s = 0; s < knapsackValues.length; s++)
+         knapsackValues[s] = knapsackValue - knapsackValues[s];
       
       return new double[] {calculateMean(knapsackValues), calculateVariance(knapsackValues)};
    }
