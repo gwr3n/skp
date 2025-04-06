@@ -25,11 +25,12 @@ import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
 
 import umontreal.ssj.rng.MRG32k3aL;
+import umontreal.ssj.rng.RandomStream;
 
 public class SKPScenarioBased {
    
    static final long[] seed = {12345, 24513, 24531, 42531, 35124, 32451};
-   MRG32k3aL randGenerator = new MRG32k3aL();
+   RandomStream randGenerator;
    
    SKPGenericDistribution instance;
    int numberOfScenarios;
@@ -45,9 +46,20 @@ public class SKPScenarioBased {
    int simplexIterations;
    int exploredNodes;
    
+   public SKPScenarioBased(SKPGenericDistribution instance, int numberOfScenarios, RandomStream randGenerator) {
+      this.randGenerator = randGenerator;
+      this.randGenerator.resetNextSubstream();
+      this.instance = instance;
+      this.numberOfScenarios = numberOfScenarios;
+      scenarios = SampleFactory.getNextLHSample(instance.getWeights(), numberOfScenarios, this.randGenerator);
+   }
+   
    public SKPScenarioBased(SKPGenericDistribution instance, int numberOfScenarios) {
-      this.randGenerator.setSeed(seed);
+      MRG32k3aL rnd = new MRG32k3aL();
+      rnd.setSeed(seed);
+      this.randGenerator = rnd;
       this.randGenerator.resetStartStream();
+      
       this.instance = instance;
       this.numberOfScenarios = numberOfScenarios;
       scenarios = SampleFactory.getNextLHSample(instance.getWeights(), numberOfScenarios, this.randGenerator);
@@ -71,12 +83,13 @@ public class SKPScenarioBased {
       this.solveMILP(model, instance);
       
       SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
-      double simulatedSolutionValue = sim.simulate(optimalKnapsack, simulationRuns);
+      double[] simulatedSolutionValue = sim.simulateMeanVariance(optimalKnapsack, simulationRuns);
       
       SKPScenarioBasedSolvedInstance solvedInstance = new SKPScenarioBasedSolvedInstance(
             instance,
             optimalKnapsack,
-            simulatedSolutionValue,
+            simulatedSolutionValue[0],
+            simulatedSolutionValue[1],
             simulationRuns,
             milpSolutionValue,
             milpOptimalityGap,
@@ -209,10 +222,10 @@ public class SKPScenarioBased {
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
       
       try {
-         int numberOfScenarios = 100;
+         int numberOfScenarios = 1000;
          SKPScenarioBased sskp = new SKPScenarioBased(instance, numberOfScenarios);
          
-         int simulationRuns = 100000;
+         int simulationRuns = 10000;
          System.out.println(GSONUtility.<SKPScenarioBasedSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
       } catch (IloException e) {
          // TODO Auto-generated catch block
