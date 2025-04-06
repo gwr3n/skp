@@ -33,6 +33,39 @@ public class SimulateGenericDistribution extends Simulate {
       return knapsackValue;
    }
    
+   public double[] simulateMeanVariance(int[] knapsack, int nbSamples) {
+      double knapsackValue = 0;
+      for(int i = 0; i < knapsack.length; i++) {
+         if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
+      }
+      double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
+      double[] knapsackValues = Arrays.stream(sampleMatrix)
+                             .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row)
+                             .sum() - instance.getCapacity()))
+                             .toArray();
+      for(int s = 0; s < nbSamples; s++)
+         knapsackValues[s] += knapsackValue;
+      
+      return new double[] {calculateMean(knapsackValues), calculateVariance(knapsackValues)};
+   }
+   
+   public static double calculateVariance(double[] numbers) {
+      double mean = calculateMean(numbers);
+      double sum = 0;
+      for (double num : numbers) {
+          sum += Math.pow(num - mean, 2);
+      }
+      return sum / numbers.length;
+   }
+
+   public static double calculateMean(double[] numbers) {
+      double sum = 0;
+      for (double num : numbers) {
+          sum += num;
+      }
+      return sum / numbers.length;
+   }
+   
    private double[][] sampleWeights(int[] knapsack, int nbSamples){
       Distribution[] weights = this.instance.getWeights();
       Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
