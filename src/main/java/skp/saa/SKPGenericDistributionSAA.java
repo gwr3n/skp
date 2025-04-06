@@ -77,7 +77,7 @@ public class SKPGenericDistributionSAA {
          }
          
          //Early stopping
-         if(m > 1) {
+         if(m > 32) { // 32 periods warm up for CLT to apply
             int W = m + 1;
             
             final double final_barvMN = barvMN/W;
