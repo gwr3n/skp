@@ -48,7 +48,7 @@ public class SKPGenericDistributionSAA {
     * \bar{S}^2_{M}/M                        -> optGapEstimator2Variance        
     */
    
-   SKPGenericDistributionSAASolvedInstance solve(int Nsmall, int Nlarge, int M, double tolerance) {
+   public SKPGenericDistributionSAASolvedInstance solve(int Nsmall, int Nlarge, int M, double tolerance) {
       long startGlobal = System.currentTimeMillis();
       SKPScenarioBasedSolvedInstance[] SAAreplications = new SKPScenarioBasedSolvedInstance[M];
       double barvMN = 0;
