@@ -372,12 +372,12 @@ public class SKPPoissonBatch extends SKPBatch {
       {
          SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
          
-         String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+         String fileNameSolved = folder+"/solved_poisson_instances_DCG.json";
          SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
          
          System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          
-         String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+         String fileNameSolvedCSV = folder+"/solved_poisson_instances_DCG.csv";
          SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
       }
    }

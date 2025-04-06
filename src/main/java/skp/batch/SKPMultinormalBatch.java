@@ -431,12 +431,12 @@ public class SKPMultinormalBatch extends SKPBatch {
       {
          SKPMultinormal[] batch = retrieveBatch(fileName);
          
-         String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+         String fileNameSolved = folder+"/solved_multinormal_instances_DCG.json";
          SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
          
          System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          
-         String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+         String fileNameSolvedCSV = folder+"/solved_multinormal_instances_DCG.csv";
          SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
       }
    }

@@ -34,6 +34,7 @@ import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -81,8 +82,8 @@ public class SKPNormalBatch extends SKPBatch {
                } catch (IloException e) {
                   e.printStackTrace();
                }
-               if(size == instanceSize[0]) 
-                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+               //if(size == instanceSize[0]) 
+                  //solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
@@ -384,13 +385,31 @@ public class SKPNormalBatch extends SKPBatch {
       {
          SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
          
-         String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+         String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
          SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
          
          System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          
-         String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+         String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
          SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
+      
+      // SAA
+      {  
+         int Nsmall = 1000; 
+         int Nlarge = simulationRuns; 
+         int M = 100;
+         double tolerance = 1e-3;
+         
+         SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
+         
+         String fileNameSolved = folder+"/solved_normal_instances_SAA.json";
+         SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, Nsmall, Nlarge, M, tolerance);
+         
+         System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_normal_instances_SAA.csv";
+         SKPGenericDistributionSAABatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
       }
    }
    
