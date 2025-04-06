@@ -26,6 +26,7 @@ import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.milp.instance.SKPGenericDistributionBandBSolvedInstance;
 import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -39,7 +40,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    enum SolutionMethod {
       ITERATIVE_CUTS,
       LAZY_CUTS,
-      B_AND_B
+      B_AND_B,
+      SAA
    }
    
    public static void main(String args[]) {
@@ -57,7 +59,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             INSTANCE_TYPE.P05_PROFIT_CEILING,
             INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      SolutionMethod method = SolutionMethod.ITERATIVE_CUTS;
+      SolutionMethod method = SolutionMethod.SAA;
       
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
@@ -387,6 +389,21 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    
    public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int maxCuts, int simulationRuns, String folder, SolutionMethod method) throws IloException {
       switch(method) {
+         case SAA: {  
+            int Nsmall = 1000; 
+            int Nlarge = simulationRuns; 
+            int M = 100;
+            double tolerance = 1e-3;
+            
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, Nsmall, Nlarge, M, tolerance);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA.csv";
+            SKPGenericDistributionSAABatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
          case B_AND_B: {
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
