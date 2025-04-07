@@ -59,7 +59,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             INSTANCE_TYPE.P05_PROFIT_CEILING,
             INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      SolutionMethod method = SolutionMethod.SAA;
+      SolutionMethod method = SolutionMethod.ITERATIVE_CUTS;
       
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
