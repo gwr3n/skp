@@ -76,13 +76,12 @@ public class SKPNormalBatch extends SKPBatch {
                int partitions = 10;
                int simulationRuns = 100000;
                
-               int linearizationSamples = 1000;
                int maxCuts = 1000;
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
-                  solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
+                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
+                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
                   if(size == instanceSize[0]) 
-                     solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
+                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -385,7 +384,7 @@ public class SKPNormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, int linearizationSamples, int maxCuts, String folder, METHOD method) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
       switch(method){
       case DCG: //Compute optimal solution using Dynamic Cut Generation
          /*{
