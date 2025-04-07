@@ -71,7 +71,7 @@ public class SKPNormalMILP extends SKPMILP{
       double optimality_gap = 0.0;
       SKPNormalMILPSolvedInstance opt = solvedJensens;
       if(!Arrays.equals(solvedJensens.optimalKnapsack, solvedEM.optimalKnapsack)) {
-         optimality_gap = solvedJensens.milpSolutionValue - solvedEM.milpSolutionValue;
+         optimality_gap = (solvedJensens.milpSolutionValue - solvedEM.milpSolutionValue)/solvedEM.milpSolutionValue;
          if(solvedJensens.simulatedSolutionValue < solvedEM.simulatedSolutionValue) {
             opt = solvedEM;
          } 
