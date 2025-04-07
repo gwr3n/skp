@@ -81,7 +81,7 @@ public class SKPGenericDistributionCuts {
    }
    
    private static long time_limitMs = 60*10*1000; //10 minutes
-   private static double tolerance = 1e-1;
+   private static double tolerance = 1e-3;
    
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
