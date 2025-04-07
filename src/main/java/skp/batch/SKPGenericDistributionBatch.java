@@ -46,7 +46,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    
    public static void main(String args[]) {
       
-      int[] instanceSize = {25, 50};
+      int[] instanceSize = {25, 50, 100, 500};
       double[] coeff_of_var  = {0.1, 0.2};
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
@@ -413,7 +413,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
             System.out.println(GSONUtility.<SKPGenericDistributionBandBSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_BAB.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
@@ -426,7 +426,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
             System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_LC.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
