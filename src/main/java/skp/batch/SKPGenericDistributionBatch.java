@@ -59,8 +59,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             INSTANCE_TYPE.P05_PROFIT_CEILING,
             INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
       
-      SolutionMethod method = SolutionMethod.ITERATIVE_CUTS;
-      
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
             for(double cv : coeff_of_var) {
@@ -76,7 +74,9 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                int simulationRuns = 10000;   
                int maxCuts = 1000;
                try {
-                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, method);
+                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.ITERATIVE_CUTS);
+                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
+                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
