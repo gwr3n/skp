@@ -81,12 +81,16 @@ public class SKPGenericDistributionCuts {
    }
    
    private static long time_limitMs = 60*10*1000; //10 minutes
-   private static double tolerance = 1e-3;
+   private static double tolerance = 1e-2;
    
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
       this.milpSolutionValue = Double.MAX_VALUE;
       this.lastKnapsack = null;
+      
+      //long start = System.currentTimeMillis();
+      //generateInitialCut();
+      //System.out.println(System.currentTimeMillis() - start);
       
       SKPGenericDistributionCutsSolvedInstance solvedInstance = null;
       IloOplFactory.setDebugMode(false);
@@ -212,6 +216,36 @@ public class SKPGenericDistributionCuts {
          System.gc();
       }
       return solvedInstance;
+   }
+
+   private void generateInitialCut() {
+      this.optimalKnapsack = new int[instance.getItems()];
+      int low = 0;
+      int high = instance.getItems() - 1;
+
+      while (low <= high) {
+          int mid = (low + high) / 2;
+          this.optimalKnapsack = new int[instance.getItems()];
+          Arrays.fill(this.optimalKnapsack, 0, mid + 1, 1);
+          SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
+          double simulatedSolutionValueR = sim.simulate(optimalKnapsack, this.simulationRuns);
+          this.optimalKnapsack[mid] = 0;
+          double simulatedSolutionValueL = sim.simulate(optimalKnapsack, this.simulationRuns);
+          
+          if (simulatedSolutionValueR > simulatedSolutionValueL) {
+              low = mid + 1; // Move to the right half
+          } else {
+              high = mid - 1; // Move to the left half
+          }
+      }
+      this.lastKnapsack = this.optimalKnapsack;
+      // New cut
+      LPNLPCut cut = new LPNLPCut(
+          Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(),
+          computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples),
+          computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples)
+      );
+      this.cutList.add(cut);
    }
    
    public static void main(String args[]) {
