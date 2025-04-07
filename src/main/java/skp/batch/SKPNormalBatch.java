@@ -82,8 +82,8 @@ public class SKPNormalBatch extends SKPBatch {
                } catch (IloException e) {
                   e.printStackTrace();
                }
-               //if(size == instanceSize[0]) 
-                  //solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+               if(size == instanceSize[0]) 
+                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
