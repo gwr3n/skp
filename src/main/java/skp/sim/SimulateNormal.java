@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
 import skp.instance.SKPNormal;
+import skp.milp.PWAPPROXIMATION;
 import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -75,7 +76,7 @@ public class SimulateNormal extends Simulate {
       int simulationSamples = 100000;
       
       try {
-         SKPNormalMILP milp = new SKPNormalMILP(instance, partitions);
+         SKPNormalMILP milp = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
          SKPNormalMILPSolvedInstance solved = milp.solve(simulationSamples);
          System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {

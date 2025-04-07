@@ -24,6 +24,8 @@ range partitions = 1..nbpartitions;
 float prob[partitions] = ...;
 float means[partitions] = ...;
 float error = ...;
+float s = ...;           // linearisation step          (possible value 1)
+float x0 = ...;          // value of sqrt function at 0	(possible value 1/4)
 
 dvar boolean X[objects]; // Object selector
 dvar float+ M;			 // Expected knapsack weight
@@ -34,15 +36,15 @@ dvar float+ P;			 // Expected capacity shortage
 /**
  * Piecewise linearisation of sqrt()
  */
-range breakpoints = 1..ftoi(ceil(sum(i in objects, j in objects)varianceCovarianceWeights[i][j]));
-float slopes[i in breakpoints] = sqrt(i) - sqrt(i - 1); 
+range breakpoints = 1..ftoi(ceil((sum(i in objects, j in objects)varianceCovarianceWeights[i][j])/s));
+float slopes[i in breakpoints] = (sqrt(i*s) - sqrt((i - 1)*s))/s; 
 
 maximize sum(i in objects) X[i]*expectedValues[i] - c*P; // Maximize profit minus expected capacity shortage cost
 
 subject to{
 	M == sum(i in objects) X[i]*expectedWeights[i];                                       // Expected knapsack weight
 	V >= sum(j in objects) (sum(i in objects) X[i]*varianceCovarianceWeights[i][j])*X[j]; // Knapsack weight variance
-	S == piecewise(b in breakpoints){slopes[b] -> b; 0}(0, 0)(V);  // sqrt(V)
+	S == piecewise(b in breakpoints){slopes[b] -> b*s; 0}(0, x0)(V); // sqrt(V)
 	
 	/**
      * Piecewise linearization of expected capacity shortage (complementary loss)

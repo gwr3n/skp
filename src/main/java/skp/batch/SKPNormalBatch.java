@@ -431,7 +431,7 @@ public class SKPNormalBatch extends SKPBatch {
                                                    .parallel()
                                                    .map(instance -> {
                                                       try {
-                                                         return new SKPNormalMILP(instance, partitions).solve(simulationRuns);
+                                                         return SKPNormalMILP.solve(instance, partitions, simulationRuns);
                                                       } catch (IloException e) {
                                                          // TODO Auto-generated catch block
                                                          e.printStackTrace();

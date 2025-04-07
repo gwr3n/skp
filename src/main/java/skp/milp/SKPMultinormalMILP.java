@@ -1,5 +1,7 @@
 package skp.milp;
 
+import java.util.Arrays;
+
 import ilog.concert.IloException;
 import ilog.opl.IloCplex;
 import ilog.opl.IloCustomOplDataSource;
@@ -11,16 +13,32 @@ import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.sim.SimulateMultinormal;
+import skp.utilities.gson.GSONUtility;
 
 public class SKPMultinormalMILP extends SKPMILP{
    SKPMultinormal instance;
    boolean ignoreCorrelation;
+   
+   PWAPPROXIMATION pwa;        // sqrt approximation       
+   double s = 1;               // sqrt approximation step    
+   double x0 = Math.sqrt(s)/4; // sqrt approximation x0  
 
-   public SKPMultinormalMILP(SKPMultinormal instance, int partitions)  throws IloException{
+   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa)  throws IloException{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model = "sk_mvnormal";
+      this.pwa = pwa;
+   }
+   
+   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0)  throws IloException{
+      this.instance = instance;
+      this.partitions = partitions;
+      this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
+      this.model = "sk_mvnormal";
+      this.pwa = pwa;
+      this.s = s;       
+      this.x0 = x0;
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
@@ -31,6 +49,36 @@ public class SKPMultinormalMILP extends SKPMILP{
       this.milpMaxLinearizationError = this.instance.getShortageCost()*
                                        cplex.getValue(opl.getElement("S").asNumVar())*
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
+   }
+   
+   public static SKPMultinormalMILPSolvedInstance solve(SKPMultinormal instance, int partitions, int simulationRuns) throws IloException {
+      SKPMultinormalMILPSolvedInstance solvedJensens = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
+      SKPMultinormalMILPSolvedInstance solvedEM = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
+      
+      double optimality_gap = 0.0;
+      SKPMultinormalMILPSolvedInstance opt = solvedJensens;
+      if(!Arrays.equals(solvedJensens.optimalKnapsack, solvedEM.optimalKnapsack)) {
+         optimality_gap = solvedJensens.milpSolutionValue - solvedEM.milpSolutionValue;
+         if(solvedJensens.simulatedSolutionValue < solvedEM.simulatedSolutionValue) {
+            opt = solvedEM;
+         } 
+      }
+      
+      return new SKPMultinormalMILPSolvedInstance(
+            instance,
+            opt.optimalKnapsack,
+            opt.simulatedSolutionValue,
+            simulationRuns,
+            opt.milpSolutionValue,
+            optimality_gap,
+            partitions,
+            PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples(),
+            opt.milpMaxLinearizationError,
+            opt.simulatedLinearizationError,
+            solvedJensens.cplexSolutionTimeMs+solvedEM.cplexSolutionTimeMs,
+            solvedJensens.simplexIterations+solvedEM.simplexIterations,
+            solvedJensens.exploredNodes+solvedEM.exploredNodes
+            );
    }
    
    public void solve() throws IloException {
@@ -131,10 +179,37 @@ public class SKPMultinormalMILP extends SKPMILP{
          handler.endArray();
          handler.endElement();
 
-         double error = PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
+         double error = (pwa == PWAPPROXIMATION.EDMUNDSON_MADANSKI ? PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions) : 0);
          handler.startElement("error");
          handler.addNumItem(error);
          handler.endElement();
+         
+         double sqrt_step = s;
+         handler.startElement("s");
+         handler.addNumItem(sqrt_step);
+         handler.endElement();
+         
+         double sqrt_x0 = (pwa == PWAPPROXIMATION.EDMUNDSON_MADANSKI ? x0 : 0);
+         handler.startElement("x0");
+         handler.addNumItem(sqrt_x0);
+         handler.endElement();
       }
    };
+   
+   public static void main(String args[]) {
+      
+      SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
+      
+      int partitions = 10;
+      int simulationRuns = 1000000;
+      
+      try {
+         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(milp.solve(simulationRuns)));
+      } catch (IloException e) {
+         e.printStackTrace();
+         System.exit(-1);
+      }
+   }
 }

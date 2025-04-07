@@ -1,5 +1,7 @@
 package skp.milp;
 
+import java.util.Arrays;
+
 import ilog.concert.IloException;
 import ilog.opl.IloCplex;
 import ilog.opl.IloCustomOplDataSource;
@@ -29,11 +31,26 @@ import skp.utilities.gson.GSONUtility;
 public class SKPNormalMILP extends SKPMILP{
    SKPNormal instance;
    
-   public SKPNormalMILP(SKPNormal instance, int partitions) throws IloException{
+   PWAPPROXIMATION pwa;        // sqrt approximation       
+   double s = 1;               // sqrt approximation step    
+   double x0 = Math.sqrt(s)/4; // sqrt approximation x0   
+   
+   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa) throws IloException{
       this.instance = instance;
       this.partitions = partitions;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model =  "sk_normal";
+      this.pwa = pwa;
+   }
+   
+   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0) throws IloException{
+      this.instance = instance;
+      this.partitions = partitions;
+      linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
+      this.model =  "sk_normal";
+      this.pwa = pwa;   
+      this.s = s;       
+      this.x0 = x0;     
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
@@ -44,6 +61,37 @@ public class SKPNormalMILP extends SKPMILP{
       this.milpMaxLinearizationError = this.instance.getShortageCost()*
                                        cplex.getValue(opl.getElement("S").asNumVar())*
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
+   }
+   
+   public static SKPNormalMILPSolvedInstance solve(SKPNormal instance, int partitions, int simulationRuns) throws IloException {
+      
+      SKPNormalMILPSolvedInstance solvedJensens = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
+      SKPNormalMILPSolvedInstance solvedEM = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
+      
+      double optimality_gap = 0.0;
+      SKPNormalMILPSolvedInstance opt = solvedJensens;
+      if(!Arrays.equals(solvedJensens.optimalKnapsack, solvedEM.optimalKnapsack)) {
+         optimality_gap = solvedJensens.milpSolutionValue - solvedEM.milpSolutionValue;
+         if(solvedJensens.simulatedSolutionValue < solvedEM.simulatedSolutionValue) {
+            opt = solvedEM;
+         } 
+      }
+      
+      return new SKPNormalMILPSolvedInstance(
+            instance,
+            opt.optimalKnapsack,
+            opt.simulatedSolutionValue,
+            simulationRuns,
+            opt.milpSolutionValue,
+            optimality_gap,
+            partitions,
+            PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples(),
+            opt.milpMaxLinearizationError,
+            opt.simulatedLinearizationError,
+            solvedJensens.cplexSolutionTimeMs+solvedEM.cplexSolutionTimeMs,
+            solvedJensens.simplexIterations+solvedEM.simplexIterations,
+            solvedJensens.exploredNodes+solvedEM.exploredNodes
+            );
    }
    
    public void solve() throws IloException {
@@ -140,9 +188,19 @@ public class SKPNormalMILP extends SKPMILP{
          handler.endArray();
          handler.endElement();
 
-         double error = PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
+         double error = (pwa == PWAPPROXIMATION.EDMUNDSON_MADANSKI ? PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions) : 0);
          handler.startElement("error");
          handler.addNumItem(error);
+         handler.endElement();
+         
+         double sqrt_step = s;
+         handler.startElement("s");
+         handler.addNumItem(sqrt_step);
+         handler.endElement();
+         
+         double sqrt_x0 = (pwa == PWAPPROXIMATION.EDMUNDSON_MADANSKI ? x0 : 0);
+         handler.startElement("x0");
+         handler.addNumItem(sqrt_x0);
          handler.endElement();
       }
    };
@@ -150,11 +208,13 @@ public class SKPNormalMILP extends SKPMILP{
    public static void main(String args[]) {
 
       SKPNormal instance = SKPNormal.getTestInstance();
+      int partitions = 10;
+      int simulationRuns = 100000;
       
       try {
-         SKPNormalMILP sskp = new SKPNormalMILP(instance, 10);
+         SKPNormalMILP sskp = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS);
          
-         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
+         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();

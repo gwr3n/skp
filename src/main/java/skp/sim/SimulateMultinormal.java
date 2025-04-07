@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 import ilog.concert.IloException;
 
 import skp.instance.SKPMultinormal;
+import skp.milp.PWAPPROXIMATION;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -69,13 +70,13 @@ public class SimulateMultinormal extends Simulate {
       
       SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
-      int partitions = 20;
-      int simulationRuns = 10000;
+      int partitions = 10;
+      int simulationRuns = 1000000;
       
       try {
-         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions);
-         SKPMultinormalMILPSolvedInstance solved = milp.solve(simulationRuns);
-         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(solved));
+         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(milp.solve(simulationRuns)));
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);

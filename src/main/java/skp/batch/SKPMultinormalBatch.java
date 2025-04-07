@@ -459,7 +459,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                         .parallel()
                                                         .map(instance -> {
                                                            try {
-                                                              return new SKPMultinormalMILP(instance, partitions).solve(simulationRuns);
+                                                              return SKPMultinormalMILP.solve(instance, partitions, simulationRuns);
                                                            } catch (IloException e) {
                                                               // TODO Auto-generated catch block
                                                               e.printStackTrace();

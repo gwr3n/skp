@@ -11,6 +11,7 @@ import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.KP;
 import skp.instance.SKPNormal;
 import skp.milp.KPMILP;
+import skp.milp.PWAPPROXIMATION;
 import skp.milp.SKPNormalMILP;
 import skp.sim.instance.SKPNormalRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -85,7 +86,7 @@ public class SimulateNormalReceding extends Simulate {
       SKPNormalMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPNormalMILP(reducedInstance, partitions);
+         milp = new SKPNormalMILP(reducedInstance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
