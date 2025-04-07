@@ -28,6 +28,7 @@ public class SKPGenericDistributionCutsMVN {
    double milpMaxLinearizationError;
    
    SKPMultinormal instance;
+   boolean independentDemand;
    
    double cplexSolutionTimeMs = 0;
    int simplexIterations = 0;
@@ -37,8 +38,20 @@ public class SKPGenericDistributionCutsMVN {
    
    public SKPGenericDistributionCutsMVN(SKPMultinormal instance, int maxCuts, int simulationRuns){
       this.instance = instance;
+      this.independentDemand = independentDemand(instance);
       this.maxCuts = maxCuts;
       this.simulationRuns = simulationRuns;
+   }
+   
+   static boolean independentDemand(SKPMultinormal instance) {
+      double[][] cov = instance.getWeights().getCovariance();
+      for(int i = 0; i < cov.length; i++) {
+         for(int j = 0; j < cov[i].length; j++) {
+            if(i != j && cov[i][j] != 0)
+               return false;
+         }
+      }
+      return true;
    }
    
    public int[] getOptimalKnapsack() {
@@ -59,9 +72,9 @@ public class SKPGenericDistributionCutsMVN {
    
    private static final double step = 0.01;
    
-   private static double[] computeDirectionalDerivative(SKPMultinormal instance, double[] knapsack) {
+   private static double[] computeDirectionalDerivative(SKPMultinormal instance, boolean independentDemand, double[] knapsack) {
       MultiNormalDist weights = instance.getWeights();
-      FirstOrderLossFunctionScalarProductMVN folfsp = new FirstOrderLossFunctionScalarProductMVN(weights);
+      FirstOrderLossFunctionScalarProductMVN folfsp = new FirstOrderLossFunctionScalarProductMVN(weights, independentDemand);
       double[] dd = new double[weights.getMean().length];
       for(int i = 0; i < dd.length; i++) {
          double[] kp = Arrays.copyOf(knapsack, knapsack.length);
@@ -72,9 +85,9 @@ public class SKPGenericDistributionCutsMVN {
       return dd;
    }
    
-   private static double computeLX(SKPMultinormal instance, double[] knapsack) {
+   private static double computeLX(SKPMultinormal instance, boolean independentDemand, double[] knapsack) {
       MultiNormalDist weights = instance.getWeights();
-      FirstOrderLossFunctionScalarProductMVN folfsp = new FirstOrderLossFunctionScalarProductMVN(weights);
+      FirstOrderLossFunctionScalarProductMVN folfsp = new FirstOrderLossFunctionScalarProductMVN(weights, independentDemand);
       return folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack);
    }
    
@@ -163,7 +176,7 @@ public class SKPGenericDistributionCutsMVN {
             for(int i = 0; i < instance.getItems(); i++){
                objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
             }
-            objValue -= instance.getShortageCost()*computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
+            objValue -= instance.getShortageCost()*computeLX(instance, independentDemand, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
             this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
@@ -196,8 +209,8 @@ public class SKPGenericDistributionCutsMVN {
                this.lastKnapsack = this.optimalKnapsack;
                //New cut
                LPNLPCutMVN cut = new LPNLPCutMVN(Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), 
-                                           computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()), 
-                                           computeDirectionalDerivative(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()));
+                                           computeLX(instance, independentDemand, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()), 
+                                           computeDirectionalDerivative(instance, independentDemand, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray()));
                this.cutList.add(cut);
                //if(this.cutList.size() % 10 == 0) System.out.println("Cuts: "+this.cutList.size()+"\tObj:"+this.milpSolutionValue);
             }

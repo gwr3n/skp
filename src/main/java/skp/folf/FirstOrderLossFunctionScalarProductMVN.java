@@ -5,6 +5,7 @@ import umontreal.ssj.probdistmulti.MultiNormalDist;
 
 public class FirstOrderLossFunctionScalarProductMVN {
    MultiNormalDist distribution;
+   boolean independentDemand;
    
    /**
     * Return the FOLF of the scalar product between the Multivariate Normal distribution and vector X
@@ -12,8 +13,9 @@ public class FirstOrderLossFunctionScalarProductMVN {
     * @param distributions
     * @param X
     */
-   public FirstOrderLossFunctionScalarProductMVN(MultiNormalDist distribution){
+   public FirstOrderLossFunctionScalarProductMVN(MultiNormalDist distribution, boolean independentDemand){
       this.distribution = distribution;
+      this.independentDemand = independentDemand;
    }
    
    public double getComplementaryFirstOrderLossFunctionValue(double y, double[] x){
@@ -23,13 +25,18 @@ public class FirstOrderLossFunctionScalarProductMVN {
       }
       
       double variance = 0;
-      for(int j = 0; j < distribution.getMean().length; j++) {
-         double acc = 0;
-         for(int i = 0; i < distribution.getMean().length; i++) {
-            acc += x[i]*distribution.getCovariance()[i][j];
+      if(independentDemand) {
+         for(int j = 0; j < distribution.getMean().length; j++) 
+            variance += x[j]*distribution.getCovariance()[j][j];
+      }else {
+         for(int j = 0; j < distribution.getMean().length; j++) {
+            double acc = 0;
+            for(int i = 0; i < distribution.getMean().length; i++) {
+               acc += x[i]*distribution.getCovariance()[i][j];
+            }
+            acc *= x[j];
+            variance += acc;
          }
-         acc *= x[j];
-         variance += acc;
       }
       double sigma = Math.sqrt(variance);
       
