@@ -415,12 +415,11 @@ public class SKPNormalBatch extends SKPBatch {
             int Nsmall = 1000; 
             int Nlarge = simulationRuns; 
             int M = 100;
-            double tolerance = 1e-1;
             
             SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
             
             String fileNameSolved = folder+"/solved_normal_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, Nsmall, Nlarge, M, tolerance);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, Nsmall, Nlarge, M);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             

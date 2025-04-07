@@ -13,7 +13,7 @@ import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
 public class SKPGenericDistributionSAABatch {
-   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M, double tolerance) throws IloException {
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
       /*
        * Sequential
        *
@@ -32,7 +32,7 @@ public class SKPGenericDistributionSAABatch {
       SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M, tolerance);
+           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
       }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
       GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
