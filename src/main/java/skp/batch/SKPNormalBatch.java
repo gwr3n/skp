@@ -81,13 +81,13 @@ public class SKPNormalBatch extends SKPBatch {
                try {
                   solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
                   solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
-                  if(size == instanceSize[0]) {
+                  if(size == instanceSize[0]) 
                      solveMILP(batchFileName, partitions, simulationRuns, linearizationSamples, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
-                     solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
-                  }
                } catch (IloException e) {
                   e.printStackTrace();
                }
+               if(size == instanceSize[0]) 
+                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
