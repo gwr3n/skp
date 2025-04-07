@@ -81,6 +81,7 @@ public class SKPGenericDistributionCuts {
    }
    
    private static long time_limitMs = 60*10*1000; //10 minutes
+   private static double tolerance = 1e-1;
    
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
@@ -168,8 +169,9 @@ public class SKPGenericDistributionCuts {
             this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
-                  this.cutList.size() > this.maxCuts ||
-                  System.currentTimeMillis() - startGlobal >= time_limitMs) {
+               this.cutList.size() > this.maxCuts ||
+               System.currentTimeMillis() - startGlobal >= time_limitMs ||
+               this.milpOptimalityGap < tolerance) {
                stop = true;
                double endGlobal = System.currentTimeMillis();
                this.cplexSolutionTimeMs = endGlobal - startGlobal;
