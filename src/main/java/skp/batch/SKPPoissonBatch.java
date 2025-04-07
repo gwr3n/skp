@@ -84,8 +84,6 @@ public class SKPPoissonBatch extends SKPBatch {
                solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size);
          }
       }
-      
-      
    }
    
    enum INSTANCE_TYPE {
