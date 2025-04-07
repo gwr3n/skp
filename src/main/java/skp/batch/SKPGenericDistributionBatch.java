@@ -46,7 +46,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    
    public static void main(String args[]) {
       
-      int[] instanceSize = {25, 50, 100, 500};
+      int[] instanceSize = {25, 50};
       double[] coeff_of_var  = {0.1, 0.2};
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
@@ -80,8 +80,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                } catch (IloException e) {
                   e.printStackTrace();
                }
-               if(size == instanceSize[0])
-                  solveDSKP(instances, "batch/"+t.toString()+"/"+size+"/"+cv);
+               //if(size == instanceSize[0])
+                  //solveDSKP(instances, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
@@ -407,7 +407,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          case B_AND_B: {
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
-            String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_BAB.json";
             SKPGenericDistributionBandBSolvedInstance[] solvedBatch = solveBatchMILPBandB(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
             
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
@@ -420,7 +420,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          case LAZY_CUTS: {   
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
-            String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_LC.json";
             SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
             
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
