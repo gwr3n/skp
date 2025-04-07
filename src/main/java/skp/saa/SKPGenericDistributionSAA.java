@@ -78,23 +78,8 @@ public class SKPGenericDistributionSAA {
          
          //Early stopping
          if(m > 32) { // 32 periods warm up for CLT to apply
-            int W = m + 1;
             
-            final double final_barvMN = barvMN/W;
-            final int final_bestSoFar = bestSoFar;
-            
-            // Estimators
-            double optGapEstimator1 = bestObjSoFar - final_barvMN;
-            double barvMNVariance = 1.0/(W*(W-1))*Arrays.stream(SAAreplications).limit(W).mapToDouble(r -> Math.pow(r.milpSolutionValue - final_barvMN, 2)).sum();
-            double optGapEstimator1Variance = SAAreplications[bestSoFar].simulatedSolutionValueVariance + barvMNVariance;
-            
-            double bargMN = IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])).sum()/W;
-            double optGapEstimator2 = bargMN - final_barvMN;
-            double optGapEstimator2Variance = 1.0/(W*(W-1))*IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> Math.pow((computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])-SAAreplications[r].milpSolutionValue)-(bargMN - final_barvMN),2)).sum();
-            
-            double z = NormalDist.inverseF01(0.95);
-            this.optGap1 = - (optGapEstimator1 - z * Math.sqrt(optGapEstimator1Variance)); // We are in a max setting!
-            this.optGap2 = - (optGapEstimator2 - z * Math.sqrt(optGapEstimator2Variance)); // We are in a max setting!
+            computeOptimalityGaps(SAAreplications, barvMN, scenarios, bestSoFar, bestObjSoFar, m + 1);
             
             if(this.optGap1 < tolerance || this.optGap2 < tolerance) {
                double endGlobal = System.currentTimeMillis();
@@ -104,28 +89,31 @@ public class SKPGenericDistributionSAA {
             }
          }
       }
-      barvMN /= M;
-      
-      final double final_barvMN = barvMN;
-      final int final_bestSoFar = bestSoFar;
-      
-      // Estimators
-      double optGapEstimator1 = bestObjSoFar - barvMN;
-      double barvMNVariance = 1.0/(M*(M-1))*Arrays.stream(SAAreplications).mapToDouble(r -> Math.pow(r.milpSolutionValue - final_barvMN, 2)).sum();
-      double optGapEstimator1Variance = SAAreplications[bestSoFar].simulatedSolutionValueVariance + barvMNVariance;
-      
-      double bargMN = IntStream.iterate(0, i -> i + 1).limit(M).mapToDouble(r -> computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])).sum()/M;
-      double optGapEstimator2 = bargMN - barvMN;
-      double optGapEstimator2Variance = 1.0/(M*(M-1))*IntStream.iterate(0, i -> i + 1).limit(M).mapToDouble(r -> Math.pow((computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])-SAAreplications[r].milpSolutionValue)-(bargMN - final_barvMN),2)).sum();
-      
-      double z = NormalDist.inverseF01(0.95);
-      this.optGap1 = optGapEstimator1 + z * Math.sqrt(optGapEstimator1Variance);
-      this.optGap2 = optGapEstimator2 + z * Math.sqrt(optGapEstimator2Variance);
+      computeOptimalityGaps(SAAreplications, barvMN, scenarios, bestSoFar, bestObjSoFar, M);
       
       double endGlobal = System.currentTimeMillis();
       double solutionTimeMs = endGlobal - startGlobal;
       
       return new SKPGenericDistributionSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, M);
+   }
+
+   private void computeOptimalityGaps(SKPScenarioBasedSolvedInstance[] SAAreplications, double barvMN,
+         double[][][] scenarios, int bestSoFar, double bestObjSoFar, int W) {
+      final double final_barvMN = barvMN/W;
+      final int final_bestSoFar = bestSoFar;
+      
+      // Estimators
+      double optGapEstimator1 = bestObjSoFar - final_barvMN;
+      double barvMNVariance = 1.0/(W*(W-1))*Arrays.stream(SAAreplications).limit(W).mapToDouble(r -> Math.pow(r.milpSolutionValue - final_barvMN, 2)).sum();
+      double optGapEstimator1Variance = SAAreplications[bestSoFar].simulatedSolutionValueVariance + barvMNVariance;
+      
+      double bargMN = IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])).sum()/W;
+      double optGapEstimator2 = bargMN - final_barvMN;
+      double optGapEstimator2Variance = 1.0/(W*(W-1))*IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> Math.pow((computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])-SAAreplications[r].milpSolutionValue)-(bargMN - final_barvMN),2)).sum();
+      
+      double z = NormalDist.inverseF01(0.95);
+      this.optGap1 = - (optGapEstimator1 - z * Math.sqrt(optGapEstimator1Variance)); // We are in a max setting!
+      this.optGap2 = - (optGapEstimator2 - z * Math.sqrt(optGapEstimator2Variance)); // We are in a max setting!
    }
    
    public double computeSampleAverage(int[] knapsack, double[][] sampleMatrix) {
