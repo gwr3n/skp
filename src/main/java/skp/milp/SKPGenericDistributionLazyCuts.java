@@ -80,6 +80,9 @@ public class SKPGenericDistributionLazyCuts {
       FirstOrderLossFunctionScalarProduct folfsp = new FirstOrderLossFunctionScalarProduct(weights);
       return folfsp.getFirstOrderLossFunctionValue(instance.getCapacity(), knapsack, linearizationSamples);
    }
+   
+   private static long time_limit = 60*10; //10 minutes
+   private static double tolerance = 1e-2;
 
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       this.milpSolutionValue = Double.MAX_VALUE;
@@ -90,11 +93,11 @@ public class SKPGenericDistributionLazyCuts {
       IloOplFactory.setDebugMode(false);
       
       cplex = new IloCplex();
-      cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
+      cplex.setParam(IloCplex.Param.TimeLimit, time_limit);
       cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
-      cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 1.0e-3);
+      cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance);
       cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
       cplex.setOut(null);
 
