@@ -74,7 +74,8 @@ public class SKPPoissonBatch extends SKPBatch {
             int simulationRuns = 100000;
             int maxCuts = 1000;
             try {
-               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size);
+               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size, METHOD.PWLA);
+               solveMILP(batchFileName, partitions, linearizationSamples, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size, METHOD.DCG);
             } catch (IloException e) {
                // TODO Auto-generated catch block
                e.printStackTrace();
@@ -354,31 +355,41 @@ public class SKPPoissonBatch extends SKPBatch {
     * MILP
     */
    
-   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns, int maxCuts, String folder) throws IloException {
-      {
-         SKPPoisson[] batch = retrieveBatch(fileName);
-         
-         String fileNameSolved = folder+"/solved_poisson_instances_MILP.json";
-         SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
-         
-         solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
-         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-         
-         String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP.csv";
-         storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-      }
-      
-      // Compute optimal solution using Dynamic Cut Generation
-      {
-         SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
-         
-         String fileNameSolved = folder+"/solved_poisson_instances_DCG.json";
-         SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
-         
-         System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-         
-         String fileNameSolvedCSV = folder+"/solved_poisson_instances_DCG.csv";
-         SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+   enum METHOD {
+      PWLA,
+      DCG
+   }
+   
+   public static void solveMILP(String fileName, int partitions, int linearizationSamples, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
+      switch(method){
+      case DCG:
+         // Compute optimal solution using Dynamic Cut Generation
+         {
+            SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
+            
+            String fileNameSolved = folder+"/solved_poisson_instances_DCG.json";
+            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_poisson_instances_DCG.csv";
+            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+         }
+         break;
+      case PWLA:
+      default:
+         {
+            SKPPoisson[] batch = retrieveBatch(fileName);
+            
+            String fileNameSolved = folder+"/solved_poisson_instances_MILP.json";
+            SKPPoissonMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, linearizationSamples, simulationRuns);
+            
+            solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
+            System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_poisson_instances_MILP.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+         }
       }
    }
    
