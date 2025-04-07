@@ -471,7 +471,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return solved;
    }
    
-   private static SKPGenericDistributionCutsMVNSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
+   static SKPGenericDistributionCutsMVNSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
       /*
        * Sequential
        *

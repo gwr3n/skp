@@ -30,9 +30,10 @@ import ilog.concert.IloException;
 
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
+import skp.instance.SKPMultinormal;
 import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
-import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
+import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPNormal;
@@ -363,6 +364,14 @@ public class SKPNormalBatch extends SKPBatch {
       return batch;
    }
    
+   public static SKPMultinormal[] convertToMVNDistributionBatch(SKPNormal[] normalBatch) {
+      SKPMultinormal[] batch = new SKPMultinormal[normalBatch.length];
+      for(int i = 0; i < normalBatch.length; i++) {
+         batch[i] = new SKPMultinormal(normalBatch[i]);
+      }
+      return batch;
+   }
+   
    /*
     * MILP
     */   
@@ -382,13 +391,24 @@ public class SKPNormalBatch extends SKPBatch {
       }
       
       // Compute optimal solution using Dynamic Cut Generation
-      {
+      /*{
          SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
          
          String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
          SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
          
          System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
+         SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }*/
+      {
+         SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
+         
+         String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
+         SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
+         
+         System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          
          String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
          SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
