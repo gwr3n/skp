@@ -208,7 +208,7 @@ public class SKPGenericDistributionLazyCuts {
       SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
       
       int linearizationSamples = 1000;
-      int simulationRuns = 1000;
+      int simulationRuns = 100000;
       
       try {
          SKPGenericDistributionLazyCuts sskp = new SKPGenericDistributionLazyCuts(instance, linearizationSamples, simulationRuns);
