@@ -173,9 +173,9 @@ public class SKPGenericDistributionCuts {
             this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
-               this.cutList.size() > this.maxCuts ||
-               System.currentTimeMillis() - startGlobal >= time_limitMs ||
-               this.milpOptimalityGap < tolerance) {
+                  this.cutList.size() > this.maxCuts ||
+                  System.currentTimeMillis() - startGlobal >= time_limitMs ||
+                  this.milpOptimalityGap < tolerance) {
                stop = true;
                double endGlobal = System.currentTimeMillis();
                this.cplexSolutionTimeMs = endGlobal - startGlobal;
@@ -218,6 +218,7 @@ public class SKPGenericDistributionCuts {
       return solvedInstance;
    }
 
+   @SuppressWarnings("unused")
    private void generateInitialCut() {
       this.optimalKnapsack = new int[instance.getItems()];
       int low = 0;
