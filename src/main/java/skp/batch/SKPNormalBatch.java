@@ -414,7 +414,7 @@ public class SKPNormalBatch extends SKPBatch {
          {  
             int Nsmall = 1000; 
             int Nlarge = simulationRuns; 
-            int M = 100;
+            int M = 1000;
             
             SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
             

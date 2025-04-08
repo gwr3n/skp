@@ -48,6 +48,7 @@ public class SKPGenericDistributionSAA {
     * \bar{S}^2_{M}/M                        -> optGapEstimator2Variance        
     */
    
+   private static long time_limitMs = 60*10*1000; //10 minutes
    private static double tolerance = 1e-2;
    
    public SKPGenericDistributionSAASolvedInstance solve(int Nsmall, int Nlarge, int M) {
@@ -83,7 +84,11 @@ public class SKPGenericDistributionSAA {
             
             computeOptimalityGaps(SAAreplications, barvMN, scenarios, bestSoFar, bestObjSoFar, m + 1);
             
-            if(this.optGap1 < tolerance || this.optGap2 < tolerance) {
+            
+            
+            if(this.optGap1 < tolerance || 
+                  this.optGap2 < tolerance ||
+                  System.currentTimeMillis() - startGlobal > time_limitMs) {
                double endGlobal = System.currentTimeMillis();
                double solutionTimeMs = endGlobal - startGlobal;
                
