@@ -76,7 +76,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                try {
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.ITERATIVE_CUTS);
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
-                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
+                  if(size == instanceSize[0])
+                     solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
