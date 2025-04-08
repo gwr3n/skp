@@ -162,11 +162,14 @@ public class SKPPoissonMILP extends SKPMILP{
    
    public static void main(String args[]) {
       SKPPoisson instance = SKPPoisson.getTestInstance();
+      int partitions = 10;
+      int linearisationSamples = 1000;
+      int simulationRuns = 100000;
       
       try {
-         SKPPoissonMILP sskp = new SKPPoissonMILP(instance, 10, 100000);
+         SKPPoissonMILP sskp = new SKPPoissonMILP(instance, partitions, linearisationSamples);
          
-         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsJSON(sskp.solve(100000)));
+         System.out.println(GSONUtility.<SKPPoissonMILPSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
