@@ -75,7 +75,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                int maxCuts = 1000;
                try {
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.ITERATIVE_CUTS);
-                  if(size < instanceSize[3])
+                  if(size < instanceSize[3]) // LazyCuts struggles with 500 items in the allotted time limit (no initial solution returned)
                      solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
                   if(size == instanceSize[0])
                      solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
