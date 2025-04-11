@@ -80,7 +80,7 @@ public class SKPNormalBatch extends SKPBatch {
                try {
                   solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
                   solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
-                  if(size == instanceSize[0]) 
+                  if(size == instanceSize[2]) 
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
                   e.printStackTrace();

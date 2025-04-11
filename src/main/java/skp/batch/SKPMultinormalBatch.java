@@ -30,7 +30,7 @@ import ilog.concert.IloException;
 
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
-import skp.milp.SKPGenericDistributionCutsMVN;
+import skp.milp.SKPMultinormalCuts;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
@@ -501,7 +501,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                    .parallel()
                                                                    .map(instance -> {
                                                                        try {
-                                                                          return new SKPGenericDistributionCutsMVN(instance, maxCuts, simulationRuns).solve();
+                                                                          return new SKPMultinormalCuts(instance, maxCuts, simulationRuns).solve();
                                                                        } catch (IloException e) {
                                                                           // TODO Auto-generated catch block
                                                                           e.printStackTrace();

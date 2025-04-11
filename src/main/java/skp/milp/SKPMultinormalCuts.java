@@ -16,7 +16,7 @@ import skp.sim.SimulateMultinormal;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
 
-public class SKPGenericDistributionCutsMVN {    
+public class SKPMultinormalCuts {    
    
    int simulationRuns;
    int maxCuts;
@@ -36,7 +36,7 @@ public class SKPGenericDistributionCutsMVN {
    
    ArrayList<LPNLPCutMVN> cutList = new ArrayList<LPNLPCutMVN>();
    
-   public SKPGenericDistributionCutsMVN(SKPMultinormal instance, int maxCuts, int simulationRuns){
+   public SKPMultinormalCuts(SKPMultinormal instance, int maxCuts, int simulationRuns){
       this.instance = instance;
       this.independentDemand = independentDemand(instance);
       this.maxCuts = maxCuts;
@@ -232,7 +232,7 @@ public class SKPGenericDistributionCutsMVN {
       int simulationRuns = 10000;
       
       try {
-         SKPGenericDistributionCutsMVN sskp = new SKPGenericDistributionCutsMVN(instance, maxCuts, simulationRuns);
+         SKPMultinormalCuts sskp = new SKPMultinormalCuts(instance, maxCuts, simulationRuns);
          
          SKPGenericDistributionCutsMVNSolvedInstance solvedInstance = sskp.solve();
          System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance>printInstanceAsJSON(solvedInstance));
