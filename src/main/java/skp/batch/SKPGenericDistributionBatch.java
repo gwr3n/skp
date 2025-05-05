@@ -397,7 +397,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             int M = 1000;
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, Nsmall, Nlarge, M);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILP(batch, fileNameSolved, Nsmall, Nlarge, M);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             

@@ -13,7 +13,7 @@ import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.utilities.gson.GSONUtility;
 
 public class SKPGenericDistributionSAABatch {
-   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILP(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
       /*
        * Sequential
        *
