@@ -81,7 +81,7 @@ public class SKPGenericDistributionCuts {
    }
    
    private static long time_limitMs = 60*10*1000; //10 minutes
-   private static double tolerance = 1e-2;
+   private static double tolerance = 1e-4; // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
    
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
@@ -170,7 +170,7 @@ public class SKPGenericDistributionCuts {
                objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
             }
             objValue -= instance.getShortageCost()*computeLX(instance, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray(), linearizationSamples);
-            this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
+            this.milpOptimalityGap = (cplex.getObjValue() - objValue)/(1e-10 + objValue);
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
                   this.cutList.size() > this.maxCuts ||
