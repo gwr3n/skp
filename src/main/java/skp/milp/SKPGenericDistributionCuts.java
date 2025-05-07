@@ -100,11 +100,37 @@ public class SKPGenericDistributionCuts {
          cplex.setParam(IloCplex.Param.TimeLimit, 60*10); //10 minutes
          cplex.setParam(IloCplex.Param.Threads, 8);
          cplex.setParam(IloCplex.Param.MIP.Display, 2);
-         //cplex.setParam(IloCplex.Param.Simplex.DGradient, 1);
-         //cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
-         //cplex.setParam(IloCplex.Param.Preprocessing.Aggregator, 1);
-         //cplex.setParam(IloCplex.Param.Preprocessing.Symmetry, 0);
+         
+         /*
+          * Disable all cuts and preprocessing
+          * 
+         cplex.setParam(IloCplex.Param.MIP.PolishAfter.AbsMIPGap, 0);
+         cplex.setParam(IloCplex.Param.MIP.PolishAfter.MIPGap, 0);
+         
+         cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
+         cplex.setParam(IloCplex.Param.Preprocessing.Aggregator, 1);
+         cplex.setParam(IloCplex.Param.Preprocessing.Symmetry, 0);
+         
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.BQP, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Cliques, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Covers, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Disjunctive, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.FlowCovers, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Gomory, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.GUBCovers, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Implied, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.LiftProj, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.LocalImplied, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.MCFCut, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.MIRCut, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.Nodecuts, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.PathCut, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.RLT, -1);
+         cplex.setParam(    IloCplex.Param.MIP.Cuts.ZeroHalfCut, -1);
+         */
+         
          //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
+         
          cplex.setOut(null);
 
          // Create decision variables
