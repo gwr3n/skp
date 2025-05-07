@@ -8,7 +8,6 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
 import ilog.opl.IloCplex;
 import ilog.opl.IloOplFactory;
-
 import skp.folf.FirstOrderLossFunctionScalarProduct;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
@@ -98,7 +97,7 @@ public class SKPGenericDistributionLazyCuts {
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
       cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance);
-      cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false);
+      cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve
       cplex.setOut(null);
 
       // Create decision variables
