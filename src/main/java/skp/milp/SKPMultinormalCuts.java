@@ -177,7 +177,7 @@ public class SKPMultinormalCuts {
                objValue += this.optimalKnapsack[i]*instance.getExpectedValues()[i];
             }
             objValue -= instance.getShortageCost()*computeLX(instance, independentDemand, Arrays.stream(this.optimalKnapsack).asDoubleStream().toArray());
-            this.milpOptimalityGap = (cplex.getObjValue() - objValue)/objValue;
+            this.milpOptimalityGap = (cplex.getObjValue() - objValue)/(1e-10 + objValue);
 
             if(Arrays.equals(this.optimalKnapsack, this.lastKnapsack) || 
                   this.cutList.size() > this.maxCuts ||
