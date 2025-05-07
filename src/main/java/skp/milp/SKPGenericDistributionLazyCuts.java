@@ -81,7 +81,7 @@ public class SKPGenericDistributionLazyCuts {
    }
    
    private static long time_limit = 60*10; //10 minutes
-   private static double tolerance = 1e-3; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   private static double tolerance = 1e-2; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
 
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       this.milpSolutionValue = Double.MAX_VALUE;
@@ -93,11 +93,12 @@ public class SKPGenericDistributionLazyCuts {
       
       cplex = new IloCplex();
       cplex.setParam(IloCplex.Param.TimeLimit, time_limit);
-      cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading
-      cplex.setParam(IloCplex.Param.MIP.Display, 2);
-      cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
       cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance);
-      cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve
+      cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading      
+      //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional); // we must deactivate dynamic search (done automatically)
+      //cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve (done automatically)
+      //cplex.setParam(IloCplex.Param.MIP.Strategy.PresolveNode, 0); // we must deactivate the dual presolve (done automatically)
+      cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setOut(null);
 
       // Create decision variables

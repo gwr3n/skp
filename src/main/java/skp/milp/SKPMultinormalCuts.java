@@ -92,7 +92,7 @@ public class SKPMultinormalCuts {
    }
    
    private static long time_limitMs = 60*10*1000; //10 minutes
-   private static double tolerance = 1e-3; // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   private static double tolerance = 1e-2; // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
    
    public SKPGenericDistributionCutsMVNSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
