@@ -63,6 +63,8 @@ public abstract class SKPMILP {
    
    abstract void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException;
    
+   private static double tolerance = 1e-3; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   
    void solveMILP(String model_name, SKP instance) throws IloException{
       double startGlobal = System.currentTimeMillis();
       IloOplFactory.setDebugMode(false);
@@ -78,7 +80,7 @@ public abstract class SKPMILP {
       cplex.setParam(IloCplex.Param.Threads, 8);
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setParam(IloCplex.Param.TimeLimit, 60*10);
-      //cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, 1.0e-4); //this is the default value
+      cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance); 
       /*cplex.setParam(IloCplex.IntParam.VarSel, 1);
       cplex.setParam(IloCplex.IntParam.ZeroHalfCuts, 2);
       cplex.setParam(IloCplex.IntParam.ImplBd, 2);

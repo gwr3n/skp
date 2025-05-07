@@ -82,7 +82,7 @@ public class SKPGenericDistributionLazyCuts {
    }
    
    private static long time_limit = 60*10; //10 minutes
-   private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   private static double tolerance = 1e-3; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
 
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       this.milpSolutionValue = Double.MAX_VALUE;
