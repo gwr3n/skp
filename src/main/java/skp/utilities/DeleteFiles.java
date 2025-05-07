@@ -8,7 +8,7 @@ public class DeleteFiles {
 
     public static void main(String[] args) {
         String directoryPath = "./batch/normal";
-        String target = "solved_generic_distribution_instances_MILP";
+        String target = "solved_normal_instances_SAA";
 
         try {
             traverseAndDelete(directoryPath, target);
