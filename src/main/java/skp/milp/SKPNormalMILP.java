@@ -63,20 +63,17 @@ public class SKPNormalMILP extends SKPMILP{
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
    }
    
-   public static SKPNormalMILPSolvedInstance solve(SKPNormal instance, int partitions, int simulationRuns) throws IloException {
-      
+   public static SKPNormalMILPSolvedInstance solve(SKPNormal instance, int partitions, int simulationRuns) throws IloException {      
       SKPNormalMILPSolvedInstance solvedJensens = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
       SKPNormalMILPSolvedInstance solvedEM = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
       
       double optimality_gap = 0.0;
       SKPNormalMILPSolvedInstance opt = solvedJensens;
       if(!Arrays.equals(solvedJensens.optimalKnapsack, solvedEM.optimalKnapsack)) {
+         optimality_gap = (solvedJensens.milpSolutionValue - solvedEM.milpSolutionValue)/(1e-10 + solvedEM.milpSolutionValue);
          if(solvedJensens.simulatedSolutionValue < solvedEM.simulatedSolutionValue) {
             opt = solvedEM;
-            optimality_gap = (solvedJensens.milpSolutionValue - solvedEM.simulatedSolutionValue)/(1e-10 + solvedEM.simulatedSolutionValue);
-         } else {
-            optimality_gap = (solvedJensens.milpSolutionValue - solvedJensens.simulatedSolutionValue)/(1e-10 + solvedJensens.simulatedSolutionValue);
-         }
+         } 
       }
       
       return new SKPNormalMILPSolvedInstance(
