@@ -63,7 +63,7 @@ public abstract class SKPMILP {
    
    abstract void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException;
    
-   private static double tolerance = 1e-2; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
    
    void solveMILP(String model_name, SKP instance) throws IloException{
       double startGlobal = System.currentTimeMillis();

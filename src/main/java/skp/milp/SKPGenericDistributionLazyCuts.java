@@ -59,7 +59,7 @@ public class SKPGenericDistributionLazyCuts {
       return this.milpMaxLinearizationError;
    }
    
-   private static final double step = 0.01;
+   private static final double step = 1e-4;
    
    private static double[] computeDirectionalDerivative(SKPGenericDistribution instance, double[] knapsack, int linearizationSamples) {
       Distribution[] weights = instance.getWeights();
@@ -81,7 +81,7 @@ public class SKPGenericDistributionLazyCuts {
    }
    
    private static long time_limit = 60*10; //10 minutes
-   private static double tolerance = 1e-2; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
+   private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
 
    public SKPGenericDistributionCutsSolvedInstance solve() throws IloException {
       this.milpSolutionValue = Double.MAX_VALUE;
