@@ -392,12 +392,12 @@ public class SKPNormalBatch extends SKPBatch {
          {
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
             
-            String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
+            String fileNameSolved = folder+"/solved_normal_instances_LC.json";
             SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
             
             System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
+            String fileNameSolvedCSV = folder+"/solved_normal_instances_LC.csv";
             SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
