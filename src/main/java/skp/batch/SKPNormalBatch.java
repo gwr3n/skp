@@ -80,6 +80,7 @@ public class SKPNormalBatch extends SKPBatch {
                try {
                   solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
                   solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
+                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
                   if(size < instanceSize[2]) 
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
@@ -377,7 +378,8 @@ public class SKPNormalBatch extends SKPBatch {
    enum METHOD {
       PWLA,
       DCG,
-      SAA
+      SAA,
+      LC
    }
    
    /*
@@ -386,6 +388,19 @@ public class SKPNormalBatch extends SKPBatch {
    
    public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
       switch(method){
+      case LC: //Compute optimal solution using Lazy Cut Generation
+         {
+            SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
+            
+            String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
+            SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
+            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+         }
+         break;
       case DCG: //Compute optimal solution using Dynamic Cut Generation
          /*{
             SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
