@@ -33,7 +33,7 @@ import skp.instance.SKPGenericDistribution;
 import skp.instance.SKPMultinormal;
 import skp.instance.SKPNormal;
 import skp.milp.SKPNormalMILP;
-import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
+import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPNormal;
@@ -393,12 +393,12 @@ public class SKPNormalBatch extends SKPBatch {
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
             
             String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
-            SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
+            SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
             
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
-            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
       case DCG: //Compute optimal solution using Dynamic Cut Generation
@@ -417,12 +417,12 @@ public class SKPNormalBatch extends SKPBatch {
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
             
             String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
-            SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
+            SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
             
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
-            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
       case SAA: // SAA

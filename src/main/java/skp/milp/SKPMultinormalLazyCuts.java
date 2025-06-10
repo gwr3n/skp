@@ -10,7 +10,7 @@ import ilog.opl.IloCplex;
 import ilog.opl.IloOplFactory;
 import skp.folf.FirstOrderLossFunctionScalarProductMVN;
 import skp.instance.SKPMultinormal;
-import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
+import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.sim.SimulateMultinormal;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdistmulti.MultiNormalDist;
@@ -94,12 +94,12 @@ public class SKPMultinormalLazyCuts {
    private static long time_limit = 60*10; //10 minutes
    private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
 
-   public SKPGenericDistributionCutsMVNSolvedInstance solve() throws IloException {
+   public SKPMultinormalCutsSolvedInstance solve() throws IloException {
       this.milpSolutionValue = Double.MAX_VALUE;
       this.lastKnapsack = null;
       this.lazyCuts = 0;
       
-      SKPGenericDistributionCutsMVNSolvedInstance solvedInstance = null;
+      SKPMultinormalCutsSolvedInstance solvedInstance = null;
       IloOplFactory.setDebugMode(false);
       
       cplex = new IloCplex();
@@ -173,7 +173,7 @@ public class SKPMultinormalLazyCuts {
          double simulatedSolutionValue = sim.simulate(optimalKnapsack, this.simulationRuns);
          double simulatedLinearizationError = 100*(simulatedSolutionValue-milpSolutionValue)/simulatedSolutionValue;
 
-         solvedInstance = new SKPGenericDistributionCutsMVNSolvedInstance(
+         solvedInstance = new SKPMultinormalCutsSolvedInstance(
                instance,
                this.optimalKnapsack,
                simulatedSolutionValue,
@@ -225,8 +225,8 @@ public class SKPMultinormalLazyCuts {
       try {
          SKPMultinormalLazyCuts sskp = new SKPMultinormalLazyCuts(instance, simulationRuns);
          
-         SKPGenericDistributionCutsMVNSolvedInstance solvedInstance = sskp.solve();
-         System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance>printInstanceAsJSON(solvedInstance));
+         SKPMultinormalCutsSolvedInstance solvedInstance = sskp.solve();
+         System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance>printInstanceAsJSON(solvedInstance));
       } catch (Exception e) {
          // TODO Auto-generated catch block
          e.printStackTrace();

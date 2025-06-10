@@ -2,7 +2,7 @@ package skp.milp.instance;
 
 import skp.instance.SKPMultinormal;
 
-public class SKPGenericDistributionCutsMVNSolvedInstance {
+public class SKPMultinormalCutsSolvedInstance {
    public SKPMultinormal instance;
    public int[] optimalKnapsack;
    public double simulatedSolutionValue;
@@ -16,7 +16,7 @@ public class SKPGenericDistributionCutsMVNSolvedInstance {
    public int simplexIterations;
    public int exploredNodes;
    
-   public SKPGenericDistributionCutsMVNSolvedInstance(
+   public SKPMultinormalCutsSolvedInstance(
          SKPMultinormal instance,
          int[] optimalKnapsack,
          double simulatedSolutionValue,

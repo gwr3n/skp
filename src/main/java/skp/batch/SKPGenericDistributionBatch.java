@@ -24,7 +24,6 @@ import skp.milp.SKPGenericDistributionBandB;
 import skp.milp.SKPGenericDistributionCuts;
 import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.milp.instance.SKPGenericDistributionBandBSolvedInstance;
-import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
@@ -602,44 +601,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                  s.solutionTimeMs + ", " +
                  s.exploredNodes + ", " +
                  s.optGap +"\n";
-      }
-      PrintWriter pw;
-      try {
-         pw = new PrintWriter(new File(fileName));
-         pw.print(header+body);
-         pw.close();
-      } catch (FileNotFoundException e) {
-         e.printStackTrace();
-      }
-   }
-   
-   static void storeSolvedBatchToCSV(SKPGenericDistributionCutsMVNSolvedInstance[] instances, String fileName) {
-      String header = 
-            "instanceID, expectedValues, expectedWeights, covarianceWeights, "
-            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
-            + "simulationRuns, milpSolutionValue, milpOptimalityGap, cuts, "
-            + "milpMaxLinearizationError, simulatedLinearizationError,"
-            + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
-      String body = "";
-      
-      for(SKPGenericDistributionCutsMVNSolvedInstance s : instances) {
-         body += s.instance.getInstanceID() + ", " +
-                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
-                 Arrays.toString(Arrays.stream(s.instance.getWeights().getMean()).toArray()).replace(",", "\t")+ ", " +
-                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
-                 s.instance.getCapacity()+ ", " +
-                 s.instance.getShortageCost()+ ", " +
-                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
-                 s.simulatedSolutionValue + ", " +
-                 s.simulationRuns + ", " +
-                 s.milpSolutionValue + ", " +
-                 s.milpOptimalityGap + ", " +
-                 s.cuts + ", " +
-                 s.milpMaxLinearizationError + ", " +
-                 s.simulatedLinearizationError + ", " +
-                 s.cplexSolutionTimeMs + ", " +
-                 s.simplexIterations + ", " +
-                 s.exploredNodes +"\n";
       }
       PrintWriter pw;
       try {

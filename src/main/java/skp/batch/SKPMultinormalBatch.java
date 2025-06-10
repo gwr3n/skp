@@ -33,7 +33,7 @@ import skp.instance.SKPMultinormal;
 import skp.milp.SKPMultinormalCuts;
 import skp.milp.SKPMultinormalLazyCuts;
 import skp.milp.SKPMultinormalMILP;
-import skp.milp.instance.SKPGenericDistributionCutsMVNSolvedInstance;
+import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
@@ -431,12 +431,12 @@ public class SKPMultinormalBatch extends SKPBatch {
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
             String fileNameSolved = folder+"/solved_multinormal_instances_LC.json";
-            SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
+            SKPMultinormalCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns);
             
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_multinormal_instances_LC.csv";
-            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
       case DCG:  
@@ -445,12 +445,12 @@ public class SKPMultinormalBatch extends SKPBatch {
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
             String fileNameSolved = folder+"/solved_multinormal_instances_DCG.json";
-            SKPGenericDistributionCutsMVNSolvedInstance[] solvedBatch = solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
+            SKPMultinormalCutsSolvedInstance[] solvedBatch = solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
             
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_multinormal_instances_DCG.csv";
-            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
       case PWLA:
@@ -500,7 +500,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return solved;
    }
    
-   static SKPGenericDistributionCutsMVNSolvedInstance[] solveBatchMILPLazyCuts(SKPMultinormal[] instances, String fileName, int simulationRuns) throws IloException {
+   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPMultinormal[] instances, String fileName, int simulationRuns) throws IloException {
       /*
        * Sequential
        *
@@ -514,7 +514,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       /*
        * Parallel
        */
-      SKPGenericDistributionCutsMVNSolvedInstance[] solved = Arrays.stream(instances)
+      SKPMultinormalCutsSolvedInstance[] solved = Arrays.stream(instances)
                                                                    .parallel()
                                                                    .map(instance -> {
                                                                        try {
@@ -525,12 +525,12 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                           return null;
                                                                        }
                                                                     })
-                                                        .toArray(SKPGenericDistributionCutsMVNSolvedInstance[]::new);
-      GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+                                                        .toArray(SKPMultinormalCutsSolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
    
-   static SKPGenericDistributionCutsMVNSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
+   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
       /*
        * Sequential
        *
@@ -544,7 +544,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       /*
        * Parallel
        */
-      SKPGenericDistributionCutsMVNSolvedInstance[] solved = Arrays.stream(instances)
+      SKPMultinormalCutsSolvedInstance[] solved = Arrays.stream(instances)
                                                                    .parallel()
                                                                    .map(instance -> {
                                                                        try {
@@ -555,8 +555,8 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                           return null;
                                                                        }
                                                                     })
-                                                        .toArray(SKPGenericDistributionCutsMVNSolvedInstance[]::new);
-      GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+                                                        .toArray(SKPMultinormalCutsSolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
 
@@ -602,6 +602,44 @@ public class SKPMultinormalBatch extends SKPBatch {
    private static SKPMultinormalMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
       SKPMultinormalMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPMultinormalMILPSolvedInstance[]>retrieveJSONInstance(fileName, SKPMultinormalMILPSolvedInstance[].class);
       return solvedInstances;
+   }
+   
+   static void storeSolvedBatchToCSV(SKPMultinormalCutsSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, covarianceWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "simulationRuns, milpSolutionValue, milpOptimalityGap, cuts, "
+            + "milpMaxLinearizationError, simulatedLinearizationError,"
+            + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
+      String body = "";
+      
+      for(SKPMultinormalCutsSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights().getMean()).toArray()).replace(",", "\t")+ ", " +
+                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.simulationRuns + ", " +
+                 s.milpSolutionValue + ", " +
+                 s.milpOptimalityGap + ", " +
+                 s.cuts + ", " +
+                 s.milpMaxLinearizationError + ", " +
+                 s.simulatedLinearizationError + ", " +
+                 s.cplexSolutionTimeMs + ", " +
+                 s.simplexIterations + ", " +
+                 s.exploredNodes +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
    }
    
    /*
