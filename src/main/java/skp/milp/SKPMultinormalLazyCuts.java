@@ -95,6 +95,7 @@ public class SKPMultinormalLazyCuts {
    private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
 
    public SKPMultinormalCutsSolvedInstance solve() throws IloException {
+      long startGlobal = System.currentTimeMillis();
       this.milpSolutionValue = Double.MAX_VALUE;
       this.lastKnapsack = null;
       this.lazyCuts = 0;
@@ -147,14 +148,12 @@ public class SKPMultinormalLazyCuts {
             cplex.prod(-instance.getShortageCost(), P))
             );
 
-      
-      double start = cplex.getCplexImpl().getCplexTime();
-      boolean status =  cplex.solve();
-      double end = cplex.getCplexImpl().getCplexTime();
+      boolean status =  cplex.solve();      
       if ( status ) {   
          this.milpSolutionValue = cplex.getObjValue();
          this.milpOptimalityGap = cplex.getMIPRelativeGap();
-         this.cplexSolutionTimeMs += (end - start)*1000;
+         double endGlobal = System.currentTimeMillis();
+         this.cplexSolutionTimeMs = endGlobal - startGlobal;
          this.simplexIterations += cplex.getNiterations();
          this.exploredNodes += cplex.getNnodes();
 
