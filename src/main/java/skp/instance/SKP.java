@@ -1,5 +1,7 @@
 package skp.instance;
 
+import java.util.Arrays;
+
 import skp.utilities.hash.SHA;
 
 public abstract class SKP {
@@ -35,4 +37,29 @@ public abstract class SKP {
    public double[] getExpectedValues() {
       return this.expectedValues;
    }
+   
+
+   /**
+    * Returns a list of item indexes sorted by expected value to expected weight ratio in descending order.
+    */
+   public int[] getItemsOrderedByExpectedValueToExpectedWeightRatio() {
+      int n = expectedValues.length;
+      Integer[] indexes = new Integer[n];
+      for (int i = 0; i < n; i++) {
+          indexes[i] = i;
+      }
+
+      Arrays.sort(indexes, (i, j) -> {
+          double ratioI = expectedValues[i] / expectedWeights[i];
+          double ratioJ = expectedValues[j] / expectedWeights[j];
+          return Double.compare(ratioJ, ratioI); // descending order
+      });
+
+      int[] result = new int[n];
+      for (int i = 0; i < n; i++) {
+          result[i] = indexes[i];
+      }
+
+      return result;
+  }
 }
