@@ -65,6 +65,7 @@ public class SKPMultinormalBatch extends SKPBatch {
          for(int size : instanceSize) {
             for(double cv : coeff_of_var) {
                for(double rho : coeff_of_cor) {
+                  System.out.println(t + "\t" + size + "\t" + cv + "\t" + rho);
                   File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
                   if (!folder.exists()) {
                      folder.mkdirs();

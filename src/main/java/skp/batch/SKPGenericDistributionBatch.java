@@ -59,6 +59,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       for(INSTANCE_TYPE t: instanceType) {
          for(int size : instanceSize) {
             for(double cv : coeff_of_var) {
+               System.out.println(t + "\t" + size + "\t" + cv);
                File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
                if (!folder.exists()) {
                   folder.mkdirs();
