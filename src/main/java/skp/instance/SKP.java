@@ -38,11 +38,10 @@ public abstract class SKP {
       return this.expectedValues;
    }
    
-
    /**
     * Returns a list of item indexes sorted by expected value to expected weight ratio in descending order.
     */
-   public int[] getItemsOrderedByExpectedValueToExpectedWeightRatio() {
+   public int[] getItemsOrderedByExpectedValueOverExpectedWeightRatio() {
       int n = expectedValues.length;
       Integer[] indexes = new Integer[n];
       for (int i = 0; i < n; i++) {
