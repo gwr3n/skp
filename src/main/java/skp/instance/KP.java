@@ -68,4 +68,28 @@ public class KP {
       }else
          return false;
    }
+   
+   /**
+    * Returns a list of item indexes sorted by expected value to expected weight ratio in descending order.
+    */
+   public int[] getItemsOrderedByValueOverWeightRatio() {
+      int n = values.length;
+      Integer[] indexes = new Integer[n];
+      for (int i = 0; i < n; i++) {
+          indexes[i] = i;
+      }
+
+      Arrays.sort(indexes, (i, j) -> {
+          double ratioI = values[i] / weights[i];
+          double ratioJ = values[j] / weights[j];
+          return Double.compare(ratioJ, ratioI); // descending order
+      });
+
+      int[] result = new int[n];
+      for (int i = 0; i < n; i++) {
+          result[i] = indexes[i];
+      }
+
+      return result;
+  }
 }
