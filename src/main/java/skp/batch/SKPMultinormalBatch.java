@@ -83,7 +83,8 @@ public class SKPMultinormalBatch extends SKPBatch {
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.DCG);
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
-                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
+                     if(size < instanceSize[2])
+                        solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
