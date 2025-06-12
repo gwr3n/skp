@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import skp.instance.SKPGenericDistribution;
-import skp.milp.SKPGenericDistributionBandB;
-import skp.milp.instance.SKPGenericDistributionBandBSolvedInstance;
+import skp.milp.SKPGenericDistributionLazyCuts;
+import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
 
@@ -95,9 +95,9 @@ public class SimulateGenericDistribution extends Simulate {
       int simulationRuns = 100000;
       
       try {
-         SKPGenericDistributionBandB milp = new SKPGenericDistributionBandB(instance, linearizationSamples, simulationRuns);
-         SKPGenericDistributionBandBSolvedInstance solved = milp.solve();
-         System.out.println(GSONUtility.<SKPGenericDistributionBandBSolvedInstance>printInstanceAsJSON(solved));
+         SKPGenericDistributionLazyCuts milp = new SKPGenericDistributionLazyCuts(instance, linearizationSamples, simulationRuns);
+         SKPGenericDistributionCutsSolvedInstance solved = milp.solve();
+         System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance>printInstanceAsJSON(solved));
       } catch (Exception e) {
          e.printStackTrace();
       }
