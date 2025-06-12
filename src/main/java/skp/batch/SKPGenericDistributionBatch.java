@@ -23,6 +23,7 @@ import skp.instance.SKPGenericDistribution;
 import skp.milp.SKPGenericDistributionCuts;
 import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
+import skp.saa.SKPGenericDistributionSAA;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
@@ -393,12 +394,12 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             int M = 1000;
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionSAABatch.solveBatchMILP(batch, fileNameSolved, Nsmall, Nlarge, M);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA.csv";
-            SKPGenericDistributionSAABatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
          case LAZY_CUTS: {   
@@ -490,6 +491,31 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return solved;
    }
    
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionSAASolvedInstance>solved = new ArrayList<SKPGenericDistributionSAASolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M, tolerance));
+         
+      }
+      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
+                                                               .parallel()
+                                                               .map(instance -> {
+           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
+      }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
    /*
     * Batch cannot be retrieved because Distribution[] is not Serializable
     *
@@ -525,6 +551,38 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                  s.cplexSolutionTimeMs + ", " +
                  s.simplexIterations + ", " +
                  s.exploredNodes +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPGenericDistributionSAASolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "solutionTimeMs, optGap1, optGap2, N, N', M\n";
+      String body = "";
+      
+      for(SKPGenericDistributionSAASolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.optGap1 + ", " +
+                 s.optGap2 + ", " +
+                 s.Nsmall + ", " +
+                 s.Nlarge + ", " +
+                 s.M + "\n";
       }
       PrintWriter pw;
       try {
