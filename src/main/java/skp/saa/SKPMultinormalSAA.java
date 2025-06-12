@@ -4,26 +4,26 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import ilog.concert.IloException;
-import skp.instance.SKPGenericDistribution;
-import skp.milp.SKPGenericDistributionScenarioBased;
-import skp.milp.instance.SKPGenericDistributionScenarioBasedSolvedInstance;
-import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
+import skp.instance.SKPMultinormal;
+import skp.milp.SKPMultinormalScenarioBased;
+import skp.milp.instance.SKPMultinormalScenarioBasedSolvedInstance;
+import skp.saa.instance.SKPMultinormalSAASolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.rng.MRG32k3aL;
 import umontreal.ssj.rng.RandomStream;
 
-public class SKPGenericDistributionSAA {
+public class SKPMultinormalSAA {
    
    static final long[] seed = {12345, 24513, 24531, 42531, 35124, 32451};
    RandomStream randGenerator;
    
-   SKPGenericDistribution instance;
+   SKPMultinormal instance;
    
    double optGap1;
    double optGap2;
    
-   public SKPGenericDistributionSAA(SKPGenericDistribution instance) {
+   public SKPMultinormalSAA(SKPMultinormal instance) {
       MRG32k3aL rnd = new MRG32k3aL();
       rnd.setSeed(seed);
       this.randGenerator = rnd;
@@ -51,9 +51,9 @@ public class SKPGenericDistributionSAA {
    private static long time_limitMs = 60*10*1000; //10 minutes
    private static double tolerance = 1e-4; // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
    
-   public SKPGenericDistributionSAASolvedInstance solve(int Nsmall, int Nlarge, int M) {
+   public SKPMultinormalSAASolvedInstance solve(int Nsmall, int Nlarge, int M) {
       long startGlobal = System.currentTimeMillis();
-      SKPGenericDistributionScenarioBasedSolvedInstance[] SAAreplications = new SKPGenericDistributionScenarioBasedSolvedInstance[M];
+      SKPMultinormalScenarioBasedSolvedInstance[] SAAreplications = new SKPMultinormalScenarioBasedSolvedInstance[M];
       double barvMN = 0;
       
       double[][][] scenarios = new double[M][][]; 
@@ -63,7 +63,7 @@ public class SKPGenericDistributionSAA {
       for(int m = 0; m < M; m++) {
          try {
             int numberOfScenarios = Nsmall;
-            SKPGenericDistributionScenarioBased sskp = new SKPGenericDistributionScenarioBased(instance, numberOfScenarios, this.randGenerator);
+            SKPMultinormalScenarioBased sskp = new SKPMultinormalScenarioBased(instance, numberOfScenarios, this.randGenerator);
             scenarios[m] = sskp.scenarios;
             
             int simulationRuns = Nlarge;
@@ -92,7 +92,7 @@ public class SKPGenericDistributionSAA {
                double endGlobal = System.currentTimeMillis();
                double solutionTimeMs = endGlobal - startGlobal;
                
-               return new SKPGenericDistributionSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, m);
+               return new SKPMultinormalSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, m);
             }
          }
       }
@@ -101,10 +101,10 @@ public class SKPGenericDistributionSAA {
       double endGlobal = System.currentTimeMillis();
       double solutionTimeMs = endGlobal - startGlobal;
       
-      return new SKPGenericDistributionSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, M);
+      return new SKPMultinormalSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, M);
    }
 
-   private void computeOptimalityGaps(SKPGenericDistributionScenarioBasedSolvedInstance[] SAAreplications, double barvMN,
+   private void computeOptimalityGaps(SKPMultinormalScenarioBasedSolvedInstance[] SAAreplications, double barvMN,
          double[][][] scenarios, int bestSoFar, double bestObjSoFar, int W) {
       final double final_barvMN = barvMN/W;
       final int final_bestSoFar = bestSoFar;
@@ -145,15 +145,15 @@ public class SKPGenericDistributionSAA {
    
    public static void main(String args[]) {
 
-      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
+      SKPMultinormal instance = SKPMultinormal.getTestInstance();
       
-      SKPGenericDistributionSAA skpSAA = new SKPGenericDistributionSAA(instance);
+      SKPMultinormalSAA skpSAA = new SKPMultinormalSAA(instance);
       
       // SAA parameters
       int Nsmall = 100;    // N
       int Nlarge = 100000; // N'
       int M = 100;         // M
       
-      System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance>printInstanceAsJSON(skpSAA.solve(Nsmall, Nlarge, M)));
+      System.out.println(GSONUtility.<SKPMultinormalSAASolvedInstance>printInstanceAsJSON(skpSAA.solve(Nsmall, Nlarge, M)));
    }
 }

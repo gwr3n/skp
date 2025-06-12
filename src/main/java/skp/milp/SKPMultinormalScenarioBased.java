@@ -18,21 +18,20 @@ import ilog.opl.IloOplModelSource;
 import ilog.opl.IloOplSettings;
 
 import skp.instance.SKP;
-import skp.instance.SKPGenericDistribution;
-import skp.milp.instance.SKPScenarioBasedSolvedInstance;
-import skp.sim.SimulateGenericDistribution;
+import skp.instance.SKPMultinormal;
+import skp.milp.instance.SKPMultinormalScenarioBasedSolvedInstance;
+import skp.sim.SimulateMultinormal;
 import skp.utilities.gson.GSONUtility;
-import skp.utilities.probability.SampleFactory;
 
 import umontreal.ssj.rng.MRG32k3aL;
 import umontreal.ssj.rng.RandomStream;
 
-public class SKPScenarioBased {
+public class SKPMultinormalScenarioBased {
    
    static final long[] seed = {12345, 24513, 24531, 42531, 35124, 32451};
    RandomStream randGenerator;
    
-   SKPGenericDistribution instance;
+   SKPMultinormal instance;
    int numberOfScenarios;
    public double[][] scenarios;
    
@@ -46,15 +45,16 @@ public class SKPScenarioBased {
    int simplexIterations;
    int exploredNodes;
    
-   public SKPScenarioBased(SKPGenericDistribution instance, int numberOfScenarios, RandomStream randGenerator) {
+   public SKPMultinormalScenarioBased(SKPMultinormal instance, int numberOfScenarios, RandomStream randGenerator) {
       this.randGenerator = randGenerator;
       this.randGenerator.resetNextSubstream();
       this.instance = instance;
       this.numberOfScenarios = numberOfScenarios;
-      scenarios = SampleFactory.getNextLHSample(instance.getWeights(), numberOfScenarios, this.randGenerator);
+      SimulateMultinormal sm = new SimulateMultinormal(instance);
+      scenarios = sm.sampleWeights(numberOfScenarios, this.randGenerator);
    }
    
-   public SKPScenarioBased(SKPGenericDistribution instance, int numberOfScenarios) {
+   public SKPMultinormalScenarioBased(SKPMultinormal instance, int numberOfScenarios) {
       MRG32k3aL rnd = new MRG32k3aL();
       rnd.setSeed(seed);
       this.randGenerator = rnd;
@@ -62,7 +62,8 @@ public class SKPScenarioBased {
       
       this.instance = instance;
       this.numberOfScenarios = numberOfScenarios;
-      scenarios = SampleFactory.getNextLHSample(instance.getWeights(), numberOfScenarios, this.randGenerator);
+      SimulateMultinormal sm = new SimulateMultinormal(instance);
+      scenarios = sm.sampleWeights(numberOfScenarios, this.randGenerator);
    }
    
    InputStream getMILPModelStream(File file){
@@ -79,13 +80,13 @@ public class SKPScenarioBased {
       return new MyData(oplF);
    }
    
-   public SKPScenarioBasedSolvedInstance solve(int simulationRuns) throws IloException {
+   public SKPMultinormalScenarioBasedSolvedInstance solve(int simulationRuns) throws IloException {
       this.solveMILP(model, instance);
       
-      SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
+      SimulateMultinormal sim = new SimulateMultinormal(instance);
       double[] simulatedSolutionValue = sim.simulateMeanVariance(optimalKnapsack, simulationRuns);
       
-      SKPScenarioBasedSolvedInstance solvedInstance = new SKPScenarioBasedSolvedInstance(
+      SKPMultinormalScenarioBasedSolvedInstance solvedInstance = new SKPMultinormalScenarioBasedSolvedInstance(
             instance,
             optimalKnapsack,
             simulatedSolutionValue[0],
@@ -219,14 +220,14 @@ public class SKPScenarioBased {
    
    public static void main(String args[]) {
 
-      SKPGenericDistribution instance = SKPGenericDistribution.getTestInstanceLarge();
+      SKPMultinormal instance = SKPMultinormal.getTestInstance();
       
       try {
          int numberOfScenarios = 1000;
-         SKPScenarioBased sskp = new SKPScenarioBased(instance, numberOfScenarios);
+         SKPMultinormalScenarioBased sskp = new SKPMultinormalScenarioBased(instance, numberOfScenarios);
          
          int simulationRuns = 10000;
-         System.out.println(GSONUtility.<SKPScenarioBasedSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
+         System.out.println(GSONUtility.<SKPMultinormalScenarioBasedSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();

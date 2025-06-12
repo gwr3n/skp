@@ -35,6 +35,8 @@ import skp.milp.SKPMultinormalLazyCuts;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
+import skp.saa.SKPMultinormalSAA;
+import skp.saa.instance.SKPMultinormalSAASolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -81,6 +83,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.DCG);
                      solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
+                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
@@ -420,11 +423,30 @@ public class SKPMultinormalBatch extends SKPBatch {
    enum METHOD {
       LC,
       PWLA,
-      DCG
+      DCG,
+      SAA
    }
    
    public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
       switch(method){
+      case SAA:  
+         // Compute optimal solution using SAA
+         {
+            int Nsmall = 1000; 
+            int Nlarge = simulationRuns; 
+            int M = 1000;
+            
+            SKPMultinormal[] batch = retrieveBatch(fileName);
+            
+            String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
+            SKPMultinormalSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
+            
+            System.out.println(GSONUtility.<SKPMultinormalSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+         }
+         break;
       case LC:  
          // Compute optimal solution using Dynamic Cut Generation
          {
@@ -534,12 +556,12 @@ public class SKPMultinormalBatch extends SKPBatch {
       /*
        * Sequential
        *
-      ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>solved = new ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>();
+      ArrayList<SKPMultinormalCutsSolvedInstance>solved = new ArrayList<SKPMultinormalCutsSolvedInstance>();
       for(SKPMultinormal instance : instances) {
          solved.add(new SKPMultinormalCuts(instance, maxCuts, simulationRuns).solve());
-         GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]), fileName);
+         GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalCutsSolvedInstance[solved.size()]), fileName);
       }
-      return solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]); */
+      return solved.toArray(new SKPMultinormalCutsSolvedInstance[solved.size()]); */
       
       /*
        * Parallel
@@ -557,6 +579,31 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                     })
                                                         .toArray(SKPMultinormalCutsSolvedInstance[]::new);
       GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   static SKPMultinormalSAASolvedInstance[] solveBatchMILPSAA(SKPMultinormal[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPMultinormalSAASolvedInstance>solved = new ArrayList<SKPMultinormalSAASolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M, tolerance));
+         
+      }
+      GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalSAASolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPMultinormalSAASolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPMultinormalSAASolvedInstance[] solved = Arrays.stream(instances)
+                                                               .parallel()
+                                                               .map(instance -> {
+           return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
+      }).toArray(SKPMultinormalSAASolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
 
@@ -588,6 +635,39 @@ public class SKPMultinormalBatch extends SKPBatch {
                  s.cplexSolutionTimeMs + ", " +
                  s.simplexIterations + ", " +
                  s.exploredNodes +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPMultinormalSAASolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, covarianceWeights,"
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "solutionTimeMs, optGap1, optGap2, N, N', M\n";
+      String body = "";
+      
+      for(SKPMultinormalSAASolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getWeights().getMean()).replace(",", "\t")+ ", " +
+                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.optGap1 + ", " +
+                 s.optGap2 + ", " +
+                 s.Nsmall + ", " +
+                 s.Nlarge + ", " +
+                 s.M + "\n";
       }
       PrintWriter pw;
       try {

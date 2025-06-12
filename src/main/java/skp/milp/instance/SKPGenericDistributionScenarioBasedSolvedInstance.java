@@ -2,7 +2,7 @@ package skp.milp.instance;
 
 import skp.instance.SKPGenericDistribution;
 
-public class SKPScenarioBasedSolvedInstance {
+public class SKPGenericDistributionScenarioBasedSolvedInstance {
    public SKPGenericDistribution instance;
    public int[] optimalKnapsack;
    public double simulatedSolutionValueMean;
@@ -14,7 +14,7 @@ public class SKPScenarioBasedSolvedInstance {
    public int simplexIterations;
    public int exploredNodes;
    
-   public SKPScenarioBasedSolvedInstance(SKPGenericDistribution instance, int[] optimalKnapsack, double simulatedSolutionValueMean, double simulatedSolutionValueVariance, int simulationRuns, double milpSolutionValue, double milpOptimalityGap, double cplexSolutionTimeMs, int simplexIterations, int exploredNodes) {
+   public SKPGenericDistributionScenarioBasedSolvedInstance(SKPGenericDistribution instance, int[] optimalKnapsack, double simulatedSolutionValueMean, double simulatedSolutionValueVariance, int simulationRuns, double milpSolutionValue, double milpOptimalityGap, double cplexSolutionTimeMs, int simplexIterations, int exploredNodes) {
       this.instance = instance;
       this.optimalKnapsack = optimalKnapsack;
       this.simulatedSolutionValueMean = simulatedSolutionValueMean;
