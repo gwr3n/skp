@@ -87,10 +87,12 @@ public class SKPGenericDistribution extends SKP{
    public static SKPGenericDistribution getTestInstanceLarge() {
       int objects = 35;
       Random rnd = new Random(1122);
+      @SuppressWarnings("unused")
       double[] expectedValues = IntStream.iterate(0, i -> i + 1)
                                          .limit(objects)
                                          .mapToDouble(i -> 100*rnd.nextDouble())
                                          .toArray();
+      @SuppressWarnings("unused")
       Distribution[] weights = IntStream.iterate(0, i -> i + 1)
                                         .limit(objects)
                                         .mapToObj(i -> new NormalDist(100*rnd.nextDouble(),10*rnd.nextDouble()))
