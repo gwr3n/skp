@@ -86,13 +86,20 @@ public class SKPGenericDistributionSAA {
             
             
             
-            if(100*this.optGap1/bestObjSoFar < tolerance || 
-                  100*this.optGap2/bestObjSoFar < tolerance ||
+            if(this.optGap1/(1e-10 + bestObjSoFar) < tolerance || 
+                  this.optGap2/(1e-10 + bestObjSoFar) < tolerance ||
                   System.currentTimeMillis() - startGlobal > time_limitMs) {
                double endGlobal = System.currentTimeMillis();
                double solutionTimeMs = endGlobal - startGlobal;
                
-               return new SKPGenericDistributionSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, m);
+               return new SKPGenericDistributionSAASolvedInstance(
+                     this.instance, 
+                     SAAreplications[bestSoFar].optimalKnapsack, 
+                     SAAreplications[bestSoFar].simulatedSolutionValueMean, 
+                     solutionTimeMs, 
+                     this.optGap1/(1e-10 + bestObjSoFar), 
+                     this.optGap2/(1e-10 + bestObjSoFar), 
+                     Nsmall, Nlarge, m);
             }
          }
       }
