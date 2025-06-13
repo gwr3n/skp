@@ -86,8 +86,8 @@ public class SKPMultinormalSAA {
             
             
             
-            if(this.optGap1 < tolerance || 
-                  this.optGap2 < tolerance ||
+            if(100*this.optGap1/bestObjSoFar < tolerance || 
+                  100*this.optGap2/bestObjSoFar < tolerance ||
                   System.currentTimeMillis() - startGlobal > time_limitMs) {
                double endGlobal = System.currentTimeMillis();
                double solutionTimeMs = endGlobal - startGlobal;
