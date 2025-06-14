@@ -83,14 +83,15 @@ public class SKPGenericDistributionScenarioBased {
       this.solveMILP(model, instance);
       
       SimulateGenericDistribution sim = new SimulateGenericDistribution(instance);
-      double[] simulatedSolutionValue = sim.simulateMeanVariance(optimalKnapsack, simulationRuns, this.randGenerator);
+      double[] simulatedSolutionValue1 = sim.simulateMeanVariance(optimalKnapsack, simulationRuns, this.randGenerator);
       double[] simulatedSolutionValue2 = sim.simulateMeanVariance(optimalKnapsack, simulationRuns, this.randGenerator);
       
       SKPGenericDistributionScenarioBasedSolvedInstance solvedInstance = new SKPGenericDistributionScenarioBasedSolvedInstance(
             instance,
             optimalKnapsack,
-            simulatedSolutionValue[0],
+            simulatedSolutionValue1[0],
             simulatedSolutionValue2[0],
+            simulatedSolutionValue1[1],
             simulatedSolutionValue2[1],
             simulationRuns,
             milpSolutionValue,
