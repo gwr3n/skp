@@ -24,7 +24,7 @@ public final class SKPGenericDistributionSAA_LD {
     private static final int    Mmax   = 100;    // maximum replications
     private static final int    Nprime = 10_000; // evaluation sample
     private static final int    warmUp = 32;     // for CLT
-    private static final double relTol = 1e-3;   // relative gap
+    private static final double relTol = 1e-4;   // relative gap
     private static final long   wallMs = 10*60_000L;
 
     /* ---------------- members ---------------- */
@@ -49,7 +49,7 @@ public final class SKPGenericDistributionSAA_LD {
     }
 
     /*==================================================================*/
-    public SKPGenericDistributionSAASolvedInstance solve() throws IloException {
+    public SKPGenericDistributionSAASolvedInstance solve() {
 
         long wall0 = System.currentTimeMillis();
         int  N     = N0;
@@ -57,7 +57,12 @@ public final class SKPGenericDistributionSAA_LD {
         /* ---------- Phase 0 : enlarge N until LD requirement ---------- */
         while (true) {
 
-            makeReplication(N);
+            try {
+               makeReplication(N);
+            } catch (IloException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
 
             if (reps.size() >= Mmax) break;
             
@@ -87,7 +92,15 @@ public final class SKPGenericDistributionSAA_LD {
 
         while (true) {
 
-            if (reps.size() < warmUp) { makeReplication(N); continue; }
+            if (reps.size() < warmUp) { 
+               try {
+               makeReplication(N);
+               } catch (IloException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+               } 
+               continue; 
+            }
 
             int    M = reps.size();
             double vBar = sumV / M;
@@ -141,7 +154,12 @@ public final class SKPGenericDistributionSAA_LD {
                 System.out.println("DEBUG: reached Mmax");
                 break;
             }
-            makeReplication(N);
+            try {
+               makeReplication(N);
+            } catch (IloException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
             if (System.currentTimeMillis()-wall0 > wallMs)
                 throw new RuntimeException("wall-clock limit");
         }

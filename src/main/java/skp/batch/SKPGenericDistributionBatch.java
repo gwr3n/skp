@@ -24,6 +24,7 @@ import skp.milp.SKPGenericDistributionCuts;
 import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.saa.SKPGenericDistributionSAA;
+import skp.saa.SKPGenericDistributionSAA_LD;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
@@ -511,7 +512,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
+           //return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
+           return new SKPGenericDistributionSAA_LD(instance).solve();
       }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
       GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;

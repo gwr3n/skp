@@ -36,6 +36,7 @@ import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.saa.SKPMultinormalSAA;
+import skp.saa.SKPMultinormalSAA_LD;
 import skp.saa.instance.SKPMultinormalSAASolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
@@ -603,7 +604,8 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormalSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
+           //return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
+           return new SKPMultinormalSAA_LD(instance).solve();
       }).toArray(SKPMultinormalSAASolvedInstance[]::new);
       GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
