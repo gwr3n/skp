@@ -21,7 +21,7 @@ public final class SKPMultinormalSAA_LD {
     private static final double alpha = 0.05;
     private static final double delta = 0.0;
     private static final int    N0    = 64;
-    private static final int    Mmax  = 100;
+    private static final int    Mmax  = 1000;
     private static final int    Nprime= 10_000;
     private static final int    warmUp= 32;
     private static final double relTol= 1e-4;

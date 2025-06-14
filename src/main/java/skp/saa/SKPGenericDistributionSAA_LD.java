@@ -21,7 +21,7 @@ public final class SKPGenericDistributionSAA_LD {
     private static final double alpha  = 0.05;   // LD tail
     private static final double delta  = 0.0;    // usually 0
     private static final int    N0     = 64;     // start N
-    private static final int    Mmax   = 100;    // maximum replications
+    private static final int    Mmax   = 1000;    // maximum replications
     private static final int    Nprime = 10_000; // evaluation sample
     private static final int    warmUp = 32;     // for CLT
     private static final double relTol = 1e-4;   // relative gap
