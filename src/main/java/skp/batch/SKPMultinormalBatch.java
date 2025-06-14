@@ -35,8 +35,6 @@ import skp.milp.SKPMultinormalLazyCuts;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
-import skp.saa.SKPGenericDistributionSAA;
-import skp.saa.SKPGenericDistributionSAA_LD;
 import skp.saa.SKPMultinormalSAA;
 import skp.saa.SKPMultinormalSAA_LD;
 import skp.saa.instance.SKPMultinormalSAASolvedInstance;
