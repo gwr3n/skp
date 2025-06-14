@@ -39,7 +39,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    enum SolutionMethod {
       ITERATIVE_CUTS,
       LAZY_CUTS,
-      SAA
+      SAA,
+      SAA_LD // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
    }
    
    public static void main(String args[]) {
@@ -396,7 +397,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             int M = 1000;
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, method);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
@@ -493,7 +494,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return solved;
    }
    
-   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M, SolutionMethod method) throws IloException {
       /*
        * Sequential
        *
@@ -512,8 +513,13 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
-           //return new SKPGenericDistributionSAA_LD(instance).solve();
+           switch(method) {
+              case SAA:
+                 return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
+              case SAA_LD:
+              default:
+                 return new SKPGenericDistributionSAA_LD(instance).solve();
+           }
       }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
       GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;

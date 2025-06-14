@@ -35,6 +35,8 @@ import skp.milp.SKPMultinormalLazyCuts;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
+import skp.saa.SKPGenericDistributionSAA;
+import skp.saa.SKPGenericDistributionSAA_LD;
 import skp.saa.SKPMultinormalSAA;
 import skp.saa.SKPMultinormalSAA_LD;
 import skp.saa.instance.SKPMultinormalSAASolvedInstance;
@@ -427,7 +429,8 @@ public class SKPMultinormalBatch extends SKPBatch {
       LC,
       PWLA,
       DCG,
-      SAA
+      SAA,
+      SAA_LD // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
    }
    
    public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
@@ -442,7 +445,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
             String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
-            SKPMultinormalSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
+            SKPMultinormalSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, method);
             
             System.out.println(GSONUtility.<SKPMultinormalSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
@@ -585,7 +588,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return solved;
    }
    
-   static SKPMultinormalSAASolvedInstance[] solveBatchMILPSAA(SKPMultinormal[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+   static SKPMultinormalSAASolvedInstance[] solveBatchMILPSAA(SKPMultinormal[] instances, String fileName, int Nsmall, int Nlarge, int M, METHOD method) throws IloException {
       /*
        * Sequential
        *
@@ -604,8 +607,13 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormalSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
-           //return new SKPMultinormalSAA_LD(instance).solve();
+            switch(method) {
+               case SAA:
+                  return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
+               case SAA_LD:
+               default:
+                  return new SKPMultinormalSAA_LD(instance).solve();
+            }                                                                  
       }).toArray(SKPMultinormalSAASolvedInstance[]::new);
       GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;

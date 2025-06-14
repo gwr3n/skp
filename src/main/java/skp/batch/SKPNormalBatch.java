@@ -27,7 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-
+import skp.batch.SKPGenericDistributionBatch.SolutionMethod;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.instance.SKPMultinormal;
@@ -380,6 +380,7 @@ public class SKPNormalBatch extends SKPBatch {
       PWLA,
       DCG,
       SAA,
+      SAA_LD, // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
       LC
    }
    
@@ -435,7 +436,7 @@ public class SKPNormalBatch extends SKPBatch {
             SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
             
             String fileNameSolved = folder+"/solved_normal_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, (method == METHOD.SAA) ? SolutionMethod.SAA : SolutionMethod.SAA_LD);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
