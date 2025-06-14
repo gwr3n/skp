@@ -16,7 +16,19 @@ public class SKPGenericDistributionScenarioBasedSolvedInstance {
    public int simplexIterations;
    public int exploredNodes;
    
-   public SKPGenericDistributionScenarioBasedSolvedInstance(SKPGenericDistribution instance, int[] optimalKnapsack, double simulatedSolutionValueMean1, double simulatedSolutionValueMean2, double simulatedSolutionValueVariance1, double simulatedSolutionValueVariance2, int simulationRuns, double milpSolutionValue, double milpOptimalityGap, double cplexSolutionTimeMs, int simplexIterations, int exploredNodes) {
+   public SKPGenericDistributionScenarioBasedSolvedInstance(
+         SKPGenericDistribution instance, 
+         int[] optimalKnapsack, 
+         double simulatedSolutionValueMean1, 
+         double simulatedSolutionValueMean2, 
+         double simulatedSolutionValueVariance1, 
+         double simulatedSolutionValueVariance2, 
+         int simulationRuns, 
+         double milpSolutionValue, 
+         double milpOptimalityGap, 
+         double cplexSolutionTimeMs, 
+         int simplexIterations, 
+         int exploredNodes) {
       this.instance = instance;
       this.optimalKnapsack = optimalKnapsack;
       this.simulatedSolutionValueMean1 = simulatedSolutionValueMean1;
