@@ -604,8 +604,8 @@ public class SKPMultinormalBatch extends SKPBatch {
       SKPMultinormalSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           //return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
-           return new SKPMultinormalSAA_LD(instance).solve();
+           return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
+           //return new SKPMultinormalSAA_LD(instance).solve();
       }).toArray(SKPMultinormalSAASolvedInstance[]::new);
       GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;

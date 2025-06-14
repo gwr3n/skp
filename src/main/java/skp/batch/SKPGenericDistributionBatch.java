@@ -512,8 +512,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
                                                                .map(instance -> {
-           //return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
-           return new SKPGenericDistributionSAA_LD(instance).solve();
+           return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
+           //return new SKPGenericDistributionSAA_LD(instance).solve();
       }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
       GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
