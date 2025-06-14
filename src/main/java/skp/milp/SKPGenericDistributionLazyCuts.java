@@ -3,9 +3,11 @@ package skp.milp;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
+import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloNumVarType;
+import ilog.concert.IloRange;
 import ilog.opl.IloCplex;
 import ilog.opl.IloOplFactory;
 import skp.folf.FirstOrderLossFunctionScalarProduct;
@@ -97,15 +99,15 @@ public class SKPGenericDistributionLazyCuts {
       cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance);
       cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading      
       //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional); // we must deactivate dynamic search (done automatically)
-      //cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve (done automatically)
-      //cplex.setParam(IloCplex.Param.MIP.Strategy.PresolveNode, 0); // we must deactivate the dual presolve (done automatically)
+      cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve
+      cplex.setParam(IloCplex.Param.MIP.Strategy.PresolveNode, 0); // we must deactivate the dual presolve
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
       cplex.setOut(null);
 
       // Create decision variables
 
       // Object selectors
-      IloNumVar[] X = cplex.numVarArray(this.instance.getItems(), 0, 1, IloNumVarType.Int);
+      IloNumVar[] X = cplex.numVarArray(this.instance.getItems(), 0, 1, IloNumVarType.Bool);
       knapsack = X;
 
       // Expected knapsack weight
@@ -123,20 +125,23 @@ public class SKPGenericDistributionLazyCuts {
       //                                    P-M >= -C
       cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
 
+      // The objective is to maximize the profit minus the expected capacity shortage
+      
+      IloLinearNumExpr objExpr = cplex.linearNumExpr();
+      objExpr.add(cplex.scalProd(instance.getExpectedValues(), X));
+      objExpr.addTerm(-instance.getShortageCost(), P);
+      
+      // incumbent bounding constraint :  objExpr  <=  bestKnown
+      milpSolutionValue = Double.POSITIVE_INFINITY;   // nothing known yet
+      IloRange incumbentBound = cplex.addLe(objExpr, milpSolutionValue);
+      
+      cplex.addMaximize(objExpr);
+      
       //Lazy Cuts
       cplex.use(new LPNLPLazyConstraintCallback());
-
-      // Bound objective function value
-      cplex.add(cplex.le(cplex.sum(
-            cplex.scalProd(this.instance.getExpectedValues(), X),
-            cplex.prod(-instance.getShortageCost(), P)), this.milpSolutionValue));
-
-      // The objective is to maximize the profit minus the expected capacity shortage
-      cplex.addMaximize(cplex.sum(
-            cplex.scalProd(this.instance.getExpectedValues(), X),
-            cplex.prod(-instance.getShortageCost(), P))
-            );
-
+      cplex.use(new LPNLPUserCutCallback());
+      cplex.use(new IncumbentUpdater(incumbentBound));
+      
       boolean status =  cplex.solve();
       if ( status ) {   
          this.milpSolutionValue = cplex.getObjValue();
@@ -196,6 +201,10 @@ public class SKPGenericDistributionLazyCuts {
          LPNLPLazyCut cut = new LPNLPLazyCut(kp, 
                computeLX(instance, kp, linearizationSamples), 
                computeDirectionalDerivative(instance, kp, linearizationSamples));
+         
+         double pVal = getValue(P);
+         if(cut.getKnapsackLoss() - pVal <= tolerance) return;
+         
          IloNumExpr[] sum = new IloNumExpr[kp.length];
          for(int i = 0; i < cut.X.length; i++)
             sum[i] = cplex.sum(-cut.getDirectionalDerivative()[i]*cut.X[i], cplex.prod(cut.getDirectionalDerivative()[i], knapsack[i]));
@@ -203,6 +212,61 @@ public class SKPGenericDistributionLazyCuts {
          add(cplex.ge(P, rhs), IloCplex.CutManagement.UseCutForce);
          lazyCuts++;
       }
+   }
+   
+   /********************************************************************
+    *  Outer-approximation cuts at every LP solution (fractional or not)
+    ********************************************************************/
+   private class LPNLPUserCutCallback extends IloCplex.UserCutCallback {
+       @Override
+       protected void main() throws IloException {
+          double[] kp = this.getValues(knapsack);
+          kp = Arrays.stream(kp).map(v -> Math.abs(v)).toArray();
+          LPNLPLazyCut cut = new LPNLPLazyCut(kp, 
+                computeLX(instance, kp, linearizationSamples), 
+                computeDirectionalDerivative(instance, kp, linearizationSamples));
+          
+          double pVal = getValue(P);
+          if(cut.getKnapsackLoss() - pVal <= tolerance) return;
+          
+          IloNumExpr[] sum = new IloNumExpr[kp.length];
+          for(int i = 0; i < cut.X.length; i++)
+             sum[i] = cplex.sum(-cut.getDirectionalDerivative()[i]*cut.X[i], cplex.prod(cut.getDirectionalDerivative()[i], knapsack[i]));
+          IloNumExpr rhs = cplex.sum(cut.getKnapsackLoss(), cplex.sum(sum));
+          add(cplex.ge(P, rhs), IloCplex.CutManagement.UseCutForce);
+          lazyCuts++;
+       }
+   }
+   
+   /**************************************************************************
+    *  Updates the global best value and tightens the bounding constraint
+    *  whenever CPLEX finds a new incumbent.
+    **************************************************************************/
+   private class IncumbentUpdater extends IloCplex.IncumbentCallback {
+
+       private final IloRange bound;
+
+       IncumbentUpdater(IloRange incumbentBound) {
+           this.bound = incumbentBound;
+       }
+
+       @Override
+       protected void main() throws IloException {
+
+           double newObj = getObjValue();
+
+           /* strict improvement ?  (use a small tolerance to avoid loops) */
+           if (newObj > milpSolutionValue + 1e-9) {
+               milpSolutionValue = newObj;
+
+               /* tighten the right–hand side of  objExpr <= bestInc        */
+               bound.setUB(newObj);
+
+               /* optional: also tell CPLEX to cut off nodes whose best
+                  bound cannot beat the new incumbent                       */
+               // cplex.setParam(IloCplex.DoubleParam.CutOff, newObj - 1e-8);
+           }
+       }
    }
   
    public static void main(String args[]) {
