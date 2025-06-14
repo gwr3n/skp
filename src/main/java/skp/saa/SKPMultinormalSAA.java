@@ -59,7 +59,8 @@ public class SKPMultinormalSAA {
       double[][][] scenarios = new double[M][][]; 
       
       int bestSoFar = 0;
-      double bestObjSoFar = Double.MIN_VALUE;
+      double bestObjSoFar1 = Double.MIN_VALUE;
+      double bestObjSoFar2 = Double.MIN_VALUE;
       for(int m = 0; m < M; m++) {
          try {
             int numberOfScenarios = Nsmall;
@@ -70,8 +71,9 @@ public class SKPMultinormalSAA {
             //System.out.println(GSONUtility.<SKPScenarioBasedSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
             SAAreplications[m] = sskp.solve(simulationRuns);
             barvMN += SAAreplications[m].milpSolutionValue;
-            if(bestObjSoFar < SAAreplications[m].simulatedSolutionValueMean) {
-               bestObjSoFar = SAAreplications[m].simulatedSolutionValueMean;
+            if(bestObjSoFar1 < SAAreplications[m].simulatedSolutionValueMean1) {
+               bestObjSoFar1 = SAAreplications[m].simulatedSolutionValueMean1;
+               bestObjSoFar2 = SAAreplications[m].simulatedSolutionValueMean2;
                bestSoFar = m;
             }
          } catch (IloException e) {
@@ -82,12 +84,12 @@ public class SKPMultinormalSAA {
          //Early stopping
          if(m > 32) { // 32 periods warm up for CLT to apply
             
-            computeOptimalityGaps(SAAreplications, barvMN, scenarios, bestSoFar, bestObjSoFar, m + 1);
+            computeOptimalityGaps(SAAreplications, Nlarge, barvMN, scenarios, bestSoFar, bestObjSoFar2, m + 1);
             
             
             
-            if(this.optGap1/(1e-10 + bestObjSoFar) < tolerance || 
-                  this.optGap2/(1e-10 + bestObjSoFar) < tolerance ||
+            if(this.optGap1/(1e-10 + bestObjSoFar2) < tolerance || 
+                  this.optGap2/(1e-10 + bestObjSoFar2) < tolerance ||
                   System.currentTimeMillis() - startGlobal > time_limitMs) {
                double endGlobal = System.currentTimeMillis();
                double solutionTimeMs = endGlobal - startGlobal;
@@ -95,31 +97,44 @@ public class SKPMultinormalSAA {
                return new SKPMultinormalSAASolvedInstance(
                      this.instance, 
                      SAAreplications[bestSoFar].optimalKnapsack, 
-                     SAAreplications[bestSoFar].simulatedSolutionValueMean, 
+                     SAAreplications[bestSoFar].simulatedSolutionValueMean2, 
                      solutionTimeMs, 
-                     this.optGap1/(1e-10 + bestObjSoFar), 
-                     this.optGap2/(1e-10 + bestObjSoFar), 
+                     this.optGap1/(1e-10 + bestObjSoFar2), 
+                     this.optGap2/(1e-10 + bestObjSoFar2), 
                      Nsmall, Nlarge, m);
             }
          }
       }
-      computeOptimalityGaps(SAAreplications, barvMN, scenarios, bestSoFar, bestObjSoFar, M);
+      computeOptimalityGaps(SAAreplications, Nlarge, barvMN, scenarios, bestSoFar, bestObjSoFar2, M);
       
       double endGlobal = System.currentTimeMillis();
       double solutionTimeMs = endGlobal - startGlobal;
       
-      return new SKPMultinormalSAASolvedInstance(this.instance, SAAreplications[bestSoFar].optimalKnapsack, SAAreplications[bestSoFar].simulatedSolutionValueMean, solutionTimeMs, this.optGap1, this.optGap2, Nsmall, Nlarge, M);
+      return new SKPMultinormalSAASolvedInstance(
+            this.instance, 
+            SAAreplications[bestSoFar].optimalKnapsack, 
+            SAAreplications[bestSoFar].simulatedSolutionValueMean2, 
+            solutionTimeMs, 
+            this.optGap1/(1e-10 + bestObjSoFar2), 
+            this.optGap2/(1e-10 + bestObjSoFar2), 
+            Nsmall, Nlarge, M);
    }
 
-   private void computeOptimalityGaps(SKPMultinormalScenarioBasedSolvedInstance[] SAAreplications, double barvMN,
-         double[][][] scenarios, int bestSoFar, double bestObjSoFar, int W) {
+   private void computeOptimalityGaps(
+         SKPMultinormalScenarioBasedSolvedInstance[] SAAreplications, 
+         int Nlarge,
+         double barvMN,
+         double[][][] scenarios, 
+         int bestSoFar, 
+         double bestObjSoFar, 
+         int W) {
       final double final_barvMN = barvMN/W;
       final int final_bestSoFar = bestSoFar;
       
       // Estimators
       double optGapEstimator1 = bestObjSoFar - final_barvMN;
       double barvMNVariance = 1.0/(W*(W-1))*Arrays.stream(SAAreplications).limit(W).mapToDouble(r -> Math.pow(r.milpSolutionValue - final_barvMN, 2)).sum();
-      double optGapEstimator1Variance = SAAreplications[bestSoFar].simulatedSolutionValueVariance + barvMNVariance;
+      double optGapEstimator1Variance = SAAreplications[bestSoFar].simulatedSolutionValueVariance2/Nlarge + barvMNVariance;
       
       double bargMN = IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])).sum()/W;
       double optGapEstimator2 = bargMN - final_barvMN;

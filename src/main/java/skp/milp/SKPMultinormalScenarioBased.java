@@ -84,13 +84,15 @@ public class SKPMultinormalScenarioBased {
       this.solveMILP(model, instance);
       
       SimulateMultinormal sim = new SimulateMultinormal(instance);
-      double[] simulatedSolutionValue = sim.simulateMeanVariance(optimalKnapsack, simulationRuns);
+      double[] simulatedSolutionValue = sim.simulateMeanVariance(optimalKnapsack, simulationRuns, this.randGenerator);
+      double[] simulatedSolutionValue2 = sim.simulateMeanVariance(optimalKnapsack, simulationRuns, this.randGenerator);
       
       SKPMultinormalScenarioBasedSolvedInstance solvedInstance = new SKPMultinormalScenarioBasedSolvedInstance(
             instance,
             optimalKnapsack,
             simulatedSolutionValue[0],
-            simulatedSolutionValue[1],
+            simulatedSolutionValue2[0],
+            simulatedSolutionValue2[1],
             simulationRuns,
             milpSolutionValue,
             milpOptimalityGap,

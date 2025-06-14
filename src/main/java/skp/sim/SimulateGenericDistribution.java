@@ -10,6 +10,7 @@ import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
 
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.rng.RandomStream;
 
 public class SimulateGenericDistribution extends Simulate {
 
@@ -33,12 +34,12 @@ public class SimulateGenericDistribution extends Simulate {
       return knapsackValue;
    }
    
-   public double[] simulateMeanVariance(int[] knapsack, int nbSamples) {
+   public double[] simulateMeanVariance(int[] knapsack, int nbSamples, RandomStream randGenerator) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
          if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
       }
-      double[][] sampleMatrix = sampleWeights(knapsack, nbSamples);
+      double[][] sampleMatrix = sampleWeights(knapsack, nbSamples, randGenerator);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .mapToDouble(row -> instance.getShortageCost()*Math.max(0, Arrays.stream(row)
                                                                                                        .sum() - instance.getCapacity()))
@@ -83,6 +84,27 @@ public class SimulateGenericDistribution extends Simulate {
       case SRS:
       default:
          sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, randGenerator);
+      }
+      return sampleMatrix;
+   }
+   
+   private double[][] sampleWeights(int[] knapsack, int nbSamples, RandomStream rng){
+      Distribution[] weights = this.instance.getWeights();
+      Distribution[] reducedWeights = IntStream.iterate(0, i -> i + 1)
+                                               .limit(weights.length)
+                                               .filter(i -> knapsack[i] == 1)
+                                               .mapToObj(i -> weights[i])
+                                               .toArray(Distribution[]::new);
+      
+      rng.resetNextSubstream();
+      double[][] sampleMatrix;
+      switch(Simulate.samplingStrategy) {
+      case LHS:
+         sampleMatrix = SampleFactory.getNextLHSample(reducedWeights, nbSamples, rng);
+         break;
+      case SRS:
+      default:
+         sampleMatrix = SampleFactory.getNextSimpleRandomSample(reducedWeights, nbSamples, rng);
       }
       return sampleMatrix;
    }

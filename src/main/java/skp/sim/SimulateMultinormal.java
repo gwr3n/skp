@@ -53,12 +53,12 @@ public class SimulateMultinormal extends Simulate {
       return knapsackValue;
    }
    
-   public double[] simulateMeanVariance(int[] knapsack, int nbSamples) {
+   public double[] simulateMeanVariance(int[] knapsack, int nbSamples, RandomStream randGenerator) {
       double knapsackValue = 0;
       for(int i = 0; i < knapsack.length; i++) {
          if(knapsack[i] == 1) knapsackValue += this.instance.getExpectedValues()[i]; 
       }
-      double[][] sampleMatrix = sampleWeights(nbSamples);
+      double[][] sampleMatrix = sampleWeights(nbSamples, randGenerator);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .mapToDouble(row -> instance.getShortageCost()*Math.max(0, IntStream.iterate(0, i -> i + 1)
                                                                                                           .limit(row.length)
@@ -107,7 +107,7 @@ public class SimulateMultinormal extends Simulate {
       double[] mu = this.instance.getWeights().getMean();
       double[][] sigma = this.instance.getWeights().getCovariance();
       
-      rng.resetStartStream();
+      rng.resetNextSubstream();
       NormalGen standardNormal = new NormalGen(rng, 0, 1);
       //MultinormalGen gen = new MultinormalCholeskyGen(standardNormal, mu, sigma);
       MultinormalGen gen = new MultinormalPCAGen(standardNormal, mu, sigma);
