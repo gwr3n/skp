@@ -191,6 +191,7 @@ public class SKPGenericDistributionLazyCuts {
    }
    
    /**
+    * Lazy-constraint callback that closes the linearisation gap at integer solutions.
     * https://rma350.github.io/2012/06/16/from-separation-to-optimization-in-cplex.html
     */
    private class LPNLPLazyConstraintCallback extends IloCplex.LazyConstraintCallback{
@@ -256,7 +257,7 @@ public class SKPGenericDistributionLazyCuts {
            double newObj = getObjValue();
 
            /* strict improvement ?  (use a small tolerance to avoid loops) */
-           if (newObj > milpSolutionValue + 1e-9) {
+           if (newObj > milpSolutionValue + 1e-6) { // Sample as CPLEX absolute MIP tolerance
                milpSolutionValue = newObj;
 
                /* tighten the right–hand side of  objExpr <= bestInc        */
@@ -264,7 +265,7 @@ public class SKPGenericDistributionLazyCuts {
 
                /* optional: also tell CPLEX to cut off nodes whose best
                   bound cannot beat the new incumbent                       */
-               // cplex.setParam(IloCplex.DoubleParam.CutOff, newObj - 1e-8);
+               cplex.setParam(IloCplex.Param.MIP.Tolerances.LowerCutoff, newObj - 1e-8);
            }
        }
    }
