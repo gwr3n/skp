@@ -218,6 +218,7 @@ public class SKPGenericDistributionLazyCuts {
    /********************************************************************
     *  Outer-approximation cuts at every LP solution (fractional or not)
     ********************************************************************/
+   @SuppressWarnings("unused")
    private class LPNLPUserCutCallback extends IloCplex.UserCutCallback {
        @Override
        protected void main() throws IloException {
