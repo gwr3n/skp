@@ -150,7 +150,7 @@ public class SKPMultinormalLazyCuts {
       
       //Lazy Cuts
       cplex.use(new LPNLPLazyConstraintCallback());
-      cplex.use(new LPNLPUserCutCallback());
+      //cplex.use(new LPNLPUserCutCallback());
       cplex.use(new IncumbentUpdater(incumbentBound));
 
       boolean status =  cplex.solve();      
