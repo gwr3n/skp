@@ -226,12 +226,14 @@ public final class SKPMultinormalSAA_LD {
                                         nSim,rng);
     }
 
-    private double varianceV(double vBar){
-        double s=0;
-        for(var r:reps)
-            s+=(r.milpSolutionValue-vBar)*(r.milpSolutionValue-vBar);
-        return s/(reps.size()*(reps.size()-1));
-    }
+    private double varianceV(double vBar) {
+       double s = 0.0;
+       for (int i = 0; i < reps.size(); i++) {
+           SKPMultinormalScenarioBasedSolvedInstance r = reps.get(i);
+           s += (r.milpSolutionValue - vBar) * (r.milpSolutionValue - vBar);
+       }
+       return s / (reps.size() * (reps.size() - 1));
+   }
 
     private double sampleAverage(int[] k,double[][] scen){
         double base=fixedValue(k);

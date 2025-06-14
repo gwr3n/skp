@@ -231,11 +231,13 @@ public final class SKPGenericDistributionSAA_LD {
     }
 
     private double varianceV(double vBar) {
-        double s=0;
-        for (var r:reps)
-            s += (r.milpSolutionValue-vBar)*(r.milpSolutionValue-vBar);
-        return s/(reps.size()*(reps.size()-1));
-    }
+       double s = 0.0;
+       for (int i = 0; i < reps.size(); i++) {
+           SKPGenericDistributionScenarioBasedSolvedInstance r = reps.get(i);
+           s += (r.milpSolutionValue - vBar) * (r.milpSolutionValue - vBar);
+       }
+       return s / (reps.size() * (reps.size() - 1));
+   }
 
     private double computeSampleAverage(int[] knap, double[][] scen) {
         double val=0;
