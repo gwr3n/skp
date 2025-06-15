@@ -29,12 +29,18 @@ import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
 import skp.utilities.gson.GSONUtility;
-
+import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.LognormalDist;
 import umontreal.ssj.probdist.UniformDist;
 import umontreal.ssj.randvar.RandomVariateGen;
 
 public class SKPGenericDistributionBatch extends SKPBatch {
+   
+   enum Dist {
+      LOGNORMAL,
+      GAMMA
+   }
    
    enum SolutionMethod {
       ITERATIVE_CUTS,
@@ -47,6 +53,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       
       int[] instanceSize = {25, 50, 100, 500};
       double[] coeff_of_var  = {0.1, 0.2};
+      Dist distribution = Dist.GAMMA;
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
             INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
@@ -68,7 +75,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                }
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/generic_distribution_instances.json";
-               SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
+               SKPGenericDistribution[] instances = generateInstances(batchFileName, distribution, t, size, cv);
                
                int linearizationSamples = 1000;
                int simulationRuns = 10000;   
@@ -136,37 +143,12 @@ public class SKPGenericDistributionBatch extends SKPBatch {
     * Generate a batch of instances
     */
 
-   protected static SKPGenericDistribution[] generateInstances(String batchFileName, INSTANCE_TYPE type, int instanceSize, double cv) {
+   protected static SKPGenericDistribution[] generateInstances(String batchFileName, Dist dist, INSTANCE_TYPE type, int instanceSize, double cv) {
       int H = 10;
       int R = 100;
       double shortageCost = 10;
       
       switch(type) {
-         /*case GAMMA: {
-            int instances = 10;
-            int instanceSize = 10;
-            
-            Distribution expectedValue = new UniformDist(2.75,275);
-            Distribution expectedWeight = new UniformDist(15,70);
-            double coefficientOfVariation = 0.2;
-            DiscreteDistributionInt capacity = new UniformIntDist(100,200);
-            Distribution shortageCost = new UniformDist(2,10);
-            
-            SKPGenericDistribution[] batch = new SKPGenericDistribution[instances];
-            
-            randGenerator.setSeed(seed);
-            randGenerator.resetStartStream();
-            batch = IntStream.iterate(0, i -> i + 1)
-                             .limit(instances)
-                             .mapToObj(i -> new SKPGenericDistribution(
-                                                                (new RandomVariateGen(randGenerator, expectedValue)).nextArrayOfDouble(instanceSize),
-                                                                Arrays.stream((new RandomVariateGen(randGenerator, expectedWeight)).nextArrayOfDouble(instanceSize)).mapToObj(w -> new GammaDist(1/Math.pow(coefficientOfVariation,2), 1/(w*Math.pow(coefficientOfVariation,2)))).toArray(GammaDist[]::new),
-                                                                (new RandomVariateGenInt(randGenerator, capacity)).nextInt(),
-                                                                (new RandomVariateGen(randGenerator, shortageCost)).nextDouble()))
-                             .toArray(SKPGenericDistribution[]::new);
-            
-            return batch;
-         }*/
          case P05_UNCORRELATED: {
             
             SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
@@ -183,7 +165,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                           .mapToObj(w -> {
+                                 switch(dist) {
+                                    case GAMMA:
+                                       double alpha = 1/Math.pow(cv,2);
+                                       double lambda = 1/(w*Math.pow(cv,2));
+                                       return new GammaDist(alpha, lambda);
+                                    case LOGNORMAL:
+                                    default:
+                                       double sigma2 = Math.log(1 + cv * cv);
+                                       double sigma = Math.sqrt(sigma2);
+                                       double mu = Math.log(w) - 0.5 * sigma2;
+                                       return new LognormalDist(mu, sigma);
+                                 }
+                              })
+                           .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -207,7 +204,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -230,7 +242,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -253,7 +280,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -276,7 +318,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -299,7 +356,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -322,7 +394,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -346,7 +433,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );
@@ -369,7 +471,22 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
                batch[i] = new SKPGenericDistribution(
                      expectedValues,
-                     Arrays.stream(expectedWeights).mapToObj(w -> new GammaDist(1/Math.pow(cv,2), 1/(w*Math.pow(cv,2)))).toArray(GammaDist[]::new),
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
                      capacity,
                      shortageCost
                      );

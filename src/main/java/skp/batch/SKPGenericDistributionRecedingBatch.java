@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import ilog.concert.IloException;
-
 import skp.instance.SKPGenericDistribution;
 import skp.sim.SimulateGenericDistributionReceding;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
@@ -19,6 +18,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
       
       int[] instanceSize = {25};
       double[] coeff_of_var  = {0.1, 0.2};
+      Dist distribution = Dist.GAMMA;
       INSTANCE_TYPE[] instanceType = {
             INSTANCE_TYPE.P05_UNCORRELATED,
             INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
@@ -40,7 +40,7 @@ public class SKPGenericDistributionRecedingBatch extends SKPGenericDistributionB
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/generic_distribution_instances.json";
                
-               SKPGenericDistribution[] instances = generateInstances(batchFileName, t, size, cv);
+               SKPGenericDistribution[] instances = generateInstances(batchFileName, distribution, t, size, cv);
                
                int linearizationSamples = 500;
                int simulationRunsRH = 100; 
