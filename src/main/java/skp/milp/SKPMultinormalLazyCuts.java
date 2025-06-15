@@ -192,7 +192,39 @@ public class SKPMultinormalLazyCuts {
                exploredNodes
                );     
       } else {
-         System.out.println("No solution!");
+         System.out.println("**** No solution! ****");
+         this.milpSolutionValue = Double.NaN;
+         this.milpOptimalityGap = Double.NaN;
+         double endGlobal = System.currentTimeMillis();
+         this.cplexSolutionTimeMs = endGlobal - startGlobal;
+         this.simplexIterations += cplex.getNiterations();
+         this.exploredNodes += cplex.getNnodes();
+
+         this.optimalKnapsack = new int[instance.getItems()];
+         //DEBUG
+         //System.out.println("X: "+Arrays.toString(this.optimalKnapsack));
+         //System.out.println("M: "+cplex.getValue(M));
+         //System.out.println("P: "+cplex.getValue(P));
+
+         this.milpMaxLinearizationError = 0; // cuts are tight
+
+         double simulatedSolutionValue = Double.NaN;
+         double simulatedLinearizationError = Double.NaN;
+
+         solvedInstance = new SKPMultinormalCutsSolvedInstance(
+               instance,
+               this.optimalKnapsack,
+               simulatedSolutionValue,
+               this.simulationRuns,
+               this.getMILPSolutionValue(),
+               this.getMILPOptimalityGap(),
+               this.lazyCuts,
+               milpMaxLinearizationError,
+               simulatedLinearizationError,
+               this.cplexSolutionTimeMs,
+               simplexIterations,
+               exploredNodes
+               );
       } 
       cplex.end();
       System.gc();
