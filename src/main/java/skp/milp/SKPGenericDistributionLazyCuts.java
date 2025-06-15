@@ -16,6 +16,7 @@ import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 
 public class SKPGenericDistributionLazyCuts {
    
@@ -31,6 +32,9 @@ public class SKPGenericDistributionLazyCuts {
    
    SKPGenericDistribution instance;
    
+   boolean normalApproximation = false;
+   SKPGenericDistribution normalInstance;
+   
    double cplexSolutionTimeMs = 0;
    int simplexIterations = 0;
    int exploredNodes = 0;
@@ -41,8 +45,29 @@ public class SKPGenericDistributionLazyCuts {
    
    public SKPGenericDistributionLazyCuts(SKPGenericDistribution instance, int linearizationSamples, int simulationRuns){
       this.instance = instance;
+      this.generateNormalInstance();
       this.linearizationSamples = linearizationSamples;
       this.simulationRuns = simulationRuns;
+   }
+   
+   public SKPGenericDistributionLazyCuts(SKPGenericDistribution instance, int linearizationSamples, int simulationRuns, boolean normalApproximation){
+      this.instance = instance;
+      this.generateNormalInstance();
+      this.normalApproximation = normalApproximation;
+      this.linearizationSamples = linearizationSamples;
+      this.simulationRuns = simulationRuns;
+   }
+   
+   private void generateNormalInstance() {
+      NormalDist[] normalisedWeights = new NormalDist[this.instance.getWeights().length];
+      for(int i = 0; i < normalisedWeights.length; i++) {
+         normalisedWeights[i] = new NormalDist(this.instance.getWeights()[i].getMean(),this.instance.getWeights()[i].getStandardDeviation());
+      }
+      this.normalInstance = new SKPGenericDistribution(
+            this.instance.getExpectedValues(), 
+            normalisedWeights, 
+            this.instance.getCapacity(), 
+            this.instance.getShortageCost());
    }
    
    public int[] getOptimalKnapsack() {
@@ -200,8 +225,8 @@ public class SKPGenericDistributionLazyCuts {
          double[] kp = this.getValues(knapsack);
          kp = Arrays.stream(kp).map(v -> Math.abs(v)).toArray();
          LPNLPLazyCut cut = new LPNLPLazyCut(kp, 
-               computeLX(instance, kp, linearizationSamples), 
-               computeDirectionalDerivative(instance, kp, linearizationSamples));
+               computeLX(normalApproximation ? normalInstance : instance, kp, linearizationSamples), 
+               computeDirectionalDerivative(normalApproximation ? normalInstance : instance, kp, linearizationSamples));
          
          double pVal = getValue(P);
          if(cut.getKnapsackLoss() - pVal <= tolerance) return;
