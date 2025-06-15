@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 import umontreal.ssj.probdist.BinomialDist;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.LognormalDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -95,8 +96,16 @@ public class SKPGenericDistribution extends SKP{
       @SuppressWarnings("unused")
       Distribution[] weights = IntStream.iterate(0, i -> i + 1)
                                         .limit(objects)
-                                        .mapToObj(i -> new NormalDist(100*rnd.nextDouble(),10*rnd.nextDouble()))
-                                        .toArray(NormalDist[]::new);
+                                        .mapToObj(i -> {
+                                                    double cv = 0.1;
+                                                    double w = rnd.nextDouble() * 100;
+                                                    double sigma2 = Math.log(1 + cv * cv);
+                                                    double sigma = Math.sqrt(sigma2);
+                                                    double mu = Math.log(w) - 0.5 * sigma2;
+                                                    return new LognormalDist(mu, sigma);
+                                                 }
+                                              )
+                                        .toArray(LognormalDist[]::new);
       int capacity = 20*50;
       int shortageCost = 10;
       return new SKPGenericDistribution(expectedValues, weights, capacity, shortageCost);
