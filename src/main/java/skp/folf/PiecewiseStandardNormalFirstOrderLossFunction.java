@@ -1,19 +1,18 @@
 package skp.folf;
 
-import java.util.Arrays;
-
-import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.NormalDist;
-
 public final class PiecewiseStandardNormalFirstOrderLossFunction {
    
-   private static int linearizationSamples = 100000;
+   private static int linearizationSamples = 0;
    
    public static int getLinearizationSamples() {
       return linearizationSamples;
    }
    
    public static double getError(int partitions){
+      return JensenMinimaxPartitioner.compute(partitions+1).error;
+   }
+   
+   /*public static double getError(int partitions){
       if(partitions <= 10) {
          double[] errors = {
             0.3989422804014327,
@@ -37,9 +36,13 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
          double error = pwfolf.getMaxApproximationError(probabilityMasses, linearizationSamples);
          return error;
       }
-   }
+   }*/
    
    public static double[] getProbabilities(int partitions){
+      return JensenMinimaxPartitioner.compute(partitions+1).p;
+   }
+   
+   /*public static double[] getProbabilities(int partitions){
       switch(partitions){
       case 1:
          return new double[] {1};
@@ -68,9 +71,13 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
             return probabilities;
          }
       }
-   }
+   }*/
    
    public static double[] getMeans(int partitions){
+      return JensenMinimaxPartitioner.compute(partitions+1).expect;
+   }
+   
+   /*public static double[] getMeans(int partitions){
       switch(partitions){
       case 1:
          return new double[] {0};
@@ -103,5 +110,5 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
             return means;
          }
       }
-   }
+   }*/
 }
