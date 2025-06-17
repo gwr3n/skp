@@ -11,6 +11,7 @@ import skp.instance.KP;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.KPMILP;
 import skp.milp.SKPGenericDistributionCuts;
+import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.sim.instance.SKPGenericDistributionRecedingSolvedInstance;
 import skp.utilities.gson.GSONUtility;
 import skp.utilities.probability.SampleFactory;
@@ -74,10 +75,10 @@ public class SimulateGenericDistributionReceding extends Simulate {
 
       SKPGenericDistribution reducedInstance = new SKPGenericDistribution(shortExpValues, shortWeight, remainingCapacity, instance.getShortageCost());
 
-      SKPGenericDistributionCuts milp = null;
+      SKPGenericDistributionLazyCuts milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPGenericDistributionCuts(reducedInstance, linearisationSamples, maxCuts, simulationRuns);
+         milp = new SKPGenericDistributionLazyCuts(reducedInstance, linearisationSamples, simulationRuns);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
