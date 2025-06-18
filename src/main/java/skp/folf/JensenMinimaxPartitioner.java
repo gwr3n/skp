@@ -1,16 +1,18 @@
 /******************************************************************
- * JensenMinimaxPartitioner                                      *
- * -------------------------------------------------------------- *
- * Builds an optimal (minimax) Jensen lower bound with a given    *
- * number of segments for the complementary first–order loss      *
- * function of a standard Normal random variable Z~N(0,1).        *
- *                                                                *
- * References: Rossi et al., Applied Mathematics & Computation    *
- * 231 (2014) 489-502  — Sec. 4.2.1                               *
- *                                                                *
- * Requires                                                       *
- *   – SSJ  (umontreal.ssj)                                       *
- *   – Apache Commons-Math 3.x                                    *
+ * JensenMinimaxPartitioner
+ * --------------------------------------------------------------
+ * Builds an optimal (minimax) Jensen lower bound with a given
+ * number of segments for the complementary first–order loss
+ * function of a standard Normal random variable Z~N(0,1).
+ *
+ * References:
+ *   R. Rossi, S. A. Tarim, B. Hnich, S. Prestwich,
+ *   "Piecewise linear lower and upper bounds for the standard normal first order loss function",
+ *   Applied Mathematics & Computation 231 (2014) 489-502 — Sec. 4.2.1
+ *
+ * Requires:
+ *   – SSJ  (umontreal.ssj)
+ *   – Apache Commons-Math 3.x
  ******************************************************************/
 
 package skp.folf;
@@ -23,12 +25,24 @@ import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer;
 import umontreal.ssj.probdist.NormalDist;
 
+/**
+ * Computes the minimax Jensen lower bound for the complementary first-order loss function
+ * of a standard normal random variable, using a specified number of segments.
+ * The algorithm follows the approach in Rossi et al. (2014), Sec. 4.2.1.
+ */
 public final class JensenMinimaxPartitioner {
 
+    /**
+     * Result container for the minimax partitioning.
+     * Holds the segment probabilities, conditional means, and the maximum error.
+     */
     public static final class Result {
-        public final double[] p;       
-        public final double[] expect;  
-        public final double error;   
+        /** Segment probabilities \( p_i \) */
+        public final double[] p;
+        /** Conditional means \( E[Z|\Omega_i] \) */
+        public final double[] expect;
+        /** Maximum error of the Jensen lower bound */
+        public final double error;
 
         private Result(double[] p, double[] e, double err) {
             this.p = p;
@@ -37,37 +51,52 @@ public final class JensenMinimaxPartitioner {
         }
     }
 
+    /**
+     * Converts a vector of log-probabilities to breakpoints (cumulative log-sums).
+     * This is used to ensure positivity and monotonicity of the breakpoints.
+     * See Rossi et al. (2014), Eq. (19).
+     */
     private static double[] toBreakpoints(double[] y) {
         double[] bp = new double[y.length];
         double cum = Math.log(0); // Start from log(0) == negative infinity
         for (int i = 0; i < y.length; ++i) {
-            cum = logSumExp(cum, y[i]); // Add logs directly
+            cum = logSumExp(cum, y[i]); // Numerically stable log-sum
             bp[i] = cum;
         }
         return bp;
     }
 
+    /**
+     * Numerically stable computation of log(exp(loga) + exp(logb)).
+     * Prevents underflow/overflow in log-space.
+     */
     private static double logSumExp(double loga, double logb) {
-        // Computes log(exp(loga) + exp(logb)) in a numerically stable way
         if (Double.isInfinite(loga)) return logb;
         if (Double.isInfinite(logb)) return loga;
         double max = Math.max(loga, logb);
         return max + Math.log(Math.exp(loga - max) + Math.exp(logb - max));
     }
 
+    /**
+     * Computes the minimax Jensen lower bound partition for a given number of segments.
+     * @param segments Number of segments (must be >= 2)
+     * @return Result object containing probabilities, means, and error
+     */
     public static Result compute(int segments) {
         if (segments < 2)
             throw new IllegalArgumentException("segments must be ≥ 2");
 
-        final int N = segments - 1;
+        final int N = segments - 1; // Number of intervals
 
+        // Special case: N=1 (2 segments), trivial partition
         if (N == 1) {
             double[] p = { 1.0 };
             double[] Ei = { 0.0 };
-            double err = 1.0 / Math.sqrt(2.0 * Math.PI);
+            double err = 1.0 / Math.sqrt(2.0 * Math.PI); // Standard normal density at 0
             return new Result(p, Ei, err);
         }
 
+        // Special case: N=2 (3 segments), explicit solution
         if (N == 2) {
             double[] p = { 0.5, 0.5 };
             double phi0 = NormalDist.density01(0.0);
@@ -83,19 +112,24 @@ public final class JensenMinimaxPartitioner {
             return new Result(p, E, err);
         }
 
-        final int mPos = (N - 1) / 2;
-        final boolean addZero = (N % 2 == 0);
-        final int dim = mPos;
+        // For N > 2, use optimization as in Rossi et al. (2014), Sec. 4.2.1
+        final int mPos = (N - 1) / 2; // Number of positive breakpoints
+        final boolean addZero = (N % 2 == 0); // Even N: add zero breakpoint
+        final int dim = mPos; // Optimization dimension
 
+        // Objective function: minimize the squared difference of errors (see Eq. (21))
         Objective fObj = new Objective(N, mPos, addZero);
 
+        // Initial guess: log(0.5 + j) for each positive breakpoint
         double[] y0 = new double[dim];
         for (int j = 0; j < dim; ++j)
-            y0[j] = Math.log(0.5 + j); // Start with log probabilities
+            y0[j] = Math.log(0.5 + j);
 
+        // Set up the Nelder-Mead simplex optimizer (derivative-free)
         SimplexOptimizer opt = new SimplexOptimizer(
                 new SimplePointChecker<>(1e-12, 1e-12));
 
+        // Run the optimization to find the best breakpoints
         PointValuePair sol = opt.optimize(
                 new MaxIter(100000), new MaxEval(100000),
                 new ObjectiveFunction(fObj),
@@ -104,15 +138,20 @@ public final class JensenMinimaxPartitioner {
                 new NelderMeadSimplex(dim)
         );
 
+        // Convert optimized log-probabilities to breakpoints
         double[] bpPos = toBreakpoints(sol.getPoint());
 
+        // Build the full set of breakpoints (symmetric about zero)
         int B = 2 * mPos + (addZero ? 1 : 0);
         double[] bInt = new double[B];
-        for (int j = 0; j < mPos; ++j) bInt[j] = -bpPos[mPos - 1 - j];
-        if (addZero) bInt[mPos] = 0.0;
+        for (int j = 0; j < mPos; ++j)
+           bInt[j] = -bpPos[mPos - 1 - j];
+        if (addZero)
+           bInt[mPos] = 0.0;
         for (int j = 0; j < mPos; ++j)
             bInt[mPos + (addZero ? 1 : 0) + j] = bpPos[j];
 
+        // Compute interval bounds a[i], b[i] for each segment
         double[] a = new double[N], b = new double[N];
         a[0] = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < N - 1; ++i) {
@@ -121,6 +160,7 @@ public final class JensenMinimaxPartitioner {
         }
         b[N - 1] = Double.POSITIVE_INFINITY;
 
+        // Compute probabilities, conditional means, and error for each segment
         double[] p = new double[N], Ei = new double[N];
         double err = 0.0;
         for (int i = 0; i < N; ++i) {
@@ -129,17 +169,23 @@ public final class JensenMinimaxPartitioner {
             double phi_ai = (i == 0) ? 0.0 : NormalDist.density01(a[i]);
             double phi_bi = (i == N - 1) ? 0.0 : NormalDist.density01(b[i]);
 
-            p[i] = Phi_bi - Phi_ai;
-            Ei[i] = (phi_ai - phi_bi) / p[i];
+            p[i] = Phi_bi - Phi_ai; // Probability of segment i
+            Ei[i] = (phi_ai - phi_bi) / p[i]; // Conditional mean in segment i
 
+            // Compute the error for this segment (see Eq. (20))
             double loss = NormalDist.density01(Ei[i]) + Ei[i] * NormalDist.cdf01(Ei[i]);
             double lb = Phi_bi * Ei[i] + phi_bi;
             double ei = loss - lb;
-            if (ei > err) err = ei;
+            if (ei > err) err = ei; // Track the maximum error
         }
         return new Result(p, Ei, err);
     }
 
+    /**
+     * Objective function for the minimax optimization.
+     * The goal is to minimize the squared difference of errors across segments,
+     * enforcing the minimax property (see Rossi et al. (2014), Eq. (21)).
+     */
     private static final class Objective implements MultivariateFunction {
         private final int N, mPos;
         private final boolean addZero;
@@ -152,14 +198,18 @@ public final class JensenMinimaxPartitioner {
 
         @Override
         public double value(double[] y) {
+            // Convert log-probabilities to breakpoints
             double[] bpPos = toBreakpoints(y);
             int B = 2 * mPos + (addZero ? 1 : 0);
             double[] bInt = new double[B];
-            for (int j = 0; j < mPos; ++j) bInt[j] = -bpPos[mPos - 1 - j];
-            if (addZero) bInt[mPos] = 0.0;
+            for (int j = 0; j < mPos; ++j)
+               bInt[j] = -bpPos[mPos - 1 - j];
+            if (addZero)
+               bInt[mPos] = 0.0;
             for (int j = 0; j < mPos; ++j)
                 bInt[mPos + (addZero ? 1 : 0) + j] = bpPos[j];
 
+            // Compute interval bounds
             double[] a = new double[N], b = new double[N], e = new double[N];
             a[0] = Double.NEGATIVE_INFINITY;
             for (int i = 0; i < N - 1; ++i) {
@@ -168,6 +218,7 @@ public final class JensenMinimaxPartitioner {
             }
             b[N - 1] = Double.POSITIVE_INFINITY;
 
+            // Compute error for each segment
             for (int i = 0; i < N; ++i) {
                 double Phi_ai = (i == 0) ? 0 : NormalDist.cdf01(a[i]);
                 double Phi_bi = (i == N - 1) ? 1 : NormalDist.cdf01(b[i]);
@@ -179,6 +230,7 @@ public final class JensenMinimaxPartitioner {
                 double lb = Phi_bi * E + phi_bi;
                 e[i] = loss - lb;
             }
+            // Objective: sum of squared differences from the first segment's error
             double obj = 0;
             for (int i = 1; i < N; ++i) {
                 double d = e[i] - e[0];
@@ -188,19 +240,12 @@ public final class JensenMinimaxPartitioner {
         }
     }
 
+    /**
+     * Self-test routine: checks computed results against reference values from Rossi et al. (2014).
+     * Prints results and verifies accuracy.
+     */
     public static void selfTest() {
-       final double[] REF_ERRORS = {
-           0.3989422804014327,
-           0.1206560496714961,
-           0.05784405029198253,
-           0.033905164962384104,
-           0.022270929512393414,
-           0.01574607463566398,
-           0.011721769576577057,
-           0.00906528789647753,
-           0.007219916411227892,
-           0.005885974956458359
-       };
+       final double[] REF_ERRORS = getErrors();
        final double EPS = 1e-9;
        System.out.println("----- Jensen minimax self-test -----");
 
@@ -253,6 +298,9 @@ public final class JensenMinimaxPartitioner {
        System.out.println("All tests passed.");
    }
 
+   /**
+    * Utility: formats a double array as a string for output.
+    */
    private static String arrayToString(double[] array) {
        StringBuilder sb = new StringBuilder();
        sb.append("[");
@@ -266,16 +314,39 @@ public final class JensenMinimaxPartitioner {
        return sb.toString();
    }
 
-
    //----------------------------------------------------------------------------
    // Reference Getters
    //----------------------------------------------------------------------------
+   
+   /**
+    * Returns reference errors for the given number of partitions,
+    * as reported in Rossi et al. (2014), Table 2.
+    */
+   public static double[] getErrors() {
+      return new double[] {
+            0.3989422804014327,
+            0.1206560496714961,
+            0.05784405029198253,
+            0.033905164962384104,
+            0.022270929512393414,
+            0.01574607463566398,
+            0.011721769576577057,
+            0.00906528789647753,
+            0.007219916411227892,
+            0.005885974956458359
+        };
+   }
+   
+   /**
+    * Returns reference conditional means for the given number of partitions,
+    * as reported in Rossi et al. (2014), Table 2.
+    */
    public static double[] getMeans(int partitions) {
        switch (partitions) {
            case 1:
                return new double[] {0};
            case 2:
-               return new double[] {-0.7978845608028654, 0.7978845608028654};  
+               return new double[] {-0.7978845608028654, 0.7978845608028654};
            case 3:
                return new double[] {-1.1850544278068644, 0, 1.1850544278068644};
            case 4:
@@ -297,12 +368,16 @@ public final class JensenMinimaxPartitioner {
        }
    }
 
+   /**
+    * Returns reference probabilities for the given number of partitions,
+    * as reported in Rossi et al. (2014), Table 2.
+    */
    public static double[] getProbabilities(int partitions) {
        switch (partitions) {
            case 1:
                return new double[] {1};
            case 2:
-               return new double[] {0.5, 0.5};  
+               return new double[] {0.5, 0.5};
            case 3:
                return new double[] {0.28783338731597996, 0.4243332253680401, 0.28783338731597996};
            case 4:
@@ -324,6 +399,11 @@ public final class JensenMinimaxPartitioner {
        }
    }
 
+    /**
+     * Main entry point. If no arguments, runs self-test.
+     * If an integer argument is given, computes and prints the optimal Jensen lower bound
+     * for that number of segments.
+     */
     public static void main(String[] args) {
         if (args.length == 0) {
             selfTest();
