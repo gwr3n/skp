@@ -9,8 +9,7 @@ import ilog.opl.IloOplDataHandler;
 import ilog.opl.IloOplDataSource;
 import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplModel;
-
-import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.folf.PiecewisePoissonFirstOrderLossFunction;
 import skp.instance.SKPPoisson;
 import skp.milp.instance.SKPPoissonMILPSolvedInstance;
 import skp.sim.SimulatePoisson;
@@ -48,7 +47,7 @@ public class SKPPoissonMILP extends SKPMILP{
    }
    
    void computeMILPMaxLinearizationError(IloOplModel opl, IloCplex cplex) throws IloException {
-      double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
+      double[] errors = PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
       int expKnapWeight = (int)Math.round(cplex.getValue(opl.getElement("M").asNumVar()));
       // If expKnapWeight >= errors.length, then errors[errors.length - 1] applies (Edmundson-Madansky)
       this.milpMaxLinearizationError = instance.getShortageCost()*errors[Math.min(expKnapWeight, errors.length - 1)];
@@ -125,7 +124,7 @@ public class SKPPoissonMILP extends SKPMILP{
          handler.addIntItem(partitions);
          handler.endElement();
          
-         int maxWeight = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFMaxWeight(instance.getCapacity(), probabilityMasses, linearizationSamples);
+         int maxWeight = PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFMaxWeight(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("maxWeight");
          handler.addIntItem(maxWeight);
          handler.endElement();
@@ -137,7 +136,7 @@ public class SKPPoissonMILP extends SKPMILP{
          handler.endArray();
          handler.endElement();
 
-         double[][] means = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(instance.getCapacity(), probabilityMasses, linearizationSamples);
+         double[][] means = PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("means");
          handler.startArray();
          for (int i = 0 ; i < maxWeight + 1; i++){
@@ -150,7 +149,7 @@ public class SKPPoissonMILP extends SKPMILP{
          handler.endArray();
          handler.endElement();
 
-         double[] errors = PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
+         double[] errors = PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(instance.getCapacity(), probabilityMasses, linearizationSamples);
          handler.startElement("error");
          handler.startArray();
          for (int j = 0 ; j<errors.length ; j++)

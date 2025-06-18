@@ -27,7 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-import skp.folf.PiecewiseFirstOrderLossFunction;
+import skp.folf.PiecewisePoissonFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.instance.SKPPoisson;
 import skp.milp.SKPPoissonMILP;
@@ -565,8 +565,8 @@ public class SKPPoissonBatch extends SKPBatch {
                         "c = "+s.getShortageCost()+";\n\n"+
                         "nbpartitions = "+partitions+";\n"+
                         "prob = "+Arrays.toString(probabilityMasses)+";\n"+
-                        "means = "+Arrays.deepToString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(s.getCapacity(), probabilityMasses, linearizationSamples))+";\n"+
-                        "error = "+Arrays.toString(PiecewiseFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(s.getCapacity(), probabilityMasses, linearizationSamples))+";";
+                        "means = "+Arrays.deepToString(PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFConditionalExpectations(s.getCapacity(), probabilityMasses, linearizationSamples))+";\n"+
+                        "error = "+Arrays.toString(PiecewisePoissonFirstOrderLossFunction.poissonKnapsackPiecewiseFOLFApproximationErrors(s.getCapacity(), probabilityMasses, linearizationSamples))+";";
 
             ZipEntry e = new ZipEntry(s.getInstanceID()+".dat");
             out.putNextEntry(e);
