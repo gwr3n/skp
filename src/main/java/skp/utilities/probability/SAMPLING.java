@@ -1,5 +1,6 @@
 package skp.utilities.probability;
 
 public enum SAMPLING {
-   SRS, LHS
+   SRS, // Simple Random Sampling
+   LHS  // Latin Hypercube Sampling
 }

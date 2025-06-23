@@ -8,6 +8,15 @@ import org.apache.commons.math3.linear.RealMatrix;
 
 import umontreal.ssj.probdist.NormalDist;
 
+/**
+ * Multivariate Gaussian distribution.
+ * 
+ * This class implements a multivariate Gaussian distribution with methods to compute
+ * the cumulative distribution function (CDF) using a Monte Carlo method based on
+ * the algorithm from Alan Genz (1992).
+ * 
+ * The covariance matrix is expected to be positive definite.
+ */
 public class MultivariateGaussianDistribution {
    
    
@@ -23,11 +32,11 @@ public class MultivariateGaussianDistribution {
    /** The Cholesky decomposition of covariance matrix. */
    private RealMatrix sigmaL;
    
-   /** The number of parameters. */
-   private final int length;
+   /** The number of free parameters. */
+   private final int freeParameters;
    
    /**
-    * Constructor.
+    * Constructor for a multivariate Gaussian distribution.
     *
     * @param mean mean vector.
     * @param cov covariance matrix.
@@ -41,13 +50,13 @@ public class MultivariateGaussianDistribution {
        sigma = cov;
 
        diagonal = false;
-       length = mu.length + mu.length * (mu.length + 1) / 2;
+       freeParameters = mu.length + mu.length * (mu.length + 1) / 2;
 
        init();
    }
    
    /**
-    * Initialize the object.
+    * Initializes the distribution by computing the Cholesky decomposition
     */
    private void init() {
        dim = mu.length;
@@ -56,14 +65,29 @@ public class MultivariateGaussianDistribution {
        sigmaL = cholesky.getL();
    }
    
+   /**
+    * Returns the number of free parameters (or degrees of freedom)  of the distribution.
+    *
+    * @return the number of free parameters.
+    */
    public int length() {
-       return length;
+       return freeParameters;
    }
 
+   /**
+    * Returns the mean vector of the distribution.
+    *
+    * @return the mean vector.
+    */
    public double[] mean() {
        return mu;
    }
 
+   /**
+    * Returns the covariance matrix of the distribution.
+    *
+    * @return the covariance matrix.
+    */
    public RealMatrix cov() {
        return sigma;
    }
