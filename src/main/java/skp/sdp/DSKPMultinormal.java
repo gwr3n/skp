@@ -54,7 +54,7 @@ public class DSKPMultinormal{
       /**
        * This function returns the set of actions associated with a given state
        */
-      this.actionGenerator = _ ->{
+      this.actionGenerator = state ->{
          return DoubleStream.iterate(0, num -> num + 1)
                             .limit(2)
                             .toArray();
