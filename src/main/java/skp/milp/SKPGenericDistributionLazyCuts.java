@@ -123,7 +123,7 @@ public class SKPGenericDistributionLazyCuts {
       cplex.setParam(IloCplex.Param.TimeLimit, time_limit);
       cplex.setParam(IloCplex.Param.MIP.Tolerances.MIPGap, tolerance);
       cplex.setParam(IloCplex.Param.Threads, 1); // Lazy cuts do not allow multithreading      
-      //cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional); // we must deactivate dynamic search (done automatically)
+      cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional); // we must deactivate dynamic search (done automatically)
       cplex.setParam(IloCplex.Param.Preprocessing.Presolve, false); // we must deactivate the dual presolve
       cplex.setParam(IloCplex.Param.MIP.Strategy.PresolveNode, 0); // we must deactivate the dual presolve
       cplex.setParam(IloCplex.Param.MIP.Display, 2);
