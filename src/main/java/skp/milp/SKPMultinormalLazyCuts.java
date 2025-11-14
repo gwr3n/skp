@@ -11,6 +11,7 @@ import ilog.concert.IloRange;
 import ilog.opl.IloCplex;
 import ilog.opl.IloOplFactory;
 import skp.folf.FirstOrderLossFunctionScalarProductMVN;
+import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.sim.SimulateMultinormal;
@@ -95,7 +96,8 @@ public class SKPMultinormalLazyCuts {
    
    private static long time_limit = 60*10; //10 minutes
    private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
-
+   private boolean warm_start = false;
+   
    public SKPMultinormalCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
       this.milpSolutionValue = Double.MAX_VALUE;
@@ -135,6 +137,48 @@ public class SKPMultinormalLazyCuts {
       // Expected capacity shortage (loss): P >= - (C-M)
       //                                    P-M >= -C
       cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
+      
+      
+      
+      // ************** Warm start (add Jensens cut) START ********************
+      
+      if(warm_start) {
+         int nbPartitions = 10;
+         double[] prob = PiecewiseStandardNormalFirstOrderLossFunction.getProbabilities(nbPartitions);    // size = nbPartitions
+         double[] means = PiecewiseStandardNormalFirstOrderLossFunction.getMeans(nbPartitions);           // size = nbPartitions (or item means per partition)
+         double error = 0;// scalar error term
+         
+         // Auxiliary scaling variable S (define bounds as needed)
+         IloNumVar S = cplex.numVar(0.0, Double.POSITIVE_INFINITY, "S");
+         
+         // For each partition p build: P >= (sum_{k=p..nbPartitions-1} prob[k]*means[k]) * S
+         //    - sum_{k=p..nbPartitions-1} prob[k]*(C - M) + error * S
+         for (int p = 0; p < nbPartitions; p++) {
+            double sumProbMeans = 0.0;
+            double sumProb = 0.0;
+            for (int k = p; k < nbPartitions; k++) {
+               sumProbMeans += prob[k] * means[k];
+               sumProb += prob[k];
+            }
+            IloLinearNumExpr rhs = cplex.linearNumExpr();
+            // (sum prob[k]*means[k]) * S
+            rhs.addTerm(sumProbMeans, S);
+            // - sum prob[k]*(C - M) = -sumProb*C + sumProb*M
+            rhs.addTerm(sumProb, M); // + sumProb * M
+            double constantPart = -sumProb * instance.getCapacity(); // - sumProb * C
+            // + error * S
+            rhs.addTerm(error, S);
+            
+            // Final: P >= rhs + constantPart
+            cplex.addGe(P, cplex.sum(rhs, constantPart));
+         }
+         
+         //Global lower bound: P >= error * S
+         cplex.addGe(P, cplex.prod(error, S));
+      }
+      
+      // ************** Warm start (add Jensens cut) END ********************
+      
 
       // The objective is to maximize the profit minus the expected capacity shortage
       
