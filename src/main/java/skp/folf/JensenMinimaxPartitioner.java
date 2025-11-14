@@ -131,7 +131,7 @@ public final class JensenMinimaxPartitioner {
 
         // Run the optimization to find the best breakpoints
         PointValuePair sol = opt.optimize(
-                new MaxIter(100000), new MaxEval(100000),
+                new MaxIter(1000000), new MaxEval(1000000),
                 new ObjectiveFunction(fObj),
                 GoalType.MINIMIZE,
                 new InitialGuess(y0),
