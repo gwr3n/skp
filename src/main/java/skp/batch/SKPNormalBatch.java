@@ -449,13 +449,13 @@ public class SKPNormalBatch extends SKPBatch {
          {
             SKPNormal[] batch = retrieveBatch(fileName);
             
-            String fileNameSolved = folder+"/solved_normal_instances_MILP.json";
+            String fileNameSolved = folder+"/solved_normal_instances_MILP_"+partitions+".json";
             SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
             
             solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
             System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_normal_instances_MILP.csv";
+            String fileNameSolvedCSV = folder+"/solved_normal_instances_MILP_"+partitions+".csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
       }
@@ -475,11 +475,15 @@ public class SKPNormalBatch extends SKPBatch {
       /*
        * Parallel
        */
+	  
       SKPNormalMILPSolvedInstance[] solved = Arrays.stream(instances)
                                                    .parallel()
                                                    .map(instance -> {
                                                       try {
-                                                         return SKPNormalMILP.solve(instance, partitions, simulationRuns);
+                                                    	 System.out.println("Processing instance " + instance.toString());
+                                                    	 SKPNormalMILPSolvedInstance solvedInstance = SKPNormalMILP.solve(instance, partitions, simulationRuns);
+                                                    	 System.out.println("Processed instance " + instance.toString() + "("+solvedInstance.cplexSolutionTimeMs+" ms)");
+                                                         return solvedInstance;
                                                       } catch (IloException e) {
                                                          // TODO Auto-generated catch block
                                                          e.printStackTrace();
