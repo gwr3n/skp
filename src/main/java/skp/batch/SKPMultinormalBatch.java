@@ -556,6 +556,36 @@ public class SKPMultinormalBatch extends SKPBatch {
       return solved;
    }
    
+   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPMultinormal[] instances, String fileName, int simulationRuns, int warmStartPartitions) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>solved = new ArrayList<SKPGenericDistributionCutsMVNSolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions).solve());
+         GSONUtility.<SKPGenericDistributionCutsMVNSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new SKPGenericDistributionCutsMVNSolvedInstance[solved.size()]); */
+      
+      /*
+       * Parallel
+       */
+      SKPMultinormalCutsSolvedInstance[] solved = Arrays.stream(instances)
+                                                                   .parallel()
+                                                                   .map(instance -> {
+                                                                       try {
+                                                                          return new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions).solve();
+                                                                       } catch (IloException e) {
+                                                                          // TODO Auto-generated catch block
+                                                                          e.printStackTrace();
+                                                                          return null;
+                                                                       }
+                                                                    })
+                                                        .toArray(SKPMultinormalCutsSolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
    static SKPMultinormalCutsSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
       /*
        * Sequential

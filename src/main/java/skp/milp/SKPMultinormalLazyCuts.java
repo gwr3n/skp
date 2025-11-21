@@ -44,6 +44,15 @@ public class SKPMultinormalLazyCuts {
       this.instance = instance;
       this.independentDemand = independentDemand(instance);
       this.simulationRuns = simulationRuns;
+      this.warmStart = false;
+   }
+   
+   public SKPMultinormalLazyCuts(SKPMultinormal instance, int simulationRuns, int warmStartPartitions){
+      this.instance = instance;
+      this.independentDemand = independentDemand(instance);
+      this.simulationRuns = simulationRuns;
+      this.warmStart = true;
+      this.warmStartPartitions = warmStartPartitions;
    }
    
    static boolean independentDemand(SKPMultinormal instance) {
@@ -96,7 +105,8 @@ public class SKPMultinormalLazyCuts {
    
    private static long time_limit = 60*10; //10 minutes
    private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
-   private boolean warm_start = false;
+   private boolean warmStart;
+   private int warmStartPartitions;
    
    public SKPMultinormalCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
@@ -142,10 +152,9 @@ public class SKPMultinormalLazyCuts {
       
       // ************** Warm start (add Jensens cut) START ********************
       
-      if(warm_start) {
-         int nbPartitions = 10;
-         double[] prob = PiecewiseStandardNormalFirstOrderLossFunction.getProbabilities(nbPartitions);    // size = nbPartitions
-         double[] means = PiecewiseStandardNormalFirstOrderLossFunction.getMeans(nbPartitions);           // size = nbPartitions (or item means per partition)
+      if(warmStart) {
+         double[] prob = PiecewiseStandardNormalFirstOrderLossFunction.getProbabilities(warmStartPartitions);    // size = nbPartitions
+         double[] means = PiecewiseStandardNormalFirstOrderLossFunction.getMeans(warmStartPartitions);           // size = nbPartitions (or item means per partition)
          double error = 0;// scalar error term
          
          // Auxiliary scaling variable S (define bounds as needed)
@@ -153,10 +162,10 @@ public class SKPMultinormalLazyCuts {
          
          // For each partition p build: P >= (sum_{k=p..nbPartitions-1} prob[k]*means[k]) * S
          //    - sum_{k=p..nbPartitions-1} prob[k]*(C - M) + error * S
-         for (int p = 0; p < nbPartitions; p++) {
+         for (int p = 0; p < warmStartPartitions; p++) {
             double sumProbMeans = 0.0;
             double sumProb = 0.0;
-            for (int k = p; k < nbPartitions; k++) {
+            for (int k = p; k < warmStartPartitions; k++) {
                sumProbMeans += prob[k] * means[k];
                sumProb += prob[k];
             }
