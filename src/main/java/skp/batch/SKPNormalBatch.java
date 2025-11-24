@@ -68,14 +68,14 @@ public class SKPNormalBatch extends SKPBatch {
                   folder.mkdirs();
                }
                
+               int partitions = 10;
+               int simulationRuns = 100000;
+               
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
                generateInstances(batchFileName, t, size, cv);
                
                String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances_opl.zip";
-               storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, 10);
-               
-               int partitions = 10;
-               int simulationRuns = 100000;
+               storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                
                int maxCuts = 1000;
                try {
