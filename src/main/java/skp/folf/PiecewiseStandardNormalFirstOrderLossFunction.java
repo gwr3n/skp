@@ -1,15 +1,26 @@
 package skp.folf;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public final class PiecewiseStandardNormalFirstOrderLossFunction {
    
-   private static int linearizationSamples = 0;
+   private static final int linearizationSamples = 0;
+   
+   private static final Map<Integer, Double> errorCache = new ConcurrentHashMap<>();
+   private static final Map<Integer, double[]> probabilitiesCache = new ConcurrentHashMap<>(); 
+   private static final Map<Integer, double[]> meansCache = new ConcurrentHashMap<>();
    
    public static int getLinearizationSamples() {
       return linearizationSamples;
    }
    
-   public static double getError(int partitions){
-      return JensenMinimaxPartitioner.compute(partitions+1).error;
+   public static double getError(int partitions){ 
+      if(partitions <= 0) { 
+         throw new IllegalArgumentException("partitions must be >= 1"); 
+      } 
+      return errorCache.computeIfAbsent(partitions, p -> JensenMinimaxPartitioner.compute(p + 1).error); 
    }
    
    /*public static double getError(int partitions){
@@ -38,8 +49,15 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
       }
    }*/
    
-   public static double[] getProbabilities(int partitions){
-      return JensenMinimaxPartitioner.compute(partitions+1).p;
+   public static double[] getProbabilities(int partitions){ 
+      if(partitions <= 0) { 
+         throw new IllegalArgumentException("partitions must be >= 1"); 
+      } 
+      double[] cached = probabilitiesCache.computeIfAbsent(partitions, p -> { 
+         double[] src = JensenMinimaxPartitioner.compute(p + 1).p; 
+         return Arrays.copyOf(src, src.length); // store defensive copy 
+         }); 
+      return Arrays.copyOf(cached, cached.length); // return defensive copy 
    }
    
    /*public static double[] getProbabilities(int partitions){
@@ -73,8 +91,15 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
       }
    }*/
    
-   public static double[] getMeans(int partitions){
-      return JensenMinimaxPartitioner.compute(partitions+1).expect;
+   public static double[] getMeans(int partitions){ 
+      if(partitions <= 0) { 
+         throw new IllegalArgumentException("partitions must be >= 1"); 
+      } 
+      double[] cached = meansCache.computeIfAbsent(partitions, p -> { 
+         double[] src = JensenMinimaxPartitioner.compute(p + 1).expect; 
+         return Arrays.copyOf(src, src.length); // store defensive copy 
+      }); 
+      return Arrays.copyOf(cached, cached.length); // return defensive copy 
    }
    
    /*public static double[] getMeans(int partitions){
