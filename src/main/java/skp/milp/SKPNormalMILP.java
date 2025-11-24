@@ -34,7 +34,7 @@ public class SKPNormalMILP extends SKPMILP{
    SKPNormal instance;
    
    PWAPPROXIMATION pwa;        // sqrt approximation       
-   double s = 10e-6;           // sqrt approximation step    
+   double s = 10e-2;           // sqrt approximation step    
    double x0 = Math.sqrt(s)/4; // sqrt approximation x0   
    
    public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa) throws IloException{
