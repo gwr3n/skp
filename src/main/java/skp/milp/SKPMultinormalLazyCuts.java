@@ -135,7 +135,10 @@ public class SKPMultinormalLazyCuts {
 
       // Expected knapsack weight
       IloNumVar M = cplex.numVar(0, Double.POSITIVE_INFINITY);
-
+      
+      // Knapsack weight variance
+      IloNumVar V = cplex.numVar(0, Double.POSITIVE_INFINITY);
+      
       // Expected capacity shortage
       P = cplex.numVar(0, Double.POSITIVE_INFINITY);
 
@@ -149,16 +152,77 @@ public class SKPMultinormalLazyCuts {
       cplex.addGe(cplex.sum(P,cplex.prod(M, -1)), -this.instance.getCapacity());
       
       
-      
       // ************** Warm start (add Jensens cut) START ********************
       
       if(warmStart) {
+         // Knapsack weight variance
+         double[][] cov = this.instance.getWeights().getCovariance();
+         IloNumExpr varExpr;
+         int n = cov.length;
+
+         if (independentDemand) {
+             // Variance simplifies to sum_i Var_i * X_i (diagonal only)
+             double[] diag = new double[n];
+             for (int i = 0; i < n; i++) {
+                 diag[i] = cov[i][i];
+             }
+             varExpr = cplex.scalProd(diag, X);
+         } else {
+             // Full quadratic form: X^T * Cov * X = sum_{i,j} cov[i][j] * X_i * X_j
+             varExpr = cplex.numExpr();
+             for (int i = 0; i < n; i++) {
+                 for (int j = i + 1; j < n; j++) {
+                     double cij = cov[i][j];
+                     if (cij != 0.0) {
+                         varExpr = cplex.sum(varExpr, cplex.prod(2 * cij, cplex.prod(X[i], X[j])));
+                     }
+                 }
+             }
+         }
+
+         // V = variance of selected weights
+         cplex.addGe(V, varExpr);
+         
+         // Knapsack weight standard deviation via piecewise linearization of sqrt(V)
+         double s = 1.0;                       // linearisation step
+         double x0 = Math.sqrt(s)/4;           // value at 0 (same role as x0 in .mod)
+
+         // Upper bound on V
+         double totalVarianceUpper = 0.0;
+         for (int i = 0; i < cov.length; i++) {
+             for (int j = 0; j < cov[i].length; j++) {
+                 totalVarianceUpper += cov[i][j];
+             }
+         }
+         int nbPartitions = (int) Math.ceil(totalVarianceUpper / s);
+
+         // Breakpoints and function values
+         double[] xBreaks = new double[nbPartitions + 1];
+         double[] yVals   = new double[nbPartitions + 1];
+         xBreaks[0] = 0.0;
+         yVals[0]   = x0;
+         for (int b = 1; b <= nbPartitions; b++) {
+             xBreaks[b] = b * s;
+             yVals[b]   = x0 + Math.sqrt(xBreaks[b]);
+         }
+
+         // Standard deviation variable
+         IloNumVar S = cplex.numVar(0.0, Double.POSITIVE_INFINITY, "S");
+
+         // Extreme slopes (left, right)
+         double slopeLeft = (yVals[1] - yVals[0]) / (xBreaks[1] - xBreaks[0]); // = 1 / sqrt(s)
+         double slopeRight = 0.0;
+
+         // Piecewise linear approximation: S == pwl(V)
+         IloNumExpr pwS = cplex.piecewiseLinear(V, xBreaks, yVals, slopeLeft, slopeRight);
+         cplex.addEq(S, pwS);
+         
          double[] prob = PiecewiseStandardNormalFirstOrderLossFunction.getProbabilities(warmStartPartitions);    // size = nbPartitions
          double[] means = PiecewiseStandardNormalFirstOrderLossFunction.getMeans(warmStartPartitions);           // size = nbPartitions (or item means per partition)
          double error = 0;// scalar error term
          
          // Auxiliary scaling variable S (define bounds as needed)
-         IloNumVar S = cplex.numVar(0.0, Double.POSITIVE_INFINITY, "S");
+         // IloNumVar S = cplex.numVar(0.0, Double.POSITIVE_INFINITY, "S");
          
          // For each partition p build: P >= (sum_{k=p..nbPartitions-1} prob[k]*means[k]) * S
          //    - sum_{k=p..nbPartitions-1} prob[k]*(C - M) + error * S
