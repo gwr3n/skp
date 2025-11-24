@@ -83,4 +83,13 @@ public class SKPNormal extends SKP {
       int shortageCost = 10;
       return new SKPNormal(expectedValues, expectedWeights, cv, capacity, shortageCost);
    }
+   
+   public static SKPNormal getTestOptimalityGapInstance() {
+      double[] expectedValues = {30.0, 81.0, 66.0, 24.0, 69.0, 36.0, 93.0, 39.0, 9.0,  45.0, 66.0, 39.0, 18.0, 39.0, 42.0, 78.0, 78.0, 84.0, 18.0, 42.0, 51.0, 87.0, 30.0, 18.0, 96.0};
+      double[] expectedWeights = {27.374614896234103, 78.4130955596743, 64.65813191442086, 23.266107454511886, 67.4093146834377, 33.59693259866023, 92.16485054308757, 37.79821214150361, 8.236141621162524, 42.6355367987863, 65.54323036758973, 36.508548229182615, 15.968166079227474, 38.83708767781832, 39.062391091831344, 75.03159125698056, 77.3931165367291, 82.83151230238252, 17.34237700822168, 40.044541913379156, 49.92889765445393, 85.56454225080667, 27.426648865161223, 17.446202319304014, 94.46271171962006};
+      double cv = 0.2;
+      double capacity = 112.6313185;
+      int shortageCost = 10;
+      return new SKPNormal(expectedValues, expectedWeights, cv, capacity, shortageCost);
+   }
 }
