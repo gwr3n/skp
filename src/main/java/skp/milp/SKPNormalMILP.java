@@ -62,12 +62,13 @@ public class SKPNormalMILP extends SKPMILP{
       this.pwa = pwa;
       
       int[] param = chooseLinearisationParameters(epsilon);
-      System.out.println(Arrays.toString(param));
       
       this.partitions = param[0] - 1;
       double Vmax = Arrays.stream(this.instance.getWeights()).mapToDouble(w -> w.getVariance()).sum();
       this.s = Vmax/param[1];       
       this.x0 = Math.sqrt(this.s)/4; 
+      
+      System.out.println("Linearisation parameters: W = " + this.partitions + "; s = " + this.s);
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
@@ -314,7 +315,7 @@ public class SKPNormalMILP extends SKPMILP{
    
    public static void main(String args[]) {
 
-      SKPNormal instance = SKPNormal.getTestInstance();
+      SKPNormal instance = SKPNormal.getTestOptimalityGapInstance();
       double epsilon = 0.1;
       int simulationRuns = 100000;
       
