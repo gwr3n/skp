@@ -77,14 +77,12 @@ public class SKPNormalBatch extends SKPBatch {
                String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances_opl.zip";
                storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                
-               int maxCuts = 1000;
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
-                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.DCG);
-                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
-                  solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
+                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
+                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
+                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
                   if(size < instanceSize[2]) 
-                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
+                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -379,7 +377,6 @@ public class SKPNormalBatch extends SKPBatch {
    
    enum METHOD {
       PWLA,
-      DCG,
       SAA,
       SAA_LD, // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
       LC,
@@ -390,7 +387,7 @@ public class SKPNormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method){
       case LC: //Compute optimal solution using Lazy Cut Generation
          {
@@ -417,30 +414,6 @@ public class SKPNormalBatch extends SKPBatch {
             System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          
             String fileNameSolvedCSV = folder+"/solved_normal_instances_LC_warm_start_"+warmStartPartitions+".csv";
-            SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-         }
-         break;
-      case DCG: //Compute optimal solution using Dynamic Cut Generation
-         /*{
-            SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
-            
-            String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
-            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
-            
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-            
-            String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
-            SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-         }*/
-         {
-            SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
-            
-            String fileNameSolved = folder+"/solved_normal_instances_DCG.json";
-            SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
-            
-            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-            
-            String fileNameSolvedCSV = folder+"/solved_normal_instances_DCG.csv";
             SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;

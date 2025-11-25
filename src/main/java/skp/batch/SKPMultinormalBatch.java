@@ -30,7 +30,6 @@ import ilog.concert.IloException;
 
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
-import skp.milp.SKPMultinormalCuts;
 import skp.milp.SKPMultinormalLazyCuts;
 import skp.milp.SKPMultinormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
@@ -80,13 +79,11 @@ public class SKPMultinormalBatch extends SKPBatch {
                   storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                   
                   int simulationRuns = 100000;
-                  int maxCuts = 1000;
                   try {
-                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
-                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.DCG);
-                     solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
+                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
+                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
                      if(size < instanceSize[2])
-                        solveMILP(batchFileName, partitions, simulationRuns, maxCuts, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
+                        solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
@@ -426,12 +423,11 @@ public class SKPMultinormalBatch extends SKPBatch {
    enum METHOD {
       LC,
       PWLA,
-      DCG,
       SAA,
       SAA_LD // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
    }
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, int maxCuts, String folder, METHOD method) throws IloException {
+   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method){
       case SAA:  
          // Compute optimal solution using SAA
@@ -462,20 +458,6 @@ public class SKPMultinormalBatch extends SKPBatch {
             System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_multinormal_instances_LC.csv";
-            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-         }
-         break;
-      case DCG:  
-         // Compute optimal solution using Dynamic Cut Generation
-         {
-            SKPMultinormal[] batch = retrieveBatch(fileName);
-            
-            String fileNameSolved = folder+"/solved_multinormal_instances_DCG.json";
-            SKPMultinormalCutsSolvedInstance[] solvedBatch = solveBatchMILPDynamicCutGeneration(batch, fileNameSolved, maxCuts, simulationRuns);
-            
-            System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-            
-            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_DCG.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
@@ -575,36 +557,6 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                    .map(instance -> {
                                                                        try {
                                                                           return new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions).solve();
-                                                                       } catch (IloException e) {
-                                                                          // TODO Auto-generated catch block
-                                                                          e.printStackTrace();
-                                                                          return null;
-                                                                       }
-                                                                    })
-                                                        .toArray(SKPMultinormalCutsSolvedInstance[]::new);
-      GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
-      return solved;
-   }
-   
-   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPDynamicCutGeneration(SKPMultinormal[] instances, String fileName, int maxCuts, int simulationRuns) throws IloException {
-      /*
-       * Sequential
-       *
-      ArrayList<SKPMultinormalCutsSolvedInstance>solved = new ArrayList<SKPMultinormalCutsSolvedInstance>();
-      for(SKPMultinormal instance : instances) {
-         solved.add(new SKPMultinormalCuts(instance, maxCuts, simulationRuns).solve());
-         GSONUtility.<SKPMultinormalCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalCutsSolvedInstance[solved.size()]), fileName);
-      }
-      return solved.toArray(new SKPMultinormalCutsSolvedInstance[solved.size()]); */
-      
-      /*
-       * Parallel
-       */
-      SKPMultinormalCutsSolvedInstance[] solved = Arrays.stream(instances)
-                                                                   .parallel()
-                                                                   .map(instance -> {
-                                                                       try {
-                                                                          return new SKPMultinormalCuts(instance, maxCuts, simulationRuns).solve();
                                                                        } catch (IloException e) {
                                                                           // TODO Auto-generated catch block
                                                                           e.printStackTrace();

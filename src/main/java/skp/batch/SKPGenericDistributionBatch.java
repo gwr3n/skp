@@ -20,7 +20,6 @@ import java.util.Arrays;
 
 import ilog.concert.IloException;
 import skp.instance.SKPGenericDistribution;
-import skp.milp.SKPGenericDistributionCuts;
 import skp.milp.SKPGenericDistributionLazyCuts;
 import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.saa.SKPGenericDistributionSAA;
@@ -43,7 +42,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
    }
    
    enum SolutionMethod {
-      ITERATIVE_CUTS,
       LAZY_CUTS,
       LAZY_CUTS_NORMAL_APPROXIMATION,
       SAA,
@@ -82,7 +80,6 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                int simulationRuns = 10000;   
                int maxCuts = 1000;
                try {
-                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.ITERATIVE_CUTS);
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
                   solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS_NORMAL_APPROXIMATION);
                   if(size < instanceSize[2])
@@ -536,7 +533,8 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
-         case LAZY_CUTS_NORMAL_APPROXIMATION: {   
+         case LAZY_CUTS_NORMAL_APPROXIMATION: 
+         default: {   
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_LC_normal_approx.json";
@@ -549,50 +547,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
-         case ITERATIVE_CUTS: 
-         default: {
-            // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
-            
-            String fileNameSolved = folder+"/solved_generic_distribution_instances_MILP.json";
-            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPIterativeCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns);
-            
-            // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
-            System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
-            
-            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_MILP.csv";
-            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
-         }
       }
-   }
-   
-   static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPIterativeCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int maxCuts, int simulationRuns) throws IloException {
-      /*
-       * Sequential
-       * 
-      ArrayList<SKPGenericDistributionCutsSolvedInstance>solved = new ArrayList<SKPGenericDistributionCutsSolvedInstance>();
-      for(SKPGenericDistribution instance : instances) {
-         solved.add(new SKPGenericDistributionCuts(instance, linearizationSamples, maxCuts, simulationRuns).solve());
-         
-      }
-      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]), fileName);
-      return solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]);
-      */
-      
-      /*
-       * Parallel
-       */
-      SKPGenericDistributionCutsSolvedInstance[] solved = Arrays.stream(instances)
-                                                                .parallel()
-                                                                .map(instance -> {
-         try {
-            return new SKPGenericDistributionCuts(instance, linearizationSamples, maxCuts, simulationRuns).solve();
-         } catch (IloException e) {
-            e.printStackTrace();
-            return null;
-         }
-      }).toArray(SKPGenericDistributionCutsSolvedInstance[]::new);
-      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
-      return solved;
    }
    
    private static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int maxCuts, int simulationRuns, boolean normalApproximation) throws IloException {
