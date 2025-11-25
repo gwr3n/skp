@@ -6,10 +6,10 @@ public class LinearisationFactory {
    {
       JensenPartitioner partitioner;
       switch(PiecewiseStandardNormalFirstOrderLossFunction.getPartitioner()) {
-      case PARTITIONER.UNIFORM:
+      case UNIFORM:
          partitioner = new JensenUniformPartitioner();
          break;
-      case PARTITIONER.MINIMAX:
+      case MINIMAX:
       default:
          partitioner = new JensenMinimaxPartitioner();
          break;
