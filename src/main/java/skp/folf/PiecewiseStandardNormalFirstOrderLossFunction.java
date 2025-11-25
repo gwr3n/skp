@@ -6,11 +6,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class PiecewiseStandardNormalFirstOrderLossFunction {
    
+   private static final PARTITIONER partitioner = PARTITIONER.MINIMAX;
+   
    private static final int linearizationSamples = 0;
    
    private static final Map<Integer, Double> errorCache = new ConcurrentHashMap<>();
    private static final Map<Integer, double[]> probabilitiesCache = new ConcurrentHashMap<>(); 
    private static final Map<Integer, double[]> meansCache = new ConcurrentHashMap<>();
+   
+   public static PARTITIONER getPartitioner() {
+      return partitioner;
+   }
    
    public static int getLinearizationSamples() {
       return linearizationSamples;
@@ -20,7 +26,13 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
       if(partitions <= 0) { 
          throw new IllegalArgumentException("partitions must be >= 1"); 
       } 
-      return errorCache.computeIfAbsent(partitions, p -> JensenMinimaxPartitioner.compute(p + 1).error); 
+      switch(partitioner) {
+         case UNIFORM:
+            return errorCache.computeIfAbsent(partitions, p -> new JensenUniformPartitioner().compute(p + 1).error);
+         case MINIMAX:
+         default:
+            return errorCache.computeIfAbsent(partitions, p -> new JensenMinimaxPartitioner().compute(p + 1).error);
+      }
    }
    
    /*public static double getError(int partitions){
@@ -54,7 +66,7 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
          throw new IllegalArgumentException("partitions must be >= 1"); 
       } 
       double[] cached = probabilitiesCache.computeIfAbsent(partitions, p -> { 
-         double[] src = JensenMinimaxPartitioner.compute(p + 1).p; 
+         double[] src = (partitioner == PARTITIONER.UNIFORM ? new JensenUniformPartitioner().compute(p + 1).p : new JensenMinimaxPartitioner().compute(p + 1).p); 
          return Arrays.copyOf(src, src.length); // store defensive copy 
          }); 
       return Arrays.copyOf(cached, cached.length); // return defensive copy 
@@ -91,12 +103,12 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
       }
    }*/
    
-   public static double[] getMeans(int partitions){ 
+   public static double[] getMeans(int partitions){
       if(partitions <= 0) { 
          throw new IllegalArgumentException("partitions must be >= 1"); 
       } 
       double[] cached = meansCache.computeIfAbsent(partitions, p -> { 
-         double[] src = JensenMinimaxPartitioner.compute(p + 1).expect; 
+         double[] src = (partitioner == PARTITIONER.UNIFORM ? new JensenUniformPartitioner().compute(p + 1).expect : new JensenMinimaxPartitioner().compute(p + 1).expect); 
          return Arrays.copyOf(src, src.length); // store defensive copy 
       }); 
       return Arrays.copyOf(cached, cached.length); // return defensive copy 

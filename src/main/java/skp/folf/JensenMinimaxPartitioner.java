@@ -30,26 +30,7 @@ import umontreal.ssj.probdist.NormalDist;
  * of a standard normal random variable, using a specified number of segments.
  * The algorithm follows the approach in Rossi et al. (2014), Sec. 4.2.1.
  */
-public final class JensenMinimaxPartitioner {
-
-    /**
-     * Result container for the minimax partitioning.
-     * Holds the segment probabilities, conditional means, and the maximum error.
-     */
-    public static final class Result {
-        /** Segment probabilities \( p_i \) */
-        public final double[] p;
-        /** Conditional means \( E[Z|\Omega_i] \) */
-        public final double[] expect;
-        /** Maximum error of the Jensen lower bound */
-        public final double error;
-
-        private Result(double[] p, double[] e, double err) {
-            this.p = p;
-            this.expect = e;
-            this.error = err;
-        }
-    }
+public final class JensenMinimaxPartitioner extends JensenPartitioner {
 
     /**
      * Converts a vector of log-probabilities to breakpoints (cumulative log-sums).
@@ -82,7 +63,7 @@ public final class JensenMinimaxPartitioner {
      * @param segments Number of segments (must be >= 2)
      * @return Result object containing probabilities, means, and error
      */
-    public static Result compute(int segments) {
+    public Result compute(int segments) {
         if (segments < 2)
             throw new IllegalArgumentException("segments must be ≥ 2");
 
@@ -248,9 +229,11 @@ public final class JensenMinimaxPartitioner {
        final double[] REF_ERRORS = getErrors();
        final double EPS = 1e-9;
        System.out.println("----- Jensen minimax self-test -----");
+       
+       JensenMinimaxPartitioner partitioner = new JensenMinimaxPartitioner();
 
        for (int W = 1; W <= 10; ++W) {
-           Result r = compute(W + 1);
+           Result r = partitioner.compute(W + 1);
            double[] expectedMeans = getMeans(W);
            double[] expectedProbs = getProbabilities(W);
 
@@ -410,7 +393,8 @@ public final class JensenMinimaxPartitioner {
             return;
         }
         int segments = Integer.parseInt(args[0]);
-        Result r = compute(segments);
+        JensenMinimaxPartitioner partitioner = new JensenMinimaxPartitioner();
+        Result r = partitioner.compute(segments);
         System.out.printf("%nOptimal Jensen lower bound with %d segments%n", segments);
         System.out.println(" i       p_i        E[Z|Ω_i]");
         for(int i = 0; i < r.p.length; ++i)

@@ -3,7 +3,7 @@ package skp.folf;
 
 import umontreal.ssj.probdist.NormalDist;
 
-public final class JensenUniformPartitioner {
+public final class JensenUniformPartitioner extends JensenPartitioner {
 
 
    // --- Numerical helpers ---
@@ -103,22 +103,10 @@ public final class JensenUniformPartitioner {
       return num / p;
    }
 
-   /** Result container for the uniform partitioning. */
-   public static final class Result {
-      public final double[] p;      // Segment probabilities
-      public final double[] expect; // Conditional means
-      public final double error;    // Maximum Jensen error
-
-      private Result(double[] p, double[] e, double err) {
-         this.p = p;
-         this.expect = e;
-         this.error = err;
-      }
-   }
 
    /** Compute uniform partition */
 
-   public static Result compute(int segments) {
+   public Result compute(int segments) {
       if (segments < 2)
          throw new IllegalArgumentException("segments must be ≥ 2");
 
@@ -201,24 +189,17 @@ public final class JensenUniformPartitioner {
 
       return new Result(p, Ei, err);
    }
-
-   public static double[] getMeans(int partitions) {
-      // Return the uniform-partition conditional means for W = partitions
-      return compute(partitions + 1).expect;
-   }
-
-   public static double[] getProbabilities(int partitions) {
-      // Return the uniform-partition probabilities for W = partitions
-      return compute(partitions + 1).p;
-   }
+   
 
    public static void selfTest() {
        System.out.println("----- Jensen uniform partition diagnostic -----");
        final int[] TEST_W = {2, 4, 8, 16, 32, 64};
        final double EPS = 1e-12;
+       
+       JensenUniformPartitioner partitioner = new JensenUniformPartitioner();
    
        for (int W : TEST_W) {
-           Result r = compute(W + 1);
+           Result r = partitioner.compute(W + 1);
            double sumP = 0.0;
            for (double pi : r.p) sumP += pi;
    
@@ -240,7 +221,8 @@ public final class JensenUniformPartitioner {
                }
            }
            
-           JensenMinimaxPartitioner.Result rMinimax = JensenMinimaxPartitioner.compute(W + 1);
+           JensenMinimaxPartitioner minimaxPartitioner = new JensenMinimaxPartitioner();
+           Result rMinimax = minimaxPartitioner.compute(W + 1);
            System.out.printf("W=%3d | sumP=%.2f norm=%s mono=%s sym=%s err=%.15f err_minimax=%.15f%n",
                W, sumP, normOK ? "OK" : "FAIL", monoOK ? "OK" : "FAIL", symOK ? "OK" : "FAIL", r.error, rMinimax.error);
    
@@ -258,7 +240,8 @@ public final class JensenUniformPartitioner {
          return;
       }
       int segments = Integer.parseInt(args[0]);
-      Result r = compute(segments);
+      JensenUniformPartitioner partitioner = new JensenUniformPartitioner();
+      Result r = partitioner.compute(segments);
       System.out.printf("%nUniform Jensen lower bound with %d segments%n", segments);
       System.out.println(" i       p_i        E[Z|Ω_i]");
       for (int i = 0; i < r.p.length; ++i)
