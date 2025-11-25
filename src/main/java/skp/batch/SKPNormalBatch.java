@@ -404,7 +404,7 @@ public class SKPNormalBatch extends SKPBatch {
          break;
       case LC_WARM_START: //Compute optimal solution using Lazy Cut Generation
          {
-        	int warmStartPartitions = 50;
+        	int warmStartPartitions = partitions;
         	
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
          
