@@ -37,7 +37,7 @@ public class SKPNormalMILP extends SKPMILP{
    double s = 10e-2;           // sqrt approximation step    
    double x0 = Math.sqrt(s)/4; // sqrt approximation x0   
    
-   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa) throws IloException{
+   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa){
       this.instance = instance;
       this.partitions = partitions;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
@@ -45,7 +45,7 @@ public class SKPNormalMILP extends SKPMILP{
       this.pwa = pwa;
    }
    
-   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0) throws IloException{
+   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0){
       this.instance = instance;
       this.partitions = partitions;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
@@ -55,7 +55,7 @@ public class SKPNormalMILP extends SKPMILP{
       this.x0 = x0;     
    }
    
-   public SKPNormalMILP(SKPNormal instance, PWAPPROXIMATION pwa, double epsilon) throws IloException{
+   public SKPNormalMILP(SKPNormal instance, PWAPPROXIMATION pwa, double epsilon){
       this.instance = instance;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model =  "sk_normal";
@@ -102,15 +102,25 @@ public class SKPNormalMILP extends SKPMILP{
     ********************************************************************/
    public int[] chooseLinearisationParameters(final double epsilon)
    {
-       if (epsilon <= 0.0)
-           throw new IllegalArgumentException("epsilon must be positive");
-
        /* ---------- constants that depend only on the instance ---------- */
        double Vmax = Arrays.stream(instance.getWeights())
                            .mapToDouble(w -> w.getVariance())
                            .sum();
-       double Smax = Math.sqrt(Vmax);
        double c    = instance.getShortageCost();
+       
+       /* ================================================================
+        * Delegate to main method
+        * ================================================================ */
+       return chooseLinearisationParameters(epsilon, Vmax, c);
+   }
+   
+   public static int[] chooseLinearisationParameters(final double epsilon, double Vmax, double c)
+   {
+       if (epsilon <= 0.0)
+           throw new IllegalArgumentException("epsilon must be positive");
+       
+       /* ---------- constants that depend only on the instance ---------- */
+       double Smax = Math.sqrt(Vmax);
 
        /* ================================================================
         * 1.  Choose W  (first-order-loss approximation)
@@ -315,7 +325,7 @@ public class SKPNormalMILP extends SKPMILP{
    
    public static void main(String args[]) {
 
-      SKPNormal instance = SKPNormal.getTestOptimalityGapInstance();
+      SKPNormal instance = SKPNormal.getTestInstance();
       double epsilon = 0.1;
       int simulationRuns = 100000;
       
