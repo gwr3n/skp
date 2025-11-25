@@ -74,16 +74,18 @@ public class SKPMultinormalBatch extends SKPBatch {
                   String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances.json";
                   generateInstances(batchFileName, t, size, cv, rho);
                   
-                  int partitions = 10;
+                  int partitions = 10;    // piecewise linear approximation partitions
+                  double s = 1e-2;        // sqrt approximation step
+                  
                   String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances_opl.zip";
                   storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                   
                   int simulationRuns = 100000;
                   try {
-                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
-                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
+                     solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
+                     solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
                      if(size < instanceSize[2])
-                        solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
+                        solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
@@ -427,7 +429,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       SAA_LD // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
    }
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder, METHOD method) throws IloException {
+   public static void solveMILP(String fileName, int partitions, double s, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method){
       case SAA:  
          // Compute optimal solution using SAA
@@ -467,7 +469,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
             String fileNameSolved = folder+"/solved_multinormal_instances_MILP.json";
-            SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+            SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, s, simulationRuns);
             
             solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
             System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -478,7 +480,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       }
    }
    
-   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPMultinormalMILPSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, double s, int simulationRuns) throws IloException {
       /*
        * Sequential
        *
@@ -496,7 +498,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                         .parallel()
                                                         .map(instance -> {
                                                            try {
-                                                              return SKPMultinormalMILP.solve(instance, partitions, simulationRuns);
+                                                              return SKPMultinormalMILP.solve(instance, partitions, s, simulationRuns);
                                                            } catch (IloException e) {
                                                               // TODO Auto-generated catch block
                                                               e.printStackTrace();

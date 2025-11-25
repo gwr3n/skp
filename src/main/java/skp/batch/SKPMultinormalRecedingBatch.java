@@ -57,10 +57,11 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
                       *  generateInstances(batchFileName);
                       */
                      
-                     int partitions = 10;
+                     int partitions = 10;    // piecewise linear approximation partitions
+                     double s = 1e-2;        // sqrt approximation step
                      int simulationRuns = 100;
                      try {
-                        solveMILP(batchFileName, partitions, simulationRuns, ignoreCorrelation, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
+                        solveMILP(batchFileName, partitions, s, simulationRuns, ignoreCorrelation, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho);
                      } catch (IloException e) {
                         e.printStackTrace();
                      }
@@ -77,11 +78,11 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation, String folder) throws IloException {
+   public static void solveMILP(String fileName, int partitions, double s, int simulationRuns, boolean ignoreCorrelation, String folder) throws IloException {
       SKPMultinormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = ignoreCorrelation ? folder+"/solved_multinormal_instances_MILP_receding_ignore_correlation.json" : folder+"/solved_multinormal_instances_MILP_receding.json";
-      SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns, ignoreCorrelation);
+      SKPMultinormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, s, simulationRuns, ignoreCorrelation);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -90,10 +91,10 @@ public class SKPMultinormalRecedingBatch extends SKPMultinormalBatch{
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPMultinormalRecedingSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, int simulationRuns, boolean ignoreCorrelation) throws IloException {
+   private static SKPMultinormalRecedingSolvedInstance[] solveBatchMILP(SKPMultinormal[] instances, String fileName, int partitions, double s, int simulationRuns, boolean ignoreCorrelation) throws IloException {
       ArrayList<SKPMultinormalRecedingSolvedInstance>solved = new ArrayList<SKPMultinormalRecedingSolvedInstance>();
       for(SKPMultinormal instance : instances) {
-         solved.add(new SimulateMultinormalReceding(instance, partitions).solve(simulationRuns, ignoreCorrelation));
+         solved.add(new SimulateMultinormalReceding(instance, partitions, s).solve(simulationRuns, ignoreCorrelation));
          System.out.println("Solved receding horizon instance number "+solved.size());
          GSONUtility.<SKPMultinormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalRecedingSolvedInstance[solved.size()]), fileName);
       }

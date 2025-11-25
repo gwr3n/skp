@@ -36,22 +36,22 @@ public class SKPNormalMILP extends SKPMILP{
    double s = 1e-2;            // sqrt approximation step    
    double x0 = Math.sqrt(s)/4; // sqrt approximation x0   
    
-   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa){
+   /*public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa){
       this.instance = instance;
       this.partitions = partitions;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model =  "sk_normal";
       this.pwa = pwa;
-   }
+   }*/
    
-   public SKPNormalMILP(SKPNormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0){
+   public SKPNormalMILP(SKPNormal instance, int partitions, double s, PWAPPROXIMATION pwa){
       this.instance = instance;
       this.partitions = partitions;
       linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model =  "sk_normal";
       this.pwa = pwa;   
       this.s = s;       
-      this.x0 = x0;     
+      this.x0 = Math.sqrt(s)/4;    
    }
    
    public SKPNormalMILP(SKPNormal instance, PWAPPROXIMATION pwa, double epsilon){
@@ -114,9 +114,9 @@ public class SKPNormalMILP extends SKPMILP{
    }
    
 
-   public static SKPNormalMILPSolvedInstance solve(SKPNormal instance, int partitions, int simulationRuns) throws IloException {      
-      SKPNormalMILPSolvedInstance solvedJensens = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
-      SKPNormalMILPSolvedInstance solvedEM = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
+   public static SKPNormalMILPSolvedInstance solve(SKPNormal instance, int partitions, double s, int simulationRuns) throws IloException {      
+      SKPNormalMILPSolvedInstance solvedJensens = new SKPNormalMILP(instance, partitions, s, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
+      SKPNormalMILPSolvedInstance solvedEM = new SKPNormalMILP(instance, partitions, s, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
       
       double optimality_gap = 0.0;
       SKPNormalMILPSolvedInstance opt = solvedJensens;
@@ -262,12 +262,31 @@ public class SKPNormalMILP extends SKPMILP{
       int simulationRuns = 100000;
       
       try {
-         SKPNormalMILP sskp = new SKPNormalMILP(instance, PWAPPROXIMATION.JENSENS, epsilon);
+         SKPNormalMILP sskp_J = new SKPNormalMILP(instance, PWAPPROXIMATION.JENSENS, epsilon);
          
-         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
+         SKPNormalMILPSolvedInstance solved_J = sskp_J.solve(simulationRuns);
+         System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(solved_J));
+         
+         boolean test = false;
+         if(test) {
+            SKPNormalMILP sskp_EM = new SKPNormalMILP(instance, PWAPPROXIMATION.EDMUNDSON_MADANSKI, epsilon);
+            
+            SKPNormalMILPSolvedInstance solved_EM =sskp_EM.solve(simulationRuns);
+            System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(solved_EM));
+            
+            System.out.println("Jensen's MILP solution value: " + solved_J.milpSolutionValue);
+            System.out.println("Edmundson-Madanski MILP solution value: " + solved_EM.milpSolutionValue);         
+            System.out.println("Difference: " + (solved_J.milpSolutionValue - solved_EM.milpSolutionValue));
+            System.out.println("Allowed epsilon: " + epsilon);
+            if(solved_J.milpSolutionValue - solved_EM.milpSolutionValue <= epsilon + 1e-12)
+               System.out.println("Difference is within allowed epsilon.");
+            else
+               System.out.println("Difference exceeds allowed epsilon!");
+         }
       } catch (IloException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
+         System.exit(-1);
       }
    }
 }

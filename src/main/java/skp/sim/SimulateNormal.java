@@ -73,10 +73,11 @@ public class SimulateNormal extends Simulate {
       SKPNormal instance = SKPNormal.getTestInstance();
       
       int partitions = 10;
+      double s = 1e-2;
       int simulationSamples = 100000;
       
       try {
-         SKPNormalMILP milp = new SKPNormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         SKPNormalMILP milp = new SKPNormalMILP(instance, partitions, s, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
          SKPNormalMILPSolvedInstance solved = milp.solve(simulationSamples);
          System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance>printInstanceAsJSON(solved));
       } catch (IloException e) {

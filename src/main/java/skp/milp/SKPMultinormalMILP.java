@@ -9,6 +9,7 @@ import ilog.opl.IloOplDataHandler;
 import ilog.opl.IloOplDataSource;
 import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplModel;
+import skp.folf.LinearisationFactory;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPMultinormal;
 import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
@@ -20,25 +21,47 @@ public class SKPMultinormalMILP extends SKPMILP{
    boolean ignoreCorrelation;
    
    PWAPPROXIMATION pwa;        // sqrt approximation       
-   double s = 10e-2;           // sqrt approximation step    
+   double s = 1e-2;            // sqrt approximation step    
    double x0 = Math.sqrt(s)/4; // sqrt approximation x0  
 
-   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa)  throws IloException{
+   /*public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa)  throws IloException{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model = "sk_mvnormal";
       this.pwa = pwa;
-   }
+   }*/
    
-   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa, double s, double x0)  throws IloException{
+   public SKPMultinormalMILP(SKPMultinormal instance, int partitions, double s, PWAPPROXIMATION pwa)  throws IloException{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
       this.model = "sk_mvnormal";
       this.pwa = pwa;
       this.s = s;       
-      this.x0 = x0;
+      this.x0 = Math.sqrt(s)/4;
+   }
+   
+   public SKPMultinormalMILP(SKPMultinormal instance, PWAPPROXIMATION pwa, double epsilon)  throws IloException{
+      this.instance = instance;
+      this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
+      this.model = "sk_mvnormal";
+      this.pwa = pwa;
+      
+      int[] param = chooseLinearisationParameters(epsilon);
+      
+      this.partitions = param[0] - 1;
+      double[][] covMatrix = instance.getWeights().getCovariance();
+      double Vmax = 0.0;
+      for (int i = 0; i < covMatrix.length; i++) {
+          for (int j = 0; j < covMatrix[i].length; j++) {
+              Vmax += covMatrix[i][j];
+          }
+      }
+      this.s = Vmax/param[1];       
+      this.x0 = Math.sqrt(this.s)/4; 
+      
+      System.out.println("Linearisation parameters: W = " + this.partitions + "; s = " + this.s);
    }
    
    IloOplDataSource getDataSource(IloOplFactory oplF) {
@@ -51,9 +74,27 @@ public class SKPMultinormalMILP extends SKPMILP{
                                        PiecewiseStandardNormalFirstOrderLossFunction.getError(partitions);
    }
    
-   public static SKPMultinormalMILPSolvedInstance solve(SKPMultinormal instance, int partitions, int simulationRuns) throws IloException {
-      SKPMultinormalMILPSolvedInstance solvedJensens = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
-      SKPMultinormalMILPSolvedInstance solvedEM = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
+   public int[] chooseLinearisationParameters(final double epsilon)
+   {
+       /* ---------- constants that depend only on the instance ---------- */
+       double[][] covMatrix = instance.getWeights().getCovariance();
+       double Vmax = 0.0;
+       for (int i = 0; i < covMatrix.length; i++) {
+           for (int j = 0; j < covMatrix[i].length; j++) {
+               Vmax += covMatrix[i][j];
+           }
+       }
+       double c    = instance.getShortageCost();
+       
+       /* ================================================================
+        * Delegate to helper method
+        * ================================================================ */
+       return LinearisationFactory.chooseLinearisationParameters(epsilon, Vmax, c);
+   }
+   
+   public static SKPMultinormalMILPSolvedInstance solve(SKPMultinormal instance, int partitions, double s, int simulationRuns) throws IloException {
+      SKPMultinormalMILPSolvedInstance solvedJensens = new SKPMultinormalMILP(instance, partitions, s, PWAPPROXIMATION.JENSENS).solve(simulationRuns);
+      SKPMultinormalMILPSolvedInstance solvedEM = new SKPMultinormalMILP(instance, partitions, s, PWAPPROXIMATION.EDMUNDSON_MADANSKI).solve(simulationRuns);
       
       double optimality_gap = 0.0;
       SKPMultinormalMILPSolvedInstance opt = solvedJensens;
@@ -198,15 +239,32 @@ public class SKPMultinormalMILP extends SKPMILP{
    
    public static void main(String args[]) {
       
-      SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
-      
-      int partitions = 10;
+      SKPMultinormal instance = SKPMultinormal.getTestInstance();
+      double epsilon = 0.1;
       int simulationRuns = 1000000;
       
       try {
-         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         SKPMultinormalMILP sskp_J = new SKPMultinormalMILP(instance, PWAPPROXIMATION.JENSENS, epsilon);
          
-         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(milp.solve(simulationRuns)));
+         SKPMultinormalMILPSolvedInstance solved_J = sskp_J.solve(simulationRuns);
+         System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(solved_J));
+         
+         boolean test = true;
+         if(test) {
+            SKPMultinormalMILP sskp_EM = new SKPMultinormalMILP(instance, PWAPPROXIMATION.EDMUNDSON_MADANSKI, epsilon);
+            
+            SKPMultinormalMILPSolvedInstance solved_EM = sskp_EM.solve(simulationRuns);
+            System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(solved_EM));
+            
+            System.out.println("Jensen's MILP solution value: " + solved_J.milpSolutionValue);
+            System.out.println("Edmundson-Madanski MILP solution value: " + solved_EM.milpSolutionValue);
+            System.out.println("Difference: " + (solved_J.milpSolutionValue - solved_EM.milpSolutionValue));
+            System.out.println("Allowed epsilon: " + epsilon);
+            if(solved_J.milpSolutionValue - solved_EM.milpSolutionValue <= epsilon + 1e-12)
+               System.out.println("Difference is within allowed epsilon.");
+            else
+               System.out.println("Difference exceeds allowed epsilon!");
+         }
       } catch (IloException e) {
          e.printStackTrace();
          System.exit(-1);

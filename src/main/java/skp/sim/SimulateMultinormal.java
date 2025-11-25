@@ -122,10 +122,11 @@ public class SimulateMultinormal extends Simulate {
       SKPMultinormal instance = SKPMultinormal.getTestInstanceSpecialStructure();
       
       int partitions = 10;
+      double s = 1e-2;
       int simulationRuns = 1000000;
       
       try {
-         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         SKPMultinormalMILP milp = new SKPMultinormalMILP(instance, partitions, s, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
          
          System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance>printInstanceAsJSON(milp.solve(simulationRuns)));
       } catch (IloException e) {

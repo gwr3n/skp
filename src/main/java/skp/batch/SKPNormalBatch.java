@@ -68,7 +68,8 @@ public class SKPNormalBatch extends SKPBatch {
                   folder.mkdirs();
                }
                
-               int partitions = 1000;
+               int partitions = 10; // piecewise linear approximation partitions
+               double s = 1e-2;     // sqrt approximation step
                int simulationRuns = 100000;
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
@@ -78,11 +79,11 @@ public class SKPNormalBatch extends SKPBatch {
                storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
-                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
-                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
                   if(size < instanceSize[2]) 
-                     solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
+                     solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -387,7 +388,7 @@ public class SKPNormalBatch extends SKPBatch {
     * MILP
     */   
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder, METHOD method) throws IloException {
+   public static void solveMILP(String fileName, int partitions, double s, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method){
       case LC: //Compute optimal solution using Lazy Cut Generation
          {
@@ -405,7 +406,6 @@ public class SKPNormalBatch extends SKPBatch {
       case LC_WARM_START: //Compute optimal solution using Lazy Cut Generation
          {
             int warmStartPartitions = partitions;
-            double s = 1e-2; // sqrt approximation step
         	
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
          
@@ -441,7 +441,7 @@ public class SKPNormalBatch extends SKPBatch {
             SKPNormal[] batch = retrieveBatch(fileName);
             
             String fileNameSolved = folder+"/solved_normal_instances_MILP_"+partitions+".json";
-            SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+            SKPNormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, s, simulationRuns);
             
             solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
             System.out.println(GSONUtility.<SKPNormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -452,7 +452,7 @@ public class SKPNormalBatch extends SKPBatch {
       }
    }
    
-   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPNormalMILPSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, double s, int simulationRuns) throws IloException {
       /*
        * Sequential
        *
@@ -472,7 +472,7 @@ public class SKPNormalBatch extends SKPBatch {
                                                    .map(instance -> {
                                                       try {
                                                     	 System.out.println("Processing instance " + instance.toString());
-                                                    	 SKPNormalMILPSolvedInstance solvedInstance = SKPNormalMILP.solve(instance, partitions, simulationRuns);
+                                                    	 SKPNormalMILPSolvedInstance solvedInstance = SKPNormalMILP.solve(instance, partitions, s, simulationRuns);
                                                     	 System.out.println("Processed instance " + instance.toString() + "("+solvedInstance.cplexSolutionTimeMs+" ms)");
                                                          return solvedInstance;
                                                       } catch (IloException e) {

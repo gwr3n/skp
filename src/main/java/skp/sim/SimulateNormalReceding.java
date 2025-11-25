@@ -20,18 +20,20 @@ import skp.utilities.probability.SampleFactory;
 public class SimulateNormalReceding extends Simulate {
    SKPNormal instance;
    int partitions;
+   double s = 1e-2; // sqrt approximation step
    
-   public SimulateNormalReceding(SKPNormal instance, int partitions) {
+   public SimulateNormalReceding(SKPNormal instance, int partitions, double s) {
       super();
       this.instance = instance;
       this.partitions = partitions;
+      this.s = s;
    }
    
    public SKPNormalRecedingSolvedInstance solve(int simulationRuns) {
       
-      SimulateNormalReceding sim = new SimulateNormalReceding(instance, partitions);
+      SimulateNormalReceding sim = new SimulateNormalReceding(instance, partitions, s);
       
-      double[] realisations = sim.simulate(simulationRuns, partitions);
+      double[] realisations = sim.simulate(simulationRuns, partitions, s);
       Mean m = new Mean();
       double simSolutionMean = m.evaluate(realisations);
       StandardDeviation std = new StandardDeviation();
@@ -63,7 +65,7 @@ public class SimulateNormalReceding extends Simulate {
       return solvedInstance;
    }
    
-   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions) {
+   private int simulateOneItem(int t, double[] realizations, double remainingCapacity, int partitions, double s) {
       double[] previousRealizations = new double[t];
       System.arraycopy(realizations, 0, previousRealizations, 0, t);
       
@@ -86,7 +88,7 @@ public class SimulateNormalReceding extends Simulate {
       SKPNormalMILP milp = null;
       int[] knapsack = null;
       try {
-         milp = new SKPNormalMILP(reducedInstance, partitions, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
+         milp = new SKPNormalMILP(reducedInstance, partitions, s, PWAPPROXIMATION.EDMUNDSON_MADANSKI);
          milp.solve();
          knapsack = milp.getOptimalKnapsack();
          //System.out.println("Knapsack: "+Arrays.toString(knapsack));
@@ -99,11 +101,11 @@ public class SimulateNormalReceding extends Simulate {
       return knapsack[0];
    }
    
-   private double simulateOneRun(double[] realizations, int partitions) {
+   private double simulateOneRun(double[] realizations, int partitions, double s) {
       double knapsackValue = 0;
       double remainingCapacity = instance.getCapacity();
       for(int i = 0; i < realizations.length; i++) {
-         if(simulateOneItem(i, realizations, remainingCapacity, partitions) == 1) {
+         if(simulateOneItem(i, realizations, remainingCapacity, partitions, s) == 1) {
             remainingCapacity -= realizations[i];
             knapsackValue += this.instance.getExpectedValues()[i];
          }
@@ -112,11 +114,11 @@ public class SimulateNormalReceding extends Simulate {
       return knapsackValue;
    }
    
-   double[] simulate(int simulationRuns, int partitions) {
+   double[] simulate(int simulationRuns, int partitions, double s) {
       double[][] sampleMatrix = sampleWeights(simulationRuns);
       double[] knapsackValues = Arrays.stream(sampleMatrix)
                                       .parallel()
-                                      .mapToDouble(r -> simulateOneRun(r, partitions))
+                                      .mapToDouble(r -> simulateOneRun(r, partitions, s))
                                       .peek(r -> System.out.println("Simulation run completed: "+r))
                                       .toArray();
       return knapsackValues;
@@ -200,9 +202,10 @@ public class SimulateNormalReceding extends Simulate {
       SKPNormal instance = SKPNormal.getTestInstance();
       
       int partitions = 10;
+      double s = 1e-2;
       int simulationRuns = 100;
       
-      SimulateNormalReceding sim = new SimulateNormalReceding(instance, partitions);
+      SimulateNormalReceding sim = new SimulateNormalReceding(instance, partitions, s);
       System.out.println(GSONUtility.<SKPNormalRecedingSolvedInstance>printInstanceAsJSON(sim.solve(simulationRuns)));
    }
 }

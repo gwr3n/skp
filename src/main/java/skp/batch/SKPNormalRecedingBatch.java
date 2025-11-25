@@ -40,10 +40,11 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
                 *  generateInstances(batchFileName);
                 */
                
-               int partitions = 10;
+               int partitions = 10; // piecewise linear approximation partitions
+               double s = 1e-2;     // sqrt approximation step
                int simulationRuns = 100;
                try {
-                  solveMILP(batchFileName, partitions, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv);
                } catch (IloException e) {
                   e.printStackTrace();
                } 
@@ -56,11 +57,11 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
     * MILP receding
     */ 
    
-   public static void solveMILP(String fileName, int partitions, int simulationRuns, String folder) throws IloException {
+   public static void solveMILP(String fileName, int partitions, double s, int simulationRuns, String folder) throws IloException {
       SKPNormal[] batch = retrieveBatch(fileName);
       
       String fileNameSolved = folder+"/solved_normal_instances_MILP_receding.json";
-      SKPNormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, simulationRuns);
+      SKPNormalRecedingSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, s, simulationRuns);
       
       solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
       System.out.println(GSONUtility.<SKPNormalRecedingSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -69,10 +70,10 @@ public class SKPNormalRecedingBatch extends SKPNormalBatch{
       storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
    }
    
-   private static SKPNormalRecedingSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, int simulationRuns) throws IloException {
+   private static SKPNormalRecedingSolvedInstance[] solveBatchMILP(SKPNormal[] instances, String fileName, int partitions, double s, int simulationRuns) throws IloException {
       ArrayList<SKPNormalRecedingSolvedInstance>solved = new ArrayList<SKPNormalRecedingSolvedInstance>();
       for(SKPNormal instance : instances) {
-         solved.add(new SimulateNormalReceding(instance, partitions).solve(simulationRuns));
+         solved.add(new SimulateNormalReceding(instance, partitions, s).solve(simulationRuns));
          System.out.println("Solved instance number "+solved.size());
          GSONUtility.<SKPNormalRecedingSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPNormalRecedingSolvedInstance[solved.size()]), fileName);
       }
