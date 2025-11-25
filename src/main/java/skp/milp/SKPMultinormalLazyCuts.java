@@ -47,12 +47,13 @@ public class SKPMultinormalLazyCuts {
       this.warmStart = false;
    }
    
-   public SKPMultinormalLazyCuts(SKPMultinormal instance, int simulationRuns, int warmStartPartitions){
+   public SKPMultinormalLazyCuts(SKPMultinormal instance, int simulationRuns, int warmStartPartitions, double s){
       this.instance = instance;
       this.independentDemand = independentDemand(instance);
       this.simulationRuns = simulationRuns;
       this.warmStart = true;
       this.warmStartPartitions = warmStartPartitions;
+      this.s = s;
    }
    
    static boolean independentDemand(SKPMultinormal instance) {
@@ -107,6 +108,8 @@ public class SKPMultinormalLazyCuts {
    private static double tolerance = 1e-4; // // Equivalent to CPLEX https://www.ibm.com/docs/en/icos/22.1.1?topic=parameters-relative-mip-gap-tolerance
    private boolean warmStart;
    private int warmStartPartitions;
+   // Knapsack weight standard deviation via piecewise linearization of sqrt(V)
+   private double s;                // linearisation step
    
    public SKPMultinormalCutsSolvedInstance solve() throws IloException {
       long startGlobal = System.currentTimeMillis();
@@ -185,7 +188,7 @@ public class SKPMultinormalLazyCuts {
          cplex.addGe(V, varExpr);
          
          // Knapsack weight standard deviation via piecewise linearization of sqrt(V)
-         double s = 10e-2;                     // linearisation step
+         //double s = 1e-2;                   // linearisation step
          double x0 = Math.sqrt(s)/4;           // value at 0 (same role as x0 in .mod)
 
          // Upper bound on V

@@ -68,7 +68,7 @@ public class SKPNormalBatch extends SKPBatch {
                   folder.mkdirs();
                }
                
-               int partitions = 10;
+               int partitions = 1000;
                int simulationRuns = 100000;
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
@@ -404,12 +404,13 @@ public class SKPNormalBatch extends SKPBatch {
          break;
       case LC_WARM_START: //Compute optimal solution using Lazy Cut Generation
          {
-        	int warmStartPartitions = partitions;
+            int warmStartPartitions = partitions;
+            double s = 1e-2;
         	
             SKPMultinormal[] batch = convertToMVNDistributionBatch(retrieveBatch(fileName));
          
             String fileNameSolved = folder+"/solved_normal_instances_LC_warm_start_"+warmStartPartitions+".json";
-            SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns, warmStartPartitions);
+            SKPMultinormalCutsSolvedInstance[] solvedBatch = SKPMultinormalBatch.solveBatchMILPLazyCuts(batch, fileNameSolved, simulationRuns, warmStartPartitions, s);
          
             System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
          

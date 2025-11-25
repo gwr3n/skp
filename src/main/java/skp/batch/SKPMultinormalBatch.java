@@ -538,7 +538,7 @@ public class SKPMultinormalBatch extends SKPBatch {
       return solved;
    }
    
-   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPMultinormal[] instances, String fileName, int simulationRuns, int warmStartPartitions) throws IloException {
+   static SKPMultinormalCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPMultinormal[] instances, String fileName, int simulationRuns, int warmStartPartitions, double s) throws IloException {
       /*
        * Sequential
        *
@@ -556,7 +556,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                    .parallel()
                                                                    .map(instance -> {
                                                                        try {
-                                                                          return new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions).solve();
+                                                                          return new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions, s).solve();
                                                                        } catch (IloException e) {
                                                                           // TODO Auto-generated catch block
                                                                           e.printStackTrace();
