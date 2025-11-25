@@ -184,7 +184,7 @@ public class SKPMultinormalLazyCuts {
          cplex.addGe(V, varExpr);
          
          // Knapsack weight standard deviation via piecewise linearization of sqrt(V)
-         double s = 1.0;                       // linearisation step
+         double s = 10e-2;                     // linearisation step
          double x0 = Math.sqrt(s)/4;           // value at 0 (same role as x0 in .mod)
 
          // Upper bound on V

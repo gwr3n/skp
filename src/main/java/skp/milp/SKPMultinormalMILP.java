@@ -20,7 +20,7 @@ public class SKPMultinormalMILP extends SKPMILP{
    boolean ignoreCorrelation;
    
    PWAPPROXIMATION pwa;        // sqrt approximation       
-   double s = 1;               // sqrt approximation step    
+   double s = 10e-2;           // sqrt approximation step    
    double x0 = Math.sqrt(s)/4; // sqrt approximation x0  
 
    public SKPMultinormalMILP(SKPMultinormal instance, int partitions, PWAPPROXIMATION pwa)  throws IloException{
