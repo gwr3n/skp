@@ -42,8 +42,12 @@ float slopes[i in breakpoints] = (sqrt(i*s) - sqrt((i - 1)*s))/s;
 maximize sum(i in objects) X[i]*expectedValues[i] - c*P; // Maximize profit minus expected capacity shortage cost
 
 subject to{
-	M == sum(i in objects) X[i]*expectedWeights[i];                                       // Expected knapsack weight
-	V >= sum(j in objects) (sum(i in objects) X[i]*varianceCovarianceWeights[i][j])*X[j]; // Knapsack weight variance
+	M == sum(i in objects) X[i]*expectedWeights[i];                                          // Expected knapsack weight
+	// V >= sum(j in objects) (sum(i in objects) X[i]*varianceCovarianceWeights[i][j])*X[j]; // Knapsack weight variance
+	V >= sum(i in objects) varianceCovarianceWeights[i][i] * X[i]                            // Knapsack weight variance (decomposed & filtered)
+       + sum(i in objects, j in objects: i < j && abs(varianceCovarianceWeights[i][j]) > 1e-6) 2 * varianceCovarianceWeights[i][j] * X[i] * X[j]; 
+    V <= sum(i in objects, j in objects) varianceCovarianceWeights[i][j];                    // max possible variance
+
 	S == piecewise(b in breakpoints){slopes[b] -> b*s; 0}(0, x0)(V); // sqrt(V)
 	
 	/**

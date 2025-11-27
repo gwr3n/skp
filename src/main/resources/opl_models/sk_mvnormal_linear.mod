@@ -1,4 +1,9 @@
-
+/*********************************************
+ * OPL 12.8.0.0 Model
+ * Author: Roberto Rossi
+ * Creation Date: 27 Nov 2025 at 20:03:21
+ *********************************************/
+ 
 int N = ...; // Number of objects
 range objects = 1..N;
 
@@ -24,7 +29,7 @@ dvar float+ S;           // Knapsack weight standard deviation
 dvar float+ P;           // Expected capacity shortage
 
 // Auxiliary variables for linearization
-dvar boolean Y[i in objects, j in objects: i <= j]; // Represents X[i]*X[j]
+dvar boolean Y[objects][objects]; // Represents X[i]*X[j]
 
 range breakpoints = 1..ftoi(ceil((sum(i in objects, j in objects)varianceCovarianceWeights[i][j])/s));
 float slopes[b in breakpoints] = (sqrt(b*s) - sqrt((b - 1)*s))/s;
@@ -36,10 +41,10 @@ subject to {
     M == sum(i in objects) X[i]*expectedWeights[i];
 
     // Linearized variance constraint using Y[i,j]
-    V >= sum(i in objects, j in objects: i <= j) varianceCovarianceWeights[i][j] * (i == j ? Y[i,j] : 2*Y[i,j]);
+    V >= sum(i in objects, j in objects) varianceCovarianceWeights[i][j] * Y[i,j];
 
     // Linking constraints for Y[i,j]
-    forall(i in objects, j in objects: i <= j) {
+    forall(i in objects, j in objects) {
         Y[i,j] <= X[i];
         Y[i,j] <= X[j];
         Y[i,j] >= X[i] + X[j] - 1;

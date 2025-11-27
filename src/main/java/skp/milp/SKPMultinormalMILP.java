@@ -28,7 +28,7 @@ public class SKPMultinormalMILP extends SKPMILP{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
-      this.model = "sk_mvnormal_linear";
+      this.model = "sk_mvnormal_bilinear";
       this.pwa = pwa;
    }*/
    
@@ -36,7 +36,7 @@ public class SKPMultinormalMILP extends SKPMILP{
       this.instance = instance;
       this.partitions = partitions;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
-      this.model = "sk_mvnormal_linear";
+      this.model = "sk_mvnormal_bilinear";
       this.pwa = pwa;
       this.s = s;       
       this.x0 = Math.sqrt(s)/4;
@@ -45,7 +45,7 @@ public class SKPMultinormalMILP extends SKPMILP{
    public SKPMultinormalMILP(SKPMultinormal instance, PWAPPROXIMATION pwa, double epsilon)  throws IloException{
       this.instance = instance;
       this.linearizationSamples = PiecewiseStandardNormalFirstOrderLossFunction.getLinearizationSamples();
-      this.model = "sk_mvnormal_linear";
+      this.model = "sk_mvnormal_bilinear";
       this.pwa = pwa;
       
       int[] param = chooseLinearisationParameters(epsilon);
