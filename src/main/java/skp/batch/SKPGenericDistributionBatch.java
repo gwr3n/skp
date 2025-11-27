@@ -78,12 +78,11 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                
                int linearizationSamples = 1000;
                int simulationRuns = 10000;   
-               int maxCuts = 1000;
                try {
-                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
-                  solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS_NORMAL_APPROXIMATION);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS_NORMAL_APPROXIMATION);
                   if(size < instanceSize[2])
-                     solveMILP(instances, linearizationSamples, maxCuts, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
+                     solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -504,7 +503,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }*/
    
-   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int maxCuts, int simulationRuns, String folder, SolutionMethod method) throws IloException {
+   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, String folder, SolutionMethod method) throws IloException {
       switch(method) {
          case SAA: {  
             int Nsmall = 1000; 
@@ -524,7 +523,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_LC.json";
-            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns, false);
+            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, simulationRuns, false);
             
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
             System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -538,7 +537,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_LC_normal_approx.json";
-            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, maxCuts, simulationRuns, true);
+            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, simulationRuns, true);
             
             // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
             System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
@@ -550,7 +549,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       }
    }
    
-   private static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int maxCuts, int simulationRuns, boolean normalApproximation) throws IloException {
+   private static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns, boolean normalApproximation) throws IloException {
       /*
        * Sequential
        * 
