@@ -61,4 +61,3 @@ subject to{
   		P >= (sum(k in p..nbpartitions)prob[k]*means[k])*S - sum(k in p..nbpartitions)prob[k]*(C-M) + error*S;
   	P >= error*S;
 }
-
