@@ -47,7 +47,7 @@ import umontreal.ssj.randvar.RandomVariateGen;
 public class SKPMultinormalBatch extends SKPBatch {
    
    public static void main(String args[]) {
-      int[] instanceSize = {25, 50, 100, 500};
+      int[] instanceSize = {25, 50, 100};
       double[] coeff_of_var  = {0.1, 0.2};
       double[] coeff_of_cor  = {0.75, 0.95};
       INSTANCE_TYPE[] instanceType = {
@@ -74,8 +74,8 @@ public class SKPMultinormalBatch extends SKPBatch {
                   String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances.json";
                   generateInstances(batchFileName, t, size, cv, rho);
                   
-                  int partitions = 10;    // piecewise linear approximation partitions
-                  double s = 1e-2;        // sqrt approximation step
+                  int partitions = 100;    // piecewise linear approximation partitions
+                  double s = 1e-1;        // sqrt approximation step
                   
                   String OPLDataFileZipArchive = "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho+"/multinormal_instances_opl.zip";
                   storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
@@ -468,13 +468,13 @@ public class SKPMultinormalBatch extends SKPBatch {
          {
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
-            String fileNameSolved = folder+"/solved_multinormal_instances_MILP.json";
+            String fileNameSolved = folder+"/solved_multinormal_instances_MILP_"+partitions+".json";
             SKPMultinormalMILPSolvedInstance[] solvedBatch = solveBatchMILP(batch, fileNameSolved, partitions, s, simulationRuns);
             
             solvedBatch = retrieveSolvedBatchMILP(fileNameSolved);
             System.out.println(GSONUtility.<SKPMultinormalMILPSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_MILP.csv";
+            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_MILP_"+partitions+".csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
       }
