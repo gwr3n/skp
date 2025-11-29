@@ -37,6 +37,7 @@ import skp.milp.instance.SKPMultinormalMILPSolvedInstance;
 import skp.saa.SKPMultinormalSAA;
 import skp.saa.SKPMultinormalSAA_LD;
 import skp.saa.instance.SKPMultinormalSAASolvedInstance;
+import skp.saa.instance.SKPMultinormalSAA_LDSolvedInstance;
 import skp.sdp.DSKPMultinormal;
 import skp.sdp.instance.DSKPMultinormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -432,7 +433,6 @@ public class SKPMultinormalBatch extends SKPBatch {
    public static void solveMILP(String fileName, int partitions, double s, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method){
       case SAA:  
-         // Compute optimal solution using SAA
          {
             int Nsmall = 1000; 
             int Nlarge = simulationRuns; 
@@ -440,10 +440,23 @@ public class SKPMultinormalBatch extends SKPBatch {
             
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
-            String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
+            String fileNameSolved = folder+"/solved_multinormal_instances_SAA_LD.json";
             SKPMultinormalSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, method);
             
             System.out.println(GSONUtility.<SKPMultinormalSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA_LD.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+         }
+         break;
+      case SAA_LD:  
+         {            
+            SKPMultinormal[] batch = retrieveBatch(fileName);
+            
+            String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
+            SKPMultinormalSAA_LDSolvedInstance[] solvedBatch = solveBatchMILPSAA_LD(batch, fileNameSolved);
+            
+            System.out.println(GSONUtility.<SKPMultinormalSAA_LDSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
@@ -588,16 +601,31 @@ public class SKPMultinormalBatch extends SKPBatch {
        */
       SKPMultinormalSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
-                                                               .map(instance -> {
-            switch(method) {
-               case SAA:
-                  return new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M);
-               case SAA_LD:
-               default:
-                  return new SKPMultinormalSAA_LD(instance).solve();
-            }                                                                  
-      }).toArray(SKPMultinormalSAASolvedInstance[]::new);
+                                                               .map(instance -> new SKPMultinormalSAA(instance).solve(Nsmall, Nlarge, M)).toArray(SKPMultinormalSAASolvedInstance[]::new);
       GSONUtility.<SKPMultinormalSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   static SKPMultinormalSAA_LDSolvedInstance[] solveBatchMILPSAA_LD(SKPMultinormal[] instances, String fileName) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPMultinormalSAA_LDSolvedInstance>solved = new ArrayList<SKPMultinormalSAA_LDSolvedInstance>();
+      for(SKPMultinormal instance : instances) {
+         solved.add(new SKPMultinormalSAA_LD(instance).solve());
+         
+      }
+      GSONUtility.<SKPMultinormalSAA_LDSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPMultinormalSAA_LDSolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPMultinormalSAA_LDSolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPMultinormalSAA_LDSolvedInstance[] solved = Arrays.stream(instances)
+                                                          .parallel()
+                                                          .map(instance -> new SKPMultinormalSAA_LD(instance).solve()).toArray(SKPMultinormalSAA_LDSolvedInstance[]::new);
+      GSONUtility.<SKPMultinormalSAA_LDSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
 
@@ -648,6 +676,39 @@ public class SKPMultinormalBatch extends SKPBatch {
       String body = "";
       
       for(SKPMultinormalSAASolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(s.instance.getWeights().getMean()).replace(",", "\t")+ ", " +
+                 Arrays.deepToString(s.instance.getWeights().getCovariance()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.optGap1 + ", " +
+                 s.optGap2 + ", " +
+                 s.Nsmall + ", " +
+                 s.Nlarge + ", " +
+                 s.M + "\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPMultinormalSAA_LDSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, covarianceWeights,"
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "solutionTimeMs, optGap1, optGap2, N, N', M\n";
+      String body = "";
+      
+      for(SKPMultinormalSAA_LDSolvedInstance s : instances) {
          body += s.instance.getInstanceID() + ", " +
                  Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
                  Arrays.toString(s.instance.getWeights().getMean()).replace(",", "\t")+ ", " +

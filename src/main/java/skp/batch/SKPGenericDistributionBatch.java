@@ -25,6 +25,7 @@ import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
 import skp.saa.SKPGenericDistributionSAA;
 import skp.saa.SKPGenericDistributionSAA_LD;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAA_LDSolvedInstance;
 import skp.sdp.DSKPGenericDistribution;
 import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -41,7 +42,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       GAMMA
    }
    
-   enum SolutionMethod {
+   enum METHOD {
       LAZY_CUTS,
       LAZY_CUTS_NORMAL_APPROXIMATION,
       SAA,
@@ -79,10 +80,10 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                int linearizationSamples = 1000;
                int simulationRuns = 10000;   
                try {
-                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS);
-                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.LAZY_CUTS_NORMAL_APPROXIMATION);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LAZY_CUTS);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LAZY_CUTS_NORMAL_APPROXIMATION);
                   if(size < instanceSize[2])
-                     solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, SolutionMethod.SAA);
+                     solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
                } catch (IloException e) {
                   e.printStackTrace();
                }
@@ -503,7 +504,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return instances;
    }*/
    
-   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, String folder, SolutionMethod method) throws IloException {
+   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, String folder, METHOD method) throws IloException {
       switch(method) {
          case SAA: {  
             int Nsmall = 1000; 
@@ -511,11 +512,21 @@ public class SKPGenericDistributionBatch extends SKPBatch {
             int M = 1000;
             
             String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, method);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
             String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
+         case SAA_LD: {              
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA_LD.json";
+            SKPGenericDistributionSAA_LDSolvedInstance[] solvedBatch = solveBatchMILPSAA_LD(batch, fileNameSolved);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA_LD.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
             break;
          }
@@ -579,7 +590,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
       return solved;
    }
    
-   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M, SolutionMethod method) throws IloException {
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
       /*
        * Sequential
        *
@@ -588,7 +599,7 @@ public class SKPGenericDistributionBatch extends SKPBatch {
          solved.add(new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M, tolerance));
          
       }
-      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]), fileName);
+      GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]), fileName);
       return solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]);
       */
       
@@ -597,16 +608,33 @@ public class SKPGenericDistributionBatch extends SKPBatch {
        */
       SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
                                                                .parallel()
-                                                               .map(instance -> {
-           switch(method) {
-              case SAA:
-                 return new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M);
-              case SAA_LD:
-              default:
-                 return new SKPGenericDistributionSAA_LD(instance).solve();
-           }
-      }).toArray(SKPGenericDistributionSAASolvedInstance[]::new);
+                                                               .map(instance -> new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M))
+                                                               .toArray(SKPGenericDistributionSAASolvedInstance[]::new);
       GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   static SKPGenericDistributionSAA_LDSolvedInstance[] solveBatchMILPSAA_LD(SKPGenericDistribution[] instances, String fileName) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionSAA_LDSolvedInstance>solved = new ArrayList<SKPGenericDistributionSAA_LDSolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new SKPGenericDistributionSAA_LD(instance).solve());
+         
+      }
+      GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionSAA_LDSolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionSAA_LDSolvedInstance[] solved = Arrays.stream(instances)
+                                                                  .parallel()
+                                                                  .map(instance -> new SKPGenericDistributionSAA_LD(instance).solve())
+                                                                  .toArray(SKPGenericDistributionSAA_LDSolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>saveInstanceToJSON(solved, fileName);
       return solved;
    }
    
@@ -677,6 +705,49 @@ public class SKPGenericDistributionBatch extends SKPBatch {
                  s.Nsmall + ", " +
                  s.Nlarge + ", " +
                  s.M + "\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPGenericDistributionSAA_LDSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "N_LD_initial, N_LD_final, N_LD_max, " // Phase 0
+            + "N_start, N_last, N_attempts, phase0StopReason, " // Phase 0
+            + "N_phase1, Mfinal, relCenterTerm, relGap1, relGap2, phase1StopReason, " // Phase 1
+            + "solutionTimeMs\n";
+      String body = "";
+      
+      for(SKPGenericDistributionSAA_LDSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.N_LD_initial + ", " +
+                 s.N_LD_final + ", " +
+                 s.N_LD_max + ", " +
+                 s.N_start + ", " +
+                 s.N_last + ", " +
+                 s.N_attempts + ", " +
+                 s.phase0StopReason + ", " +
+                 s.N_phase1 + ", " +
+                 s.Mfinal + ", " +
+                 s.relCenterTerm + ", " +
+                 s.relGap1 + ", " +
+                 s.relGap2 + ", " +
+                 s.phase1StopReason + ", " +
+                 s.solutionTimeMs + "\n";
       }
       PrintWriter pw;
       try {

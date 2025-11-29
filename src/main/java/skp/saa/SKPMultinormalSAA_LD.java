@@ -130,8 +130,8 @@ public final class SKPMultinormalSAA_LD {
                               +"rel1=%.3e rel2=%.3e%n",
                               M, gHat, gap1, gap2, gap1/gHat, gap2/gHat);
 
-            gap1Rel = gap1 / gHat;
-            gap2Rel = gap2 / gHat;
+            gap1Rel = gap1 / Math.max(1e-12, Math.abs(gHat));
+            gap2Rel = gap2 / Math.max(1e-12, Math.abs(gHat));
             finalMean = gHat;
 
             if (gap1Rel < relTol /* && gap2Rel < relTol */) break;
@@ -143,7 +143,7 @@ public final class SKPMultinormalSAA_LD {
                e.printStackTrace();
             }
             if (System.currentTimeMillis()-wall0 > wallMs)
-                throw new RuntimeException("wall-clock limit");
+               break;
         }
 
         long sec=(System.currentTimeMillis()-wall0)/1000;

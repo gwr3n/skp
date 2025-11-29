@@ -27,7 +27,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import ilog.concert.IloException;
-import skp.batch.SKPGenericDistributionBatch.SolutionMethod;
 import skp.folf.PiecewiseStandardNormalFirstOrderLossFunction;
 import skp.instance.SKPGenericDistribution;
 import skp.instance.SKPMultinormal;
@@ -36,6 +35,7 @@ import skp.milp.SKPNormalMILP;
 import skp.milp.instance.SKPMultinormalCutsSolvedInstance;
 import skp.milp.instance.SKPNormalMILPSolvedInstance;
 import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAA_LDSolvedInstance;
 import skp.sdp.DSKPNormal;
 import skp.sdp.instance.DSKPNormalSolvedInstance;
 import skp.utilities.gson.GSONUtility;
@@ -79,16 +79,16 @@ public class SKPNormalBatch extends SKPBatch {
                storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                
                try {
-                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
-                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
-                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
+                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
+                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
+                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
                   if(size < instanceSize[2]) 
-                     solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
+                     solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA_LD);
                } catch (IloException e) {
                   e.printStackTrace();
                }
-               if(size == instanceSize[0]) 
-                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+               //if(size == instanceSize[0]) 
+                  //solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
@@ -418,7 +418,7 @@ public class SKPNormalBatch extends SKPBatch {
             SKPMultinormalBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
-      case SAA: // SAA
+      case SAA: 
          {  
             int Nsmall = 1000; 
             int Nlarge = simulationRuns; 
@@ -427,7 +427,7 @@ public class SKPNormalBatch extends SKPBatch {
             SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
             
             String fileNameSolved = folder+"/solved_normal_instances_SAA.json";
-            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, (method == METHOD.SAA) ? SolutionMethod.SAA : SolutionMethod.SAA_LD);
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
             
             System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
@@ -435,6 +435,19 @@ public class SKPNormalBatch extends SKPBatch {
             SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
+      case SAA_LD: 
+      {           
+         SKPGenericDistribution[] batch = convertToGenericDistributionBatch(retrieveBatch(fileName));
+         
+         String fileNameSolved = folder+"/solved_normal_instances_SAA_LD.json";
+         SKPGenericDistributionSAA_LDSolvedInstance[] solvedBatch = SKPGenericDistributionBatch.solveBatchMILPSAA_LD(batch, fileNameSolved);
+         
+         System.out.println(GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+         
+         String fileNameSolvedCSV = folder+"/solved_normal_instances_SAA_LD.csv";
+         SKPGenericDistributionBatch.storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+      }
+      break;
       case PWLA:
       default:
          {

@@ -7,7 +7,7 @@ import ilog.concert.IloException;
 import skp.instance.SKPGenericDistribution;
 import skp.milp.SKPGenericDistributionScenarioBased;
 import skp.milp.instance.SKPGenericDistributionScenarioBasedSolvedInstance;
-import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAA_LDSolvedInstance;
 import skp.sim.SimulateGenericDistribution;
 import skp.utilities.gson.GSONUtility;
 import umontreal.ssj.probdist.NormalDist;
@@ -21,7 +21,7 @@ public final class SKPGenericDistributionSAA_LD {
     private static final double alpha  = 0.05;   // LD tail
     private static final double delta  = 0.0;    // usually 0
     private static final int    N0     = 64;     // start N
-    private static final int    Mmax   = 1000;    // maximum replications
+    private static final int    Mmax   = 1000;   // maximum replications
     private static final int    Nprime = 10_000; // evaluation sample
     private static final int    warmUp = 32;     // for CLT
     private static final double relTol = 1e-4;   // relative gap
@@ -31,8 +31,7 @@ public final class SKPGenericDistributionSAA_LD {
     private final SKPGenericDistribution inst;
     private final RandomStream           rng;
 
-    private final List<SKPGenericDistributionScenarioBasedSolvedInstance> reps
-            = new ArrayList<>();
+    private final List<SKPGenericDistributionScenarioBasedSolvedInstance> reps = new ArrayList<>();
     private final List<double[][]> smallScen = new ArrayList<>(); // size-N scenarios
 
     private double sigma2Max = 0.0;
@@ -49,13 +48,25 @@ public final class SKPGenericDistributionSAA_LD {
     }
 
     /*==================================================================*/
-    public SKPGenericDistributionSAASolvedInstance solve() {
-
+    public SKPGenericDistributionSAA_LDSolvedInstance solve() {
+       
         long wall0 = System.currentTimeMillis();
         int  N     = N0;
 
         /* ---------- Phase 0 : enlarge N until LD requirement ---------- */
+        class Phase0MiniLog {
+           long nldFirst=-1, nldFinal=-1, nldMax=-1; 
+           long N_start=N0, N_last=N0, N_attempts=1;
+           String stop; // "SUCCESS", "MMAX", "TIMEOUT"
+        }
+        Phase0MiniLog p0 = new Phase0MiniLog();
         while (true) {
+            
+            if (System.currentTimeMillis() - wall0 > wallMs) {
+               p0.stop  = "TIMEOUT";
+               p0.N_last = N;
+               break;
+            }
 
             try {
                makeReplication(N);
@@ -64,7 +75,11 @@ public final class SKPGenericDistributionSAA_LD {
                e.printStackTrace();
             }
 
-            if (reps.size() >= Mmax) break;
+            if (reps.size() >= Mmax) {
+               p0.stop = "MMAX";
+               System.out.println("DEBUG LD: reached Mmax");
+               break;
+            }
             
             /* wait until we have at least one diff-variance */
             if (sigma2Max == 0.0) continue;
@@ -73,20 +88,43 @@ public final class SKPGenericDistributionSAA_LD {
             int    k      = inst.getItems();
             double logS   = k * Math.log(2.0);                   // |S| = 2^k
             double gamma  = (epsAbs-delta)*(epsAbs-delta)
-                          / (2.0 * sigma2Max);
+                          / (3.0 * sigma2Max);
             int    Nld    = (int)Math.ceil( (logS - Math.log(alpha)) / gamma );
 
             System.out.printf("DEBUG LD:  N=%d σ̂²max=%.3g γ̂=%.3g N_LD=%d%n",
                               N, sigma2Max, gamma, Nld);
+            
+            /* ------- logging ----------------------- */
+            if (sigma2Max > 0 && p0.nldFirst < 0) 
+               p0.nldFirst = Nld; 
+            p0.nldMax = Math.max(p0.nldMax, Nld);
+            p0.nldFinal = Nld; // overwrite each time; it will hold the last value at exit.
+            /* ------- end logging ------------------- */
 
-            if (N >= Nld) break;
+            if (N >= Nld) {
+               p0.stop = "SUCCESS";
+               p0.N_last = N;
+               System.out.println("DEBUG LD: satisfied N_LD requirement");
+               break;
+            }
 
             System.out.println("DEBUG LD: increasing N to " + (N<<1));
+            p0.N_attempts++;
             N <<= 1;
+            p0.N_last = N;
             reset();
         }
 
         /* ---------- Phase 1 : CLT gap loop (both estimators) ---------- */
+        class Phase1MiniLog {
+           int    N, Mfinal;
+           double vBar, gHat, relGap1, relGap2;   // gap2 can be NaN if unused
+           long   wallMs;
+           String stop;                     // "CERTIFIED", "MMAX", "TIMEOUT"
+        }
+        Phase1MiniLog p1 = new Phase1MiniLog();
+        p1.N      = N;
+        
         double finalGap1Rel=Double.POSITIVE_INFINITY, finalGap2Rel=Double.POSITIVE_INFINITY;
         double finalEvalMean = Double.NaN;
 
@@ -134,22 +172,35 @@ public final class SKPGenericDistributionSAA_LD {
             }
             s2bar = s2bar / (M * (M - 1));               // \bar S²_M / M
             double gap2 = diffMean + z * Math.sqrt(s2bar);
-
+            
+            /* ------- logging ----------------------- */
+            double abs_gHat = Math.max(1e-12, Math.abs(gHat));
+            p1.vBar = vBar;   // \bar v_N
+            p1.gHat = gHat;   // \hat g_{N'}(\hat x)
+            p1.relGap1 = gap1/abs_gHat;
+            p1.relGap2 = gap2/abs_gHat;   
+            /* ------- end logging ------------------- */
+            
             System.out.printf(
               "DEBUG GAP: rep=%2d  ĝ=%.6f  gap1=%.3e  gap2=%.3e  rel1=%.3e%n rel2=%.3e%n",
-              M, gHat, gap1, gap2, gap1/gHat, gap2/gHat);
-
-            if (gap1/gHat < relTol /*&& gap2/gHat < relTol*/) {
-                finalGap1Rel = gap1/gHat;
-                finalGap2Rel = gap2/gHat;
+              M, gHat, gap1, gap2, gap1/abs_gHat, gap2/abs_gHat);
+            
+            if (gap1/abs_gHat < relTol /*&& gap2/abs_gHat < relTol*/) {
+                finalGap1Rel = gap1/abs_gHat;
+                finalGap2Rel = gap2/abs_gHat;
                 finalEvalMean= gHat;
+                System.out.println("DEBUG: certified optimality");
+                
+                p1.stop = "CERTIFIED";
                 break;
             }
             if (M >= Mmax) {
-                finalGap1Rel = gap1/gHat;
-                finalGap2Rel = gap2/gHat;
+                finalGap1Rel = gap1/abs_gHat;
+                finalGap2Rel = gap2/abs_gHat;
                 finalEvalMean= gHat;
                 System.out.println("DEBUG: reached Mmax");
+                
+                p1.stop = "MMAX";
                 break;
             }
             try {
@@ -158,27 +209,44 @@ public final class SKPGenericDistributionSAA_LD {
                // TODO Auto-generated catch block
                e.printStackTrace();
             }
-            if (System.currentTimeMillis()-wall0 > wallMs)
-                throw new RuntimeException("wall-clock limit");
+            if (System.currentTimeMillis()-wall0 > wallMs) {
+                p1.stop = "TIMEOUT";
+                break;
+            }
         }
-
         long sec = (System.currentTimeMillis()-wall0)/1000;
+        
+        /* ------- logging ----------------------- */
+        p1.Mfinal = reps.size();
+        p1.wallMs = sec*1000L;
+        /* ------- end logging ------------------- */
+
         System.out.printf("TERMINATE: relGap1 %.3e  relGap2 %.3e  "
                           +"rep=%d  N=%d  time=%ds%n",
                           finalGap1Rel, finalGap2Rel, reps.size(), N, sec);
 
         /* -------- build solved-instance --------------------------------*/
         SKPGenericDistributionScenarioBasedSolvedInstance inc = reps.get(bestIdx);
-        return new SKPGenericDistributionSAASolvedInstance(
-                inst,
-                inc.optimalKnapsack,
-                finalEvalMean,
-                sec*1000.0,
-                finalGap1Rel,
-                finalGap2Rel,
-                N,
-                Nprime,
-                reps.size());
+        return new SKPGenericDistributionSAA_LDSolvedInstance(
+              inst,
+              inc.optimalKnapsack,
+              finalEvalMean,
+              p0.nldFirst,
+              p0.nldFinal,
+              p0.nldMax,
+              p0.N_start,
+              p0.N_last,
+              p0.N_attempts,
+              p0.stop,
+              p1.N,
+              p1.Mfinal,
+              p1.vBar,
+              p1.gHat,
+              p1.relGap1,
+              p1.relGap2,
+              p1.stop,
+              p1.wallMs
+              );
     }
 
     /*==================== helpers ====================================*/
@@ -238,17 +306,20 @@ public final class SKPGenericDistributionSAA_LD {
    }
 
     private double computeSampleAverage(int[] knap, double[][] scen) {
-        double val=0;
-        for (int i=0;i<knap.length;i++)
-            if (knap[i]==1) val += inst.getExpectedValues()[i];
-        for (double[] row:scen) {
-            double wt=0;
-            for (int i=0;i<knap.length;i++)
-                if (knap[i]==1) wt += row[i];
-            val -= inst.getShortageCost()*Math.max(0, wt-inst.getCapacity());
-        }
-        return val/scen.length;
-    }
+       double det = 0.0;
+       for (int i = 0; i < knap.length; i++)
+           if (knap[i] == 1) det += inst.getExpectedValues()[i]; // deterministic part
+
+       double sum = 0.0;
+       for (double[] row : scen) {
+           double wt = 0.0;
+           for (int i = 0; i < knap.length; i++)
+               if (knap[i] == 1) wt += row[i];
+           double penalty = inst.getShortageCost() * Math.max(0, wt - inst.getCapacity());
+           sum += (det - penalty);
+       }
+       return sum / scen.length;
+   }
 
     private void reset() {
         reps.clear();
@@ -299,7 +370,7 @@ public final class SKPGenericDistributionSAA_LD {
         SKPGenericDistributionSAA_LD solver =
               new SKPGenericDistributionSAA_LD(inst);
 
-        SKPGenericDistributionSAASolvedInstance res = solver.solve();
+        SKPGenericDistributionSAA_LDSolvedInstance res = solver.solve();
         System.out.println("\nJSON RESULT:\n"+
                            GSONUtility.printInstanceAsJSON(res));
     }
