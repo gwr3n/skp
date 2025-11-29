@@ -65,7 +65,7 @@ public final class SKPMultinormalSAA_LD {
             if (reps.size() >= Mmax) break;
             if (sigma2Max == 0.0) continue;          // need diff variance first
 
-            double epsAbs = relTol * bestAbs;
+            double epsAbs = Math.max(relTol * bestAbs, 1e-8);
             int    k      = inst.getItems();
             double logS   = k * Math.log(2.0);       // |S| = 2^k
             double gamma  = (epsAbs-delta)*(epsAbs-delta)/(2.0*sigma2Max);
@@ -99,29 +99,29 @@ public final class SKPMultinormalSAA_LD {
 
             int    M    = reps.size();
             double vBar = sumV / M;
-            double s2_M = varianceV(vBar);
+            double s2_M = varianceV(vBar); // This is Var_hat(vBar)
 
             /* ---- gap1 (fresh evaluation) ---- */
             double[] eval = freshEvaluation(Nprime);
             double   gHat = eval[0];
             double   s2Np = eval[1] / Nprime;
-            double z   = NormalDist.inverseF01(0.95);
-            double gap1= (vBar - gHat) + z*Math.sqrt(s2Np + s2_M/M);
+            double z   = NormalDist.inverseF01(1.0 - alpha);
+            double gap1= (vBar - gHat) + z*Math.sqrt(s2Np + s2_M);
 
             /* ---- gap2 (Section 3 alternative) ---- */
+            double[] gms = new double[M];
             double gBarN = 0.0;
-            for (int m=0; m<M; m++)
-                gBarN += sampleAverage(reps.get(bestIdx).optimalKnapsack,
-                                       smallScen.get(m));
+            for (int m=0; m<M; m++) {
+                gms[m] = sampleAverage(reps.get(bestIdx).optimalKnapsack, smallScen.get(m));
+                gBarN += gms[m];
+            }
             gBarN /= M;
 
             double diff  = vBar - gBarN;
             double s2bar = 0.0;
             for (int m=0; m<M; m++) {
-                double gm = sampleAverage(reps.get(bestIdx).optimalKnapsack,
-                                          smallScen.get(m));
                 double vm = reps.get(m).milpSolutionValue;
-                s2bar += Math.pow((vm-gm) - diff, 2);
+                s2bar += Math.pow((vm-gms[m]) - diff, 2);
             }
             s2bar /= (M*(M-1));
             double gap2 = diff + z*Math.sqrt(s2bar);
@@ -211,7 +211,7 @@ public final class SKPMultinormalSAA_LD {
         }
         double m=0; for(double v:d) m+=v; m/=N;
         double v=0; for(double xV:d) v+=(xV-m)*(xV-m);
-        return v/N;
+        return v/Math.max(1, N - 1);
     }
     private double fixedValue(int[] knap){
         double v=0;

@@ -69,7 +69,7 @@ public final class SKPGenericDistributionSAA_LD {
             /* wait until we have at least one diff-variance */
             if (sigma2Max == 0.0) continue;
 
-            double epsAbs = relTol * bestAbs;                    // ε relative
+            double epsAbs = Math.max(relTol * bestAbs, 1e-8);    // ε relative
             int    k      = inst.getItems();
             double logS   = k * Math.log(2.0);                   // |S| = 2^k
             double gamma  = (epsAbs-delta)*(epsAbs-delta)
@@ -104,7 +104,7 @@ public final class SKPGenericDistributionSAA_LD {
 
             int    M = reps.size();
             double vBar = sumV / M;
-            double s2_M = varianceV(vBar);
+            double s2_M = varianceV(vBar); // This is Var_hat(vBar)
 
             /*----- estimator 1 : fresh evaluation of incumbent ----------*/
             double[] eval = freshEvaluation(Nprime);
@@ -112,30 +112,28 @@ public final class SKPGenericDistributionSAA_LD {
             double   varN = eval[1] / Nprime;
 
             double point1 = vBar - gHat;
-            double varTot = varN + s2_M/M;
-            double z      = NormalDist.inverseF01(0.95);
-            double gap1   = point1 + z*Math.sqrt(varTot);        // 95 % bound
+            double varTot = varN + s2_M; 
+            double z      = NormalDist.inverseF01(1.0 - alpha); 
+            double gap1   = point1 + z * Math.sqrt(varTot);
 
             /*----- estimator 2 : uses small-scenario samples ------------*/
+            double[] gms = new double[M];
             double gBarN = 0.0;
-            for (int m=0;m<M;m++)
-                gBarN += computeSampleAverage(
-                           reps.get(bestIdx).optimalKnapsack,
-                           smallScen.get(m));
+            for (int m = 0; m < M; m++) {
+                gms[m] = computeSampleAverage(reps.get(bestIdx).optimalKnapsack, smallScen.get(m));
+                gBarN += gms[m];
+            }
             gBarN /= M;
 
             double diffMean = vBar - gBarN;          // point estimator 2
 
             double s2bar = 0.0;
-            for (int m=0;m<M;m++) {
-                double gm = computeSampleAverage(
-                               reps.get(bestIdx).optimalKnapsack,
-                               smallScen.get(m));
+            for (int m = 0; m < M; m++) {
                 double vm = reps.get(m).milpSolutionValue;
-                s2bar += Math.pow( (vm-gm) - diffMean , 2 );
+                s2bar += Math.pow((vm - gms[m]) - diffMean, 2);
             }
-            s2bar = s2bar / (M*(M-1));               // \bar S²_M / M
-            double gap2 = diffMean + z*Math.sqrt(s2bar);
+            s2bar = s2bar / (M * (M - 1));               // \bar S²_M / M
+            double gap2 = diffMean + z * Math.sqrt(s2bar);
 
             System.out.printf(
               "DEBUG GAP: rep=%2d  ĝ=%.6f  gap1=%.3e  gap2=%.3e  rel1=%.3e%n rel2=%.3e%n",
@@ -289,7 +287,7 @@ public final class SKPGenericDistributionSAA_LD {
 
         double var = 0.0;
         for (double d : diff) var += (d-mean)*(d-mean);
-        return var / N;                     // unbiased N-denominator is fine here
+        return var / Math.max(1, N - 1);                     // unbiased N-denominator
     }
 
 
