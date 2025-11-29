@@ -101,7 +101,7 @@ public class SKPMultinormalSAA {
                      solutionTimeMs, 
                      this.optGap1/(1e-10 + bestObjSoFar2), 
                      this.optGap2/(1e-10 + bestObjSoFar2), 
-                     Nsmall, Nlarge, m);
+                     Nsmall, Nlarge, m + 1);
             }
          }
       }
