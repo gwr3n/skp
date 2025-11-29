@@ -4,24 +4,58 @@ import skp.instance.SKPMultinormal;
 
 public class SKPMultinormalSAA_LDSolvedInstance {
    public SKPMultinormal instance;
+   
    public int[] optimalKnapsack;
    public double simulatedSolutionValue;
-   public double solutionTimeMs;
-   public double optGap1;
-   public double optGap2;
-   public int Nsmall;
-   public int Nlarge;
-   public int M;
-
-   public SKPMultinormalSAA_LDSolvedInstance(SKPMultinormal instance, int[] optimalKnapsack, double simulatedSolutionValue, double solutionTimeMs, double optGap1, double optGap2, int Nsmall, int Nlarge, int M) {
+   
+   // Phase 0 (LD sizing)
+   public long N_LD_initial, N_LD_final, N_LD_max;
+   public long N_start, N_last, N_attempts;
+   public String phase0StopReason;
+   
+   // Phase 1 (replication loop at the chosen N)
+   public long N_phase1, Mfinal;
+   public double relCenterTerm, relGap1, relGap2;
+   public String phase1StopReason;
+   public long solutionTimeMs;
+   
+   public SKPMultinormalSAA_LDSolvedInstance(
+         SKPMultinormal instance, 
+         int[] optimalKnapsack, 
+         double simulatedSolutionValue,
+         long N_LD_initial,
+         long N_LD_final,
+         long N_LD_max,
+         long N_start,
+         long N_last,
+         long N_attempts,
+         String phase0StopReason,
+         long N_phase1,
+         long Mfinal,
+         double vBar,
+         double gHat,
+         double relGap1,
+         double relGap2,
+         String phase1StopReason,
+         long solutionTimeMs
+         ) {
        this.instance = instance;
        this.optimalKnapsack = optimalKnapsack;
        this.simulatedSolutionValue = simulatedSolutionValue;
        this.solutionTimeMs = solutionTimeMs;
-       this.optGap1 = optGap1;
-       this.optGap2 = optGap2;
-       this.Nsmall = Nsmall;
-       this.Nlarge = Nlarge;
-       this.M = M;
+       this.N_LD_initial = N_LD_initial;
+       this.N_LD_final = N_LD_final;
+       this.N_LD_max = N_LD_max;
+       this.N_start = N_start;
+       this.N_last = N_last;
+       this.N_attempts = N_attempts;
+       this.phase0StopReason = phase0StopReason;
+       this.N_phase1 = N_phase1;
+       this.Mfinal = Mfinal;
+       this.relCenterTerm = (vBar - gHat) / Math.max(1e-12, Math.abs(gHat));
+       this.relGap1 = relGap1;
+       this.relGap2 = relGap2;
+       this.phase1StopReason = phase1StopReason;
+       this.solutionTimeMs = solutionTimeMs;
    }
 }

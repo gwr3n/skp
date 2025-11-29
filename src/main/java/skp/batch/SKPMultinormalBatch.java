@@ -703,9 +703,12 @@ public class SKPMultinormalBatch extends SKPBatch {
    
    static void storeSolvedBatchToCSV(SKPMultinormalSAA_LDSolvedInstance[] instances, String fileName) {
       String header = 
-            "instanceID, expectedValues, expectedWeights, covarianceWeights,"
+            "instanceID, expectedValues, expectedWeights, covarianceWeights, "
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
-            + "solutionTimeMs, optGap1, optGap2, N, N', M\n";
+            + "N_LD_initial, N_LD_final, N_LD_max, " // Phase 0
+            + "N_start, N_last, N_attempts, phase0StopReason, " // Phase 0
+            + "N_phase1, Mfinal, relCenterTerm, relGap1, relGap2, phase1StopReason, " // Phase 1
+            + "solutionTimeMs\n";
       String body = "";
       
       for(SKPMultinormalSAA_LDSolvedInstance s : instances) {
@@ -717,12 +720,20 @@ public class SKPMultinormalBatch extends SKPBatch {
                  s.instance.getShortageCost()+ ", " +
                  Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
                  s.simulatedSolutionValue + ", " +
-                 s.solutionTimeMs + ", " +
-                 s.optGap1 + ", " +
-                 s.optGap2 + ", " +
-                 s.Nsmall + ", " +
-                 s.Nlarge + ", " +
-                 s.M + "\n";
+                 s.N_LD_initial + ", " +
+                 s.N_LD_final + ", " +
+                 s.N_LD_max + ", " +
+                 s.N_start + ", " +
+                 s.N_last + ", " +
+                 s.N_attempts + ", " +
+                 s.phase0StopReason + ", " +
+                 s.N_phase1 + ", " +
+                 s.Mfinal + ", " +
+                 s.relCenterTerm + ", " +
+                 s.relGap1 + ", " +
+                 s.relGap2 + ", " +
+                 s.phase1StopReason + ", " +
+                 s.solutionTimeMs + "\n";
       }
       PrintWriter pw;
       try {
