@@ -43,7 +43,7 @@ float slopes[i in breakpoints] = (sqrt(i*s) - sqrt((i - 1)*s))/s;
  * Shrink the number of quadratic terms (sparsity + symmetry)
  */
 tuple Pair { int i; int j; }
-{Pair} QPairs = { <i,j> | i in objects, j in objects : i < j && abs(varianceCovarianceWeights[i][j]) <= 1e-6 };
+{Pair} QPairs = { <i,j> | i in objects, j in objects : i < j && abs(varianceCovarianceWeights[i][j]) > 1e-6 };
 
 
 dexpr float VarDiag = sum(i in objects) varianceCovarianceWeights[i][i] * X[i];
