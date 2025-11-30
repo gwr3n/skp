@@ -241,7 +241,7 @@ public class SKPMultinormalMILP extends SKPMILP{
       
       SKPMultinormal instance = SKPMultinormal.getTestInstance();
       double epsilon = 0.1;
-      int simulationRuns = 1000000;
+      int simulationRuns = 100000;
       
       try {
          SKPMultinormalMILP sskp_J = new SKPMultinormalMILP(instance, PWAPPROXIMATION.JENSENS, epsilon);
