@@ -18,14 +18,15 @@ import umontreal.ssj.rng.RandomStream;
 public final class SKPGenericDistributionSAA_LD {
 
     /* ---------------- user parameters ---------------- */
-    private static final double alpha  = 0.05;   // LD tail
-    private static final double delta  = 0.0;    // usually 0
-    private static final int    N0     = 64;     // start N
-    private static final int    Mmax   = 1000;   // maximum replications
-    private static final int    Nprime = 100_000; // evaluation sample
-    private static final int    warmUp = 32;     // for CLT
-    private static final double relTol = 1e-4;   // relative gap
-    private static final long   wallMs = 10*60_000L;
+    private static final double alpha  = 0.05;      // LD tail
+    private static final double delta  = 0.0;       // usually 0
+    private static final int    N0     = 64;        // start N
+    private static final int    Mmax   = 1000;      // maximum replications
+    private static final int    Nprime = 100_000;   // evaluation sample
+    private static final int    NCap   = Nprime / 5; // Maximum N
+    private static final int    warmUp = 32;        // for CLT
+    private static final double relTol = 1e-4;      // relative gap
+    private static final long   wallMs = 10*60_000L; // time limit in milliseconds
 
     /* ---------------- members ---------------- */
     private final SKPGenericDistribution inst;
@@ -57,7 +58,7 @@ public final class SKPGenericDistributionSAA_LD {
         class Phase0MiniLog {
            long nldFirst=-1, nldFinal=-1, nldMax=-1; 
            long N_start=N0, N_last=N0, N_attempts=1;
-           String stop; // "SUCCESS", "MMAX", "TIMEOUT"
+           String stop; // "SUCCESS", "MMAX", "TIMEOUT", "NCAP"
         }
         Phase0MiniLog p0 = new Phase0MiniLog();
         while (true) {
@@ -77,6 +78,7 @@ public final class SKPGenericDistributionSAA_LD {
 
             if (reps.size() >= Mmax) {
                p0.stop = "MMAX";
+               p0.N_last = N;
                System.out.println("DEBUG LD: reached Mmax");
                break;
             }
@@ -107,8 +109,26 @@ public final class SKPGenericDistributionSAA_LD {
                System.out.println("DEBUG LD: satisfied N_LD requirement");
                break;
             }
+            
+            long nextN = ((long) N) << 1; // or: long nextN = 2L * N;
 
-            System.out.println("DEBUG LD: increasing N to " + (N<<1));
+            if (nextN > NCap) {
+                if (N < NCap) {
+                    System.out.println("DEBUG LD: capping N at NCap=" + NCap);
+                    p0.N_attempts++;
+                    N = NCap;
+                    p0.N_last = N;
+                    reset();
+                    continue; // try with NCap before deciding
+                } else {
+                    System.out.println("DEBUG LD: cannot increase N beyond NCap; LD may be unattainable");
+                    p0.stop  = "NCAP"; // better label than "MMAX"
+                    p0.N_last = N;
+                    break;
+                }
+            }
+            
+            System.out.println("DEBUG LD: increasing N to " + nextN);
             p0.N_attempts++;
             N <<= 1;
             p0.N_last = N;
@@ -118,7 +138,7 @@ public final class SKPGenericDistributionSAA_LD {
         /* ---------- Phase 1 : CLT gap loop (both estimators) ---------- */
         class Phase1MiniLog {
            int    N, Mfinal;
-           double vBar, gHat, relGap1, relGap2;   // gap2 can be NaN if unused
+           double vBar = Double.NaN, gHat = Double.NaN, relGap1 = Double.NaN, relGap2 = Double.NaN;   // gap2 can be NaN if unused
            long   wallMs;
            String stop;                     // "CERTIFIED", "MMAX", "TIMEOUT"
         }
