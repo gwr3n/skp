@@ -123,7 +123,7 @@ public final class SKPMultinormalSAA_LD {
                     continue; // try with NCap before deciding
                 } else {
                     System.out.println("DEBUG LD: cannot increase N beyond NCap; LD may be unattainable");
-                    p0.stop  = "NCAP"; // better label than "MMAX"
+                    p0.stop  = "NCAP"; 
                     p0.N_last = N;
                     break;
                 }
