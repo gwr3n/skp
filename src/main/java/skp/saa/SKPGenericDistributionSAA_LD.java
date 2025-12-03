@@ -223,21 +223,21 @@ public final class SKPGenericDistributionSAA_LD {
                 p1.stop = "MMAX";
                 break;
             }
+            if (System.currentTimeMillis()-wall0 > wallMs) {
+               finalGap1Rel = gap1/abs_gHat;
+               finalGap2Rel = gap2/abs_gHat;
+               finalEvalMean= gHat;
+               System.out.println("DEBUG: timeout");
+                
+               p1.stop = "TIMEOUT";
+               break;
+            }
             try {
                makeReplication(N);
             } catch (IloException e) {
                // TODO Auto-generated catch block
                e.printStackTrace();
-            }
-            if (System.currentTimeMillis()-wall0 > wallMs) {
-            	finalGap1Rel = gap1/abs_gHat;
-                finalGap2Rel = gap2/abs_gHat;
-                finalEvalMean= gHat;
-                System.out.println("DEBUG: timeout");
-                
-                p1.stop = "TIMEOUT";
-                break;
-            }
+            } 
         }
         long sec = (System.currentTimeMillis()-wall0)/1000;
         
