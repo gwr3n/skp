@@ -23,7 +23,7 @@ public final class SKPGenericDistributionSAA_LD {
     private static final int    N0     = 64;        // start N
     private static final int    Mmax   = 1000;      // maximum replications
     private static final int    Nprime = 100_000;   // evaluation sample
-    private static final int    NCap   = Nprime / 10; // Maximum N
+    private static final int    NCap   = 1_000;     // Maximum N
     private static final int    warmUp = 32;        // for CLT
     private static final double relTol = 1e-4;      // relative gap
     private static final long   wallMs = 10*60_000L; // time limit in milliseconds
@@ -230,6 +230,11 @@ public final class SKPGenericDistributionSAA_LD {
                e.printStackTrace();
             }
             if (System.currentTimeMillis()-wall0 > wallMs) {
+            	finalGap1Rel = gap1/abs_gHat;
+                finalGap2Rel = gap2/abs_gHat;
+                finalEvalMean= gHat;
+                System.out.println("DEBUG: timeout");
+                
                 p1.stop = "TIMEOUT";
                 break;
             }
