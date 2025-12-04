@@ -86,7 +86,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                      solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.PWLA);
                      solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.LC);
                      if(size < instanceSize[2])
-                        solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA);
+                        solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv+"/"+rho, METHOD.SAA_LD);
                   } catch (IloException e) {
                      e.printStackTrace();
                   }
@@ -440,12 +440,12 @@ public class SKPMultinormalBatch extends SKPBatch {
             
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
-            String fileNameSolved = folder+"/solved_multinormal_instances_SAA_LD.json";
+            String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
             SKPMultinormalSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M, method);
             
             System.out.println(GSONUtility.<SKPMultinormalSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA_LD.csv";
+            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
@@ -453,12 +453,12 @@ public class SKPMultinormalBatch extends SKPBatch {
          {            
             SKPMultinormal[] batch = retrieveBatch(fileName);
             
-            String fileNameSolved = folder+"/solved_multinormal_instances_SAA.json";
+            String fileNameSolved = folder+"/solved_multinormal_instances_SAA_LD.json";
             SKPMultinormalSAA_LDSolvedInstance[] solvedBatch = solveBatchMILPSAA_LD(batch, fileNameSolved);
             
             System.out.println(GSONUtility.<SKPMultinormalSAA_LDSolvedInstance[]>printInstanceAsJSON(solvedBatch));
             
-            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA.csv";
+            String fileNameSolvedCSV = folder+"/solved_multinormal_instances_SAA_LD.csv";
             storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
          }
          break;
