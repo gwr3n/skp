@@ -148,4 +148,28 @@ public final class PiecewiseStandardNormalFirstOrderLossFunction {
          }
       }
    }*/
+   
+   public static void main(String[] args) {
+      double s = 0.1;            // sqrt step size
+      double c = 10;             // shortage cost
+      int partitions = 6;        // number of loss function partitions
+      
+      double error = getError(partitions);
+      System.out.println("Error: " + error);
+      double[] probabilities = getProbabilities(partitions);
+      System.out.println("Probabilities: " + Arrays.toString(probabilities));
+      double[] means = getMeans(partitions);
+      System.out.println("Means: " + Arrays.toString(means));
+      double Amax = 0.0;
+      for (int i = 0; i < partitions; ++i) {
+         double sum = 0.0;
+         for (int k = i; k < partitions; ++k)
+            sum += probabilities[k] * means[k];
+         if (sum > Amax) Amax = sum;
+         System.out.println("i: " + i + ", sum: " + sum);
+      }
+      System.out.println("Amax: " + Amax);
+      double abs_error_rhs = c * (Amax + error) * (Math.sqrt(s) / 4);
+      System.out.println("c(Amax + error)(sqrt(s)/4): " + abs_error_rhs);
+   }
 }
