@@ -15,7 +15,7 @@ public class SKPGenericDistributionSAA_LDSolvedInstance {
    
    // Phase 1 (replication loop at the chosen N)
    public long N_phase1, Mfinal;
-   public double relCenterTerm, relGap1, relGap2;
+   public double vBar, gHat, relGap1, relGap2;
    public String phase1StopReason;
    public long solutionTimeMs;
    
@@ -52,7 +52,8 @@ public class SKPGenericDistributionSAA_LDSolvedInstance {
        this.phase0StopReason = phase0StopReason;
        this.N_phase1 = N_phase1;
        this.Mfinal = Mfinal;
-       this.relCenterTerm = (vBar - gHat) / Math.max(1e-12, Math.abs(gHat));
+       this.vBar = vBar;
+       this.gHat = gHat;
        this.relGap1 = relGap1;
        this.relGap2 = relGap2;
        this.phase1StopReason = phase1StopReason;

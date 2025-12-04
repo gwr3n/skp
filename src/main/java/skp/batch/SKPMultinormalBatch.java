@@ -707,7 +707,7 @@ public class SKPMultinormalBatch extends SKPBatch {
             + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
             + "N_LD_initial, N_LD_final, N_LD_max, " // Phase 0
             + "N_start, N_last, N_attempts, phase0StopReason, " // Phase 0
-            + "N_phase1, Mfinal, relCenterTerm, relGap1, relGap2, phase1StopReason, " // Phase 1
+            + "N_phase1, Mfinal, relGap1, relGap2, phase1StopReason, " // Phase 1
             + "solutionTimeMs\n";
       String body = "";
       
@@ -729,7 +729,6 @@ public class SKPMultinormalBatch extends SKPBatch {
                  s.phase0StopReason + ", " +
                  s.N_phase1 + ", " +
                  s.Mfinal + ", " +
-                 s.relCenterTerm + ", " +
                  s.relGap1 + ", " +
                  s.relGap2 + ", " +
                  s.phase1StopReason + ", " +
