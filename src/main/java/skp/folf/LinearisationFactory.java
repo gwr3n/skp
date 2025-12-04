@@ -54,7 +54,7 @@ public class LinearisationFactory {
          final int    wSegments = W + 1;
 
          /* ---------- compute  A_max  for this partition ------------------ */
-         final double[] p  = part.p;     // length W
+         final double[] p  = part.p;          // length W
          final double[] mu = part.expect;     // length W
          double Amax = 0.0;
          for (int i = 0; i < W; ++i) {
