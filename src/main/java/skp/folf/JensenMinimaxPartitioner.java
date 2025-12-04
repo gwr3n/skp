@@ -225,7 +225,7 @@ public final class JensenMinimaxPartitioner extends JensenPartitioner {
      * Self-test routine: checks computed results against reference values from Rossi et al. (2014).
      * Prints results and verifies accuracy.
      */
-    public static void selfTest() {
+    private static void selfTest() {
        final double[] REF_ERRORS = getErrors();
        final double EPS = 1e-9;
        System.out.println("----- Jensen minimax self-test -----");
@@ -305,7 +305,7 @@ public final class JensenMinimaxPartitioner extends JensenPartitioner {
     * Returns reference errors for the given number of partitions,
     * as reported in Rossi et al. (2014), Table 2.
     */
-   public static double[] getErrors() {
+   private static double[] getErrors() {
       return new double[] {
             0.3989422804014327,
             0.1206560496714961,
@@ -324,7 +324,7 @@ public final class JensenMinimaxPartitioner extends JensenPartitioner {
     * Returns reference conditional means for the given number of partitions,
     * as reported in Rossi et al. (2014), Table 2.
     */
-   public static double[] getMeans(int partitions) {
+   private static double[] getMeans(int partitions) {
        switch (partitions) {
            case 1:
                return new double[] {0};
@@ -355,7 +355,7 @@ public final class JensenMinimaxPartitioner extends JensenPartitioner {
     * Returns reference probabilities for the given number of partitions,
     * as reported in Rossi et al. (2014), Table 2.
     */
-   public static double[] getProbabilities(int partitions) {
+   private static double[] getProbabilities(int partitions) {
        switch (partitions) {
            case 1:
                return new double[] {1};
