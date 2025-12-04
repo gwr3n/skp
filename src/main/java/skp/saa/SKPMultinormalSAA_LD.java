@@ -323,8 +323,8 @@ public final class SKPMultinormalSAA_LD {
        SKPMultinormalScenarioBasedSolvedInstance sol = saa.solve(Nprime);
        
        if(sol.cplexSolutionTimeMs > modMs) {
-          System.out.printf("DEBUG: MILP solve time %fms exceeded limit %dms%n",
-                            sol.cplexSolutionTimeMs, modMs);
+          /*System.out.printf("DEBUG: MILP solve time %fms exceeded limit %dms%n",
+                            sol.cplexSolutionTimeMs, modMs);*/
           NCap = N; // force capping N next time
        }
 
