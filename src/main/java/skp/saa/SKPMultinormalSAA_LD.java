@@ -23,10 +23,13 @@ public final class SKPMultinormalSAA_LD {
    private static final int    N0     = 64;        // start N
    private static final int    Mmax   = 1000;      // maximum replications
    private static final int    Nprime = 100_000;   // evaluation sample
-   private static final int    NCap   = 1_000;     // Maximum N
+   private static       int    NCap   = Nprime;    // Maximum N
    private static final int    warmUp = 32;        // for CLT
    private static final double relTol = 1e-4;      // relative gap
    private static final long   wallMs = 10*60_000L; // time limit in milliseconds
+   private static final long   modMs  = wallMs/33;  // time limit in milliseconds to solve 
+                                                    // each SAA MILP (we need to solve at 
+                                                    // least 33 problems for CLT)
 
     /* ---------------- members ---------------- */
     private final SKPMultinormal inst;
@@ -318,6 +321,12 @@ public final class SKPMultinormalSAA_LD {
        SKPMultinormalScenarioBased saa =
               new SKPMultinormalScenarioBased(inst, N, rng);
        SKPMultinormalScenarioBasedSolvedInstance sol = saa.solve(Nprime);
+       
+       if(sol.cplexSolutionTimeMs > modMs) {
+          System.out.printf("DEBUG: MILP solve time %dms exceeded limit %dms%n",
+                            sol.cplexSolutionTimeMs, modMs);
+          NCap = N; // force capping N next time
+       }
 
        reps.add(sol);
        smallScen.add(saa.scenarios);           // keep scenarios for diff–variance
