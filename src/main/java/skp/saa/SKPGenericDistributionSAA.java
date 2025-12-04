@@ -141,8 +141,8 @@ public class SKPGenericDistributionSAA {
       double optGapEstimator2Variance = 1.0/(W*(W-1))*IntStream.iterate(0, i -> i + 1).limit(W).mapToDouble(r -> Math.pow((computeSampleAverage(SAAreplications[final_bestSoFar].optimalKnapsack, scenarios[r])-SAAreplications[r].milpSolutionValue)-(bargMN - final_barvMN),2)).sum();
       
       double z = NormalDist.inverseF01(0.95);
-      this.optGap1 = - (optGapEstimator1 - z * Math.sqrt(optGapEstimator1Variance)); // We are in a max setting!
-      this.optGap2 = - (optGapEstimator2 - z * Math.sqrt(optGapEstimator2Variance)); // We are in a max setting!
+      this.optGap1 = - optGapEstimator1 + z * Math.sqrt(optGapEstimator1Variance); // We are in a max setting!
+      this.optGap2 = - optGapEstimator2 + z * Math.sqrt(optGapEstimator2Variance); // We are in a max setting!
    }
    
    public double computeSampleAverage(int[] knapsack, double[][] sampleMatrix) {
