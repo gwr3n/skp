@@ -38,8 +38,10 @@ public final class SKPGenericDistributionSAA_LD {
     private double sigma2Max = 0.0;
     private double sumV      = 0.0;
     private int    bestIdx   = -1;
-    private double bestMean1 = Double.NEGATIVE_INFINITY;
-    private double bestAbs   = 0.0;     // |Mean1|
+    //private double bestMean1 = Double.NEGATIVE_INFINITY;
+    //private double bestAbs   = 0.0;     // |Mean1|
+    private double bestMean2 = Double.NEGATIVE_INFINITY;
+    private double bestAbs2  = 0.0;       // |Mean2|    
 
     public SKPGenericDistributionSAA_LD(SKPGenericDistribution inst) {
         this.inst = inst;
@@ -83,10 +85,46 @@ public final class SKPGenericDistributionSAA_LD {
                break;
             }
             
-            /* wait until we have at least one diff-variance */
-            if (sigma2Max == 0.0) continue;
+            if (sigma2Max == 0.0) {
+               // Need enough evidence before declaring degeneracy
+               if (reps.size() >= warmUp && bestIdx >= 0) {
+                   // 1) Check all knapsacks identical to incumbent
+                   boolean allSame = true;
+                   int[] incX = reps.get(bestIdx).optimalKnapsack;
+                   for (int m = 0; m < reps.size(); m++) {
+                       int[] x = reps.get(m).optimalKnapsack;
+                       if (x.length != incX.length) { allSame = false; break; }
+                       for (int i = 0; i < x.length; i++) {
+                           if (x[i] != incX[i]) { allSame = false; break; }
+                       }
+                       if (!allSame) break;
+                   }
 
-            double epsAbs = Math.max(relTol * bestAbs, 1e-8);    // ε relative
+                   // 2) Confirm all pairwise diff variances are zero against incumbent
+                   boolean allZeroVar = true;
+                   if (allSame) {
+                       for (int m = 0; m < reps.size(); m++) {
+                           double var = diffVariance(incX, reps.get(m).optimalKnapsack, smallScen.get(m));
+                           if (var > 0.0) { allZeroVar = false; break; }
+                       }
+                   }
+
+                   if (allSame && allZeroVar) {
+                       // True degeneracy: N_LD = 0 for any N
+                       if (p0.nldFirst < 0) p0.nldFirst = 0;
+                       p0.nldMax   = Math.max(p0.nldMax, 0);
+                       p0.nldFinal = 0;
+                       p0.stop     = "SUCCESS_SIGMA2ZERO";
+                       p0.N_last   = N;
+                       System.out.println("DEBUG LD: σ̂²max=0 with stable incumbent and zero diff–variance; N_LD=0");
+                       break;
+                   }
+               }
+               // Otherwise keep sampling to collect more evidence
+               continue;
+           }
+
+            double epsAbs = Math.max(relTol * bestAbs2, 1e-8);    // ε relative
             int    k      = inst.getItems();
             double logS   = k * Math.log(2.0);                   // |S| = 2^k
             double gamma  = (epsAbs-delta)*(epsAbs-delta)
@@ -194,20 +232,20 @@ public final class SKPGenericDistributionSAA_LD {
             double gap2 = diffMean + z * Math.sqrt(s2bar);
             
             /* ------- logging ----------------------- */
-            double abs_gHat = Math.max(1e-12, Math.abs(gHat));
+            double abs_gHat = Math.max(1e-12, gHat);
             p1.vBar = vBar;   // \bar v_N
             p1.gHat = gHat;   // \hat g_{N'}(\hat x)
-            p1.relGap1 = gap1/abs_gHat;
-            p1.relGap2 = gap2/abs_gHat;   
+            p1.relGap1 = gap1/Math.max(1e-12, gHat);
+            p1.relGap2 = gap2/Math.max(1e-12, gHat);   
             /* ------- end logging ------------------- */
             
             System.out.printf(
               "DEBUG GAP: rep=%2d  ĝ=%.6f  gap1=%.3e  gap2=%.3e  rel1=%.3e%n rel2=%.3e%n",
               M, gHat, gap1, gap2, gap1/abs_gHat, gap2/abs_gHat);
             
-            if (gap1/abs_gHat < relTol /*&& gap2/abs_gHat < relTol*/) {
-                finalGap1Rel = gap1/abs_gHat;
-                finalGap2Rel = gap2/abs_gHat;
+            if (p1.relGap1 < relTol /* && p1.relGap2 < relTol */) {
+                finalGap1Rel = p1.relGap1;
+                finalGap2Rel = p1.relGap2;
                 finalEvalMean= gHat;
                 System.out.println("DEBUG: certified optimality");
                 
@@ -215,8 +253,8 @@ public final class SKPGenericDistributionSAA_LD {
                 break;
             }
             if (M >= Mmax) {
-                finalGap1Rel = gap1/abs_gHat;
-                finalGap2Rel = gap2/abs_gHat;
+                finalGap1Rel = p1.relGap1;
+                finalGap2Rel = p1.relGap2;
                 finalEvalMean= gHat;
                 System.out.println("DEBUG: reached Mmax");
                 
@@ -224,8 +262,8 @@ public final class SKPGenericDistributionSAA_LD {
                 break;
             }
             if (System.currentTimeMillis()-wall0 > wallMs) {
-               finalGap1Rel = gap1/abs_gHat;
-               finalGap2Rel = gap2/abs_gHat;
+               finalGap1Rel = p1.relGap1;
+               finalGap2Rel = p1.relGap2;
                finalEvalMean= gHat;
                System.out.println("DEBUG: timeout");
                 
@@ -294,13 +332,13 @@ public final class SKPGenericDistributionSAA_LD {
            sigma2Max = Math.max(sigma2Max, diffVar);
        }
 
-       /* ------------- incumbent update test ---------------------------- */
-       if (sol.simulatedSolutionValueMean1 > bestMean1) {
-           bestMean1 = sol.simulatedSolutionValueMean1;
-           bestAbs   = Math.abs(bestMean1);
+       // incumbent update on Mean2 (align with SAA)
+       if (sol.simulatedSolutionValueMean2 > bestMean2) {
+           bestMean2 = sol.simulatedSolutionValueMean2;
+           bestAbs2  = Math.abs(bestMean2);
            bestIdx   = reps.size() - 1;
-           System.out.printf("DEBUG INC: new incumbent at rep %d "
-                             +"Mean1=%.6f%n", reps.size(), bestMean1);
+           System.out.printf("DEBUG INC: new incumbent at rep %d Mean2=%.6f%n",
+                             reps.size(), bestMean2);
 
            /* incumbent changed ⇒ recompute σ̂²max against *all* replications */
            sigma2Max = 0.0;
@@ -350,7 +388,7 @@ public final class SKPGenericDistributionSAA_LD {
         reps.clear();
         smallScen.clear();
         sigma2Max=0; sumV=0; bestIdx=-1;
-        bestMean1=Double.NEGATIVE_INFINITY; bestAbs=0;
+        bestMean2=Double.NEGATIVE_INFINITY; bestAbs2=0;
         rng.resetStartStream();
     }
     
