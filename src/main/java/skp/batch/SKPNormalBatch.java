@@ -68,8 +68,8 @@ public class SKPNormalBatch extends SKPBatch {
                   folder.mkdirs();
                }
                
-               int partitions = 10; // piecewise linear approximation partitions
-               double s = 1e-2;     // sqrt approximation step
+               int partitions = 100; // piecewise linear approximation partitions
+               double s = 1e-1;     // sqrt approximation step
                int simulationRuns = 100000;
                
                String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/normal_instances.json";
@@ -79,16 +79,16 @@ public class SKPNormalBatch extends SKPBatch {
                storeBatchAsOPLDataFiles(retrieveBatch(batchFileName), OPLDataFileZipArchive, partitions);
                
                try {
-                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
-                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
-                  //solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.PWLA);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC);
+                  solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LC_WARM_START);
                   if(size < instanceSize[2]) 
                      solveMILP(batchFileName, partitions, s, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA_LD);
                } catch (IloException e) {
                   e.printStackTrace();
                }
-               //if(size == instanceSize[0]) 
-                  //solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
+               if(size == instanceSize[0]) 
+                  solveDSKP(batchFileName, "batch/"+t.toString()+"/"+size+"/"+cv);
             }
          }
       }
