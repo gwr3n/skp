@@ -1,62 +1,33 @@
 #!/usr/bin/env python3
-###############################################################################
-#                                                                             #
-#  ┌──────────────────────────────────────────────────────────────────────┐     #
-#  │  Heuristic for the Static Stochastic Knapsack Problem (SSKP)        │     #
-#  │  ───────────────────────────────────────────────────────────────────  │     #
-#  │  Reference implementation of the ideas in                           │     #
-#  │     Merzifonluoğlu, Geunes & Romeijn (2012)                         │     #
-#  │     “The static stochastic knapsack problem with                    │     #
-#  │      normally distributed item sizes”, Math. Prog. A, 134:459-489   │     #
-#  └──────────────────────────────────────────────────────────────────────┘     #
-#                                                                             #
-#  Philosophy (literate-programming style)                                    #
-#  ---------------------------------------                                     #
-#  • The *explanation* precedes the code it motivates.  Each major block is    #
-#    introduced by an extensive doc-string or comment so that the file may be #
-#    read linearly as prose.                                                   #
-#  • All equation numbers, symbols (μ, σ2, ρ, L, …) and section references     #
-#    follow exactly the notation of the paper, so that a reader can keep the   #
-#    article and this file side-by-side.                                       #
-#                                                                             #
-#  Scope restrictions implemented                                             #
-#  ---------------------------------                                          #
-#  The complete algorithm in the paper is quite elaborate; here we include    #
-#  only the parts strictly needed for a **heuristic solver** under the        #
-#  following assumptions:                                                     #
-#                                                                             #
-#     (1)  Every item is *truly* stochastic:  σ²ᵢ > 0  (I₀ ≡ ∅).              #
-#          ⇒ At most one fractional item in any KKT candidate (§4.2).         #
-#     (2)  Salvage value  s  is taken as 0, so  p = p′  (no back-ordering).   #
-#     (3)  Item means satisfy  μᵢ > 0  and the capacity constant  C > 0.      #
-#     (4)  Capacity itself is deterministic and not for sale/choice.          #
-#     (5)  Thus, “multi-fractional” KKT patterns involving deterministic      #
-#          items never arise and need not be generated.                       #
-#                                                                             #
-#  These assumptions match those in our study. Note that this implementation  #
-#  has lower complexity than the original KKT heuristic, as it only needs to  #
-#  consider a restricted number of cases.                                     #
-#                                                                             #
-#  High-level structure                                                       #
-#  ---------------------                                                      #
-#  ┌ Stage I ─ generate_candidate_solutions ┐                                 #
-#  │  Exhaustively enumerates **all** continuous-relaxation KKT points        │
-#  │  allowed by the above scope (§3).                                        │
-#  └────────────────────────────────────────┘                                 #
-#  ┌ Stage II ─ heuristic_binary_knapsack_solver ┐                            #
-#  │  Rounds every fractional pattern up/down (f→0 / f→1)     (§4.2)          │
-#  │  and returns the best discrete solution found.                           │
-#  └─────────────────────────────────────────────┘                            #
-#                                                                             #
-#  External requirements                                                      #
-#  ----------------------                                                     #
-#      • numpy   – vectorised linear algebra                                  #
-#      • scipy   – norm distribution, Brent root-finder                       #
-#                                                                             #
-#  Author : Roberto Rossi                                                     #
-#  First  : 20-Jun-2025                                                       #
-#                                                                             #
-###############################################################################
+"""
+Heuristic solver for the Static Stochastic Knapsack Problem (SSKP) with
+normally distributed item sizes. This module implements a two-stage approach
+inspired by Merzifonluoğlu, Geunes & Romeijn (2012):
+
+  • Stage I (generate_candidate_solutions, Section 3):
+      Enumerates all KKT-consistent continuous-relaxation candidates under a
+      restricted scope (at most one fractional decision variable), using
+      attractiveness ordering and a Brent root-finder for the single fraction.
+
+  • Stage II (heuristic_binary_knapsack_solver, Section 4.2):
+      Rounds each candidate's fractional component to 0 and 1, evaluates the
+      exact expected profit, and returns the best binary solution found.
+
+Scope and assumptions:
+  • All items are stochastic: v_i > 0 (no deterministic items in KKT patterns).
+  • Salvage value s = 0, hence p = p'.
+  • Item means μ_i > 0 and capacity C > 0; capacity is deterministic.
+  • Under these conditions, at most one fractional item arises in any KKT
+    candidate; multi-fractional patterns with deterministic items are excluded.
+
+Reference:
+  Merzifonluoğlu, Geunes & Romeijn (2012),
+  “The static stochastic knapsack problem with normally distributed item sizes”,
+  Mathematical Programming A, 134:459-489.
+
+Author : Roberto Rossi
+First  : 20-Jun-2025
+"""
 
 import numpy as np
 from scipy.stats import norm
@@ -69,11 +40,11 @@ import json
 
 def L_func(z):
     """
-    Standard normal *loss function*      L(z) = φ(z) − z·(1 − Φ(z))
+    Standard normal *loss function*      L(z) = φ(z) - z·(1 - Φ(z))
     (sometimes called the “overshoot function” in inventory theory).
 
     It appears in Eq. (P) of the article once the overflow expectation
-    E[(D−C)⁺] is expressed in closed form for  D ∼ N(μ, σ²).
+    E[(D-C)⁺] is expressed in closed form for  D ~ N(μ, σ²).
     """
     phi = norm.pdf(z)
     Phi = norm.cdf(z)
@@ -82,7 +53,7 @@ def L_func(z):
 
 def attractiveness(i, z, r, mu, v, p):
     """
-    Compute ρᵢ(z) – the *attractiveness* of item *i* at service level *z*
+    Compute ρᵢ(z) - the *attractiveness* of item *i* at service level *z*
     (Eq. 19).  The definition depends on whether the item is stochastic or
     deterministic; in this restricted implementation vᵢ>0 holds for every i,
     but we keep the general formula for completeness.
@@ -97,7 +68,7 @@ def attractiveness(i, z, r, mu, v, p):
 def solve_fractional_value(z, mu_k, v_k, S_mu, S_v, C):
     """
     Solve for the unique fractional level  f ∈ (0,1)  that satisfies the
-    capacity-matching equations (23)–(24) for a pattern of type (21):
+    capacity-matching equations (23)-(24) for a pattern of type (21):
 
            f·μ_k + S_μ + z·√(f·v_k + S_v)  =  C.
 
@@ -122,7 +93,7 @@ def solve_fractional_value(z, mu_k, v_k, S_mu, S_v, C):
 
 def compute_continuous_obj(r, x, p, z, V):
     """
-    Continuous-relaxation objective  rᵀx − p·L(z)·√V   (Eq. (P) with s=0).
+    Continuous-relaxation objective  rᵀx - p·L(z)·√V   (Eq. (P) with s=0).
     """
     return np.dot(r, x) - p * L_func(z) * np.sqrt(V)
 
@@ -131,7 +102,7 @@ def binary_objective(x, r, mu, v, C, p):
     """
     Expected profit of *binary* vector x according to Sect. 2.2:
 
-        obj(x) = rᵀx  −  p·E[(D(x) − C)⁺].
+        obj(x) = rᵀx  -  p·E[(D(x) - C)⁺].
 
     The overflow expectation uses the closed form with L if V>0,
     else reverts to the deterministic expression.
@@ -275,8 +246,8 @@ def heuristic_binary_knapsack_solver(r, mu, v, C, p):
     Implement the rounding heuristic of Sect. 4.2.
 
     For every continuous candidate produced by Stage I we create up to two
-    integer vectors – one with the fractional component set to 0, one with it
-    set to 1 – then compute the exact expected profit (binary_objective).  The
+    integer vectors - one with the fractional component set to 0, one with it
+    set to 1 - then compute the exact expected profit (binary_objective).  The
     best of all rounded patterns is returned.
     """
     candidate_list = generate_candidate_solutions(r, mu, v, C, p)
