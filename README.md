@@ -1,4 +1,4 @@
-# Stochastic Knapsack (SKP) – Code-to-Paper Reproducibility Guide
+# Stochastic Knapsack Problem (SKP) – Code-to-Paper Reproducibility Guide
 
 This repository contains Java and Python code to reproduce the computational elements described in the work:
 
