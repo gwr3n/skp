@@ -30,7 +30,8 @@ This guide maps paper components to code, shows how to build/run experiments, an
 
 - Merzifonluoğlu et al. (2012) exact B&B and heuristic baselines (normal sizes)
 	- Heuristic (two-stage rounding): [src/main/python/binary_heuristic.py](src/main/python/binary_heuristic.py)
-	- Branch-and-Bound (exact) + heuristic batcher: [src/main/python/skp_batch.py](src/main/python/skp_batch.py)
+	- Branch-and-Bound (exact): [src/main/python/binary_heuristic.py](src/main/python/branch_and_bound.py)
+	- Heuristic batcher: [src/main/python/skp_batch.py](src/main/python/skp_batch.py)
 	- Produces: solved_normal_instances_Merzifonluoglu.csv, solved_normal_instances_Merzifonluoglu_heuristic.csv
 	- Curated results: [results/normal_results](results/normal_results)
 
