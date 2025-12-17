@@ -40,7 +40,7 @@ This guide maps paper components to code, shows how to build/run experiments, an
 	- Normal: [src/main/java/skp/milp/SKPNormalMILP.java](src/main/java/skp/milp/SKPNormalMILP.java)
 	- Multivariate Normal: [src/main/java/skp/milp/SKPMultinormalMILP.java](src/main/java/skp/milp/SKPMultinormalMILP.java)
 	- First-order loss utilities: [src/main/java/skp/folf](src/main/java/skp/folf)
-	- Optional OPL models and data: [src/main/resources/opl_models](src/main/resources/opl_models); Java batchers also package .dat archives for OPL.
+	- OPL models and sample data files: [src/main/resources/opl_models](src/main/resources/opl_models); Java batchers also package .dat archives for OPL.
 
 - MILP with Lazy Cuts (LC)
 	- Generic distributions: [src/main/java/skp/milp/SKPGenericDistributionLazyCuts.java](src/main/java/skp/milp/SKPGenericDistributionLazyCuts.java)
