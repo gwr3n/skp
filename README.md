@@ -1,4 +1,4 @@
-Stochastic Knapsack (SKP) – Code-to-Paper Reproducibility Guide
+# Stochastic Knapsack (SKP) – Code-to-Paper Reproducibility Guide
 
 This repository contains Java and Python code to reproduce the computational elements described in the work:
 
@@ -6,7 +6,7 @@ R. Rossi, S. Prestwich, S. A. Tarim, "Mixed-Integer Linear Programming Approxima
 
 This guide maps paper components to code, shows how to build/run experiments, and points to curated CSV outputs under results/.
 
-What's Implemented
+## What's Implemented
 - Normal SKP (static): Piecewise-linear MILP, Lazy-Cuts warm-start, SAA/SAA-LD, SDP baseline
 	- Batch driver: [src/main/java/skp/batch/SKPNormalBatch.java](src/main/java/skp/batch/SKPNormalBatch.java)
 	- MILP PWLA (piecewise first-order loss): outputs solved_normal_instances_MILP_{partitions}.csv
@@ -34,7 +34,7 @@ What's Implemented
 	- Produces: solved_normal_instances_Merzifonluoglu.csv, solved_normal_instances_Merzifonluoglu_heuristic.csv
 	- Curated results: [results/normal_results](results/normal_results)
 
-Core Models and Components
+## Core Models and Components
 - MILP PWLA (Piecewise First-Order Loss) formulations
 	- Normal: [src/main/java/skp/milp/SKPNormalMILP.java](src/main/java/skp/milp/SKPNormalMILP.java)
 	- Multivariate Normal: [src/main/java/skp/milp/SKPMultinormalMILP.java](src/main/java/skp/milp/SKPMultinormalMILP.java)
@@ -59,19 +59,19 @@ Core Models and Components
 	- Multivariate Normal (ρ controls correlation): [SKPMultinormalBatch](src/main/java/skp/batch/SKPMultinormalBatch.java)
 	- Lognormal/Gamma: [SKPGenericDistributionBatch](src/main/java/skp/batch/SKPGenericDistributionBatch.java)
 
-Prerequisites
+## Prerequisites
 - macOS or Linux; Java (JDK 11+), Maven, and Python 3.10+
 - IBM ILOG CPLEX Optimization Studio (OPL/Concert) with a valid license. The Java MILP code uses the OPL/Concert APIs (`ilog.opl.*`, `ilog.concert.*`, `IloCplex`) to build/solve models and callbacks. On macOS you may need `DYLD_LIBRARY_PATH` and `-Djava.library.path` as shown in batch headers.
 - Python baselines (B&B and heuristic) do not require CPLEX.
 
-Build (Java)
+## Build (Java)
 Use Maven to build the project and resolve dependencies:
 
 ```bash
 mvn -q -DskipTests package
 ```
 
-Running Experiments (Java)
+## Running Experiments (Java)
 You can run batch drivers from your IDE (recommended) or from CLI with a full runtime classpath. Each batch writes instance JSON and solution CSVs under `batch/<type>/<size>/<cv>[/<rho>]` and prints progress to stdout.
 
 - Normal SKP (all methods; PWLA, LC, LC warm-start, SAA_LD, DSKP for N=25)
@@ -87,10 +87,10 @@ You can run batch drivers from your IDE (recommended) or from CLI with a full ru
 	- To switch distribution (GAMMA vs LOGNORMAL), edit Dist in main()
 	- Curated copies under [results/lognormal_results](results/lognormal_results) and [results/gamma_results](results/gamma_results)
 
-Notes on CLI execution
+## Notes on CLI execution
 - If running from CLI, you need the runtime classpath (target/classes plus dependencies). A simple route is to run from your IDE. If you prefer CLI, you can print the runtime classpath using your Maven setup and pass it to java -cp.
 
-Baselines (Python) – Merzifonluoğlu et al. (2012)
+## Baselines (Python) – Merzifonluoğlu et al. (2012)
 - Install requirements:
 
 ```bash
@@ -113,26 +113,26 @@ python src/main/python/skp_batch.py               # or call recursive_solve() in
 	- solved_normal_instances_Merzifonluoglu_heuristic.csv (heuristic only, for larger N)
 	- Curated examples are in [results/normal_results](results/normal_results)
 
-OPL Models
+## OPL Models
 - OPL .mod files: [src/main/resources/opl_models](src/main/resources/opl_models)
 - Batch drivers export zipped .dat sets alongside instance JSONs (see `storeBatchAsOPLDataFiles` in `SKPNormalBatch`/`SKPMultinormalBatch`) for reproducing MILP PWLA in IBM ILOG OPL. This is aligned with the Java runs, which already use the OPL/Concert Java APIs.
 
-Reproducing Tables/Figures from the Paper
+## Reproducing Tables/Figures from the Paper
 - Normal SKP tables/figures: reproduced by SKPNormalBatch outputs (MILP PWLA, LC/LC warm-start, SAA/SAA_LD, DSKP). See [results/normal_results](results/normal_results) for curated CSVs.
 - Multivariate Normal SKP: reproduced by SKPMultinormalBatch outputs (PWLA, LC, SAA_LD, DSKP where applicable). See [results/mvn_large_R_results](results/mvn_large_R_results) and [results/mvn_small_R_results](results/mvn_small_R_results).
 - Lognormal/Gamma SKP: reproduced by SKPGenericDistributionBatch (LC vs LC-normal-approx, SAA/SAA_LD, DSKP). See [results/lognormal_results](results/lognormal_results) and [results/gamma_results](results/gamma_results).
 - Merzifonluoğlu baselines used for comparison in the normal case: use the Python drivers; curated outputs are in [results/normal_results](results/normal_results).
 
-Instance Classes and Settings
+## Instance Classes and Settings
 - Instance types follow Pisinger’s families (e.g., UNCORRELATED, WEAKLY/STRONGLY CORRELATED, SUBSET SUM, etc.) parameterized by item counts (e.g., 25/50/100/200/500), coefficient of variation (cv ∈ {0.1, 0.2}), and for MVN, correlation ρ ∈ {0.75, 0.95}.
 - Random seed is fixed in [src/main/java/skp/batch/SKPBatch.java](src/main/java/skp/batch/SKPBatch.java) for reproducibility.
 
-Where outputs are written
+## Where outputs are written
 - Batch runs create per-experiment folders under `batch/<instance_type>/<N>/<cv>[/<rho>]`, with:
 	- normal_instances.json or multinormal_instances.json (inputs)
 	- solved_*.json and solved_*.csv (solutions)
 - Curated CSVs used in the paper are mirrored under [results/](results).
 
-Troubleshooting
+## Troubleshooting
 - For OPL-only reproduction, configure DYLD_LIBRARY_PATH and -Djava.library.path as noted in batch headers (macOS).
 - For large N, prefer the Python heuristic exporter; the exact B&B is intended for moderate sizes.
