@@ -52,8 +52,8 @@ You can run batch drivers from your IDE (recommended) or from CLI with a full ru
 	2) From repo root or src/main/python, run one of:
 
 ```bash
-python src/main/python/skp_batch.py               # solve normal_instances.json in CWD
-python src/main/python/skp_batch.py               # or call recursive_solve() inside the script to traverse a root directory
+python src/main/python/skp_batch.py    # solve normal_instances.json in the current directory
+							           # or call recursive_solve() inside the script to traverse a root directory
 ```
 
 ## Where outputs are written
