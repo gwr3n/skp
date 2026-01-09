@@ -1,0 +1,844 @@
+/**
+ * Batch driver for stochastic knapsack problem instances with generic item distributions.
+ *
+ * <h3>CPLEX native library notes</h3>
+ * The IBM CPLEX native library must be visible to the JVM. Recommended startup option:
+ * <pre>
+ *   -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
+ * </pre>
+ * Historically `DYLD_LIBRARY_PATH` could also be used:
+ * <pre>
+ *   DYLD_LIBRARY_PATH=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
+ * </pre>
+ *
+ * <h3>Dependencies</h3>
+ * - IBM CPLEX (Java API and native libs)
+ * - SSJ (umontreal.ssj.probdist and randvar)
+ * - GSONUtility for JSON I/O
+ *
+ * @author Roberto Rossi
+ * 
+ */
+
+package skp.batch;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+
+import ilog.concert.IloException;
+import skp.instance.SKPGenericDistribution;
+import skp.milp.SKPGenericDistributionLazyCuts;
+import skp.milp.instance.SKPGenericDistributionCutsSolvedInstance;
+import skp.saa.SKPGenericDistributionSAA;
+import skp.saa.SKPGenericDistributionSAA_LD;
+import skp.saa.instance.SKPGenericDistributionSAASolvedInstance;
+import skp.saa.instance.SKPGenericDistributionSAA_LDSolvedInstance;
+import skp.sdp.DSKPGenericDistribution;
+import skp.sdp.instance.DSKPGenericDistributionSolvedInstance;
+import skp.utilities.gson.GSONUtility;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.LognormalDist;
+import umontreal.ssj.probdist.UniformDist;
+import umontreal.ssj.randvar.RandomVariateGen;
+
+public class SKPGenericDistributionBatch extends SKPBatch {
+   
+   enum Dist {
+      LOGNORMAL,
+      GAMMA
+   }
+   
+   enum METHOD {
+      LAZY_CUTS,
+      LAZY_CUTS_NORMAL_APPROXIMATION,
+      SAA,
+      SAA_LD // SAA with NSmall selection using bound 2.23 from KLEYWEGT et al. (large deviations theory)
+   }
+   
+   public static void main(String args[]) {
+      
+      int[] instanceSize = {25, 50, 100, 500};
+      double[] coeff_of_var  = {0.1, 0.2};
+      Dist distribution = Dist.GAMMA;
+      INSTANCE_TYPE[] instanceType = {
+            INSTANCE_TYPE.P05_UNCORRELATED,
+            INSTANCE_TYPE.P05_WEAKLY_CORRELATED,
+            INSTANCE_TYPE.P05_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_INVERSE_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_ALMOST_STRONGLY_CORRELATED,
+            INSTANCE_TYPE.P05_SUBSET_SUM,
+            INSTANCE_TYPE.P05_UNCORRELATED_SIMILAR_WEIGHTS,
+            INSTANCE_TYPE.P05_PROFIT_CEILING,
+            INSTANCE_TYPE.P05_CIRCLE_INSTANCES};
+      
+      for(INSTANCE_TYPE t: instanceType) {
+         for(int size : instanceSize) {
+            for(double cv : coeff_of_var) {
+               System.out.println(t + "\t" + size + "\t" + cv);
+               File folder = new File("batch/"+t.toString()+"/"+size+"/"+cv);
+               if (!folder.exists()) {
+                  folder.mkdirs();
+               }
+               
+               String batchFileName = "batch/"+t.toString()+"/"+size+"/"+cv+"/generic_distribution_instances.json";
+               SKPGenericDistribution[] instances = generateInstances(batchFileName, distribution, t, size, cv);
+               
+               int linearizationSamples = 1000;
+               int simulationRuns = 10000;   
+               try {
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LAZY_CUTS);
+                  solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.LAZY_CUTS_NORMAL_APPROXIMATION);
+                  if(size < instanceSize[2])
+                     solveMILP(instances, linearizationSamples, simulationRuns, "batch/"+t.toString()+"/"+size+"/"+cv, METHOD.SAA);
+               } catch (IloException e) {
+                  e.printStackTrace();
+               }
+               if(size == instanceSize[0])
+                  solveDSKP(instances, "batch/"+t.toString()+"/"+size+"/"+cv);
+            }
+         }
+      }
+      
+   }
+   
+   enum INSTANCE_TYPE {
+      GAMMA,
+      P05_UNCORRELATED,
+      P05_WEAKLY_CORRELATED,
+      P05_STRONGLY_CORRELATED,
+      P05_INVERSE_STRONGLY_CORRELATED,
+      P05_ALMOST_STRONGLY_CORRELATED,
+      P05_SUBSET_SUM,
+      P05_UNCORRELATED_SIMILAR_WEIGHTS,
+      P05_PROFIT_CEILING,
+      P05_CIRCLE_INSTANCES
+   };
+   
+   private static void bubbleSort(double[] expectedValues, double[] expectedWeights) {
+      if (expectedValues.length != expectedWeights.length) {
+         throw new IllegalArgumentException("Arrays must be of the same length");
+      }
+
+      boolean swapped;
+      do {
+         swapped = false;
+         for (int i = 0; i < expectedValues.length - 1; i++) {
+            double ratioA = expectedValues[i] / expectedWeights[i];
+            double ratioB = expectedValues[i + 1] / expectedWeights[i + 1];
+
+            if (ratioA < ratioB) {
+               // Swap values
+               double tempValue = expectedValues[i];
+               expectedValues[i] = expectedValues[i + 1];
+               expectedValues[i + 1] = tempValue;
+
+               // Swap weights
+               double tempWeight = expectedWeights[i];
+               expectedWeights[i] = expectedWeights[i + 1];
+               expectedWeights[i + 1] = tempWeight;
+
+               swapped = true;
+            }
+         }
+      } while (swapped);
+   }
+   
+   /**
+    * Generate a batch of instances
+    */
+
+   protected static SKPGenericDistribution[] generateInstances(String batchFileName, Dist dist, INSTANCE_TYPE type, int instanceSize, double cv) {
+      int H = 10;
+      int R = 100;
+      double shortageCost = 10;
+      
+      switch(type) {
+         case P05_UNCORRELATED: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                           .mapToObj(w -> {
+                                 switch(dist) {
+                                    case GAMMA:
+                                       double alpha = 1/Math.pow(cv,2);
+                                       double lambda = 1/(w*Math.pow(cv,2));
+                                       return new GammaDist(alpha, lambda);
+                                    case LOGNORMAL:
+                                    default:
+                                       double sigma2 = Math.log(1 + cv * cv);
+                                       double sigma = Math.sqrt(sigma2);
+                                       double mu = Math.log(w) - 0.5 * sigma2;
+                                       return new LognormalDist(mu, sigma);
+                                 }
+                              })
+                           .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_WEAKLY_CORRELATED: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double U = Math.max(1.0, Arrays.stream(expectedWeights).map(v -> v - R/10.0).max().getAsDouble());
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(U,U+2*R/10.0)).nextArrayOfDouble(instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_STRONGLY_CORRELATED: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> v + R/10.0).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_INVERSE_STRONGLY_CORRELATED: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedWeights = Arrays.stream(expectedValues).map(v -> v + R/10.0).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_ALMOST_STRONGLY_CORRELATED: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> new RandomVariateGen(randGenerator, new UniformDist(v + R/10.0 - R/500.0, v + R/10.0 + R/500.0)).nextDouble()).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_SUBSET_SUM: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.copyOf(expectedWeights, instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_UNCORRELATED_SIMILAR_WEIGHTS: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(R,R+10)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_PROFIT_CEILING: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double d = 3;
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> d*Math.ceil(v/d)).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         case P05_CIRCLE_INSTANCES: {
+            
+            SKPGenericDistribution[] batch = new SKPGenericDistribution[H];
+            
+            randGenerator.setSeed(seed);
+            randGenerator.resetStartStream();
+            
+            for(int i = 0; i < H; i++) {
+               double[] expectedWeights = new RandomVariateGen(randGenerator, new UniformDist(1,R)).nextArrayOfDouble(instanceSize);
+               double[] expectedValues = Arrays.stream(expectedWeights).map(v -> 2*Math.sqrt(4*R*R - Math.pow(v - 2*R,2))/3).toArray();
+               
+               bubbleSort(expectedValues, expectedWeights);
+               
+               double capacity = ((i+1.0)/(H+1))*Arrays.stream(expectedWeights).sum();
+               batch[i] = new SKPGenericDistribution(
+                     expectedValues,
+                     Arrays.stream(expectedWeights)
+                     .mapToObj(w -> {
+                           switch(dist) {
+                              case GAMMA:
+                                 double alpha = 1/Math.pow(cv,2);
+                                 double lambda = 1/(w*Math.pow(cv,2));
+                                 return new GammaDist(alpha, lambda);
+                              case LOGNORMAL:
+                              default:
+                                 double sigma2 = Math.log(1 + cv * cv);
+                                 double sigma = Math.sqrt(sigma2);
+                                 double mu = Math.log(w) - 0.5 * sigma2;
+                                 return new LognormalDist(mu, sigma);
+                           }
+                        })
+                     .toArray(Distribution[]::new),
+                     capacity,
+                     shortageCost
+                     );
+            }
+            return batch;
+         }
+         default:
+            return null;
+      }
+   }
+   
+   /*
+    * Batch cannot be retrieved because Distribution[] is not Serializable
+    *
+   public static SKPGenericDistribution[] retrieveBatch(String fileName) {
+      SKPGenericDistribution[] instances = GSONUtility.<SKPGenericDistribution[]>retrieveJSONInstance(fileName, SKPGenericDistribution[].class);
+      return instances;
+   }*/
+   
+   public static void solveMILP(SKPGenericDistribution[] batch, int linearizationSamples, int simulationRuns, String folder, METHOD method) throws IloException {
+      switch(method) {
+         case SAA: {  
+            int Nsmall = 1000; 
+            int Nlarge = simulationRuns; 
+            int M = 1000;
+            
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA.json";
+            SKPGenericDistributionSAASolvedInstance[] solvedBatch = solveBatchMILPSAA(batch, fileNameSolved, Nsmall, Nlarge, M);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
+         case SAA_LD: {              
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_SAA_LD.json";
+            SKPGenericDistributionSAA_LDSolvedInstance[] solvedBatch = solveBatchMILPSAA_LD(batch, fileNameSolved);
+            
+            System.out.println(GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_SAA_LD.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
+         case LAZY_CUTS: {   
+            // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+            
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_LC.json";
+            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, simulationRuns, false);
+            
+            // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
+            System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_LC.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
+         case LAZY_CUTS_NORMAL_APPROXIMATION: 
+         default: {   
+            // SKPGenericDistribution[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+            
+            String fileNameSolved = folder+"/solved_generic_distribution_instances_LC_normal_approx.json";
+            SKPGenericDistributionCutsSolvedInstance[] solvedBatch = solveBatchMILPLazyCuts(batch, fileNameSolved, linearizationSamples, simulationRuns, true);
+            
+            // solvedBatch = retrieveSolvedBatchMILP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
+            System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+            
+            String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_LC_normal_approx.csv";
+            storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+            break;
+         }
+      }
+   }
+   
+   private static SKPGenericDistributionCutsSolvedInstance[] solveBatchMILPLazyCuts(SKPGenericDistribution[] instances, String fileName, int linearizationSamples, int simulationRuns, boolean normalApproximation) throws IloException {
+      /*
+       * Sequential
+       * 
+      ArrayList<SKPGenericDistributionCutsSolvedInstance>solved = new ArrayList<SKPGenericDistributionCutsSolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new SKPGenericDistributionLazyCuts(instance, linearizationSamples, simulationRuns, normalApproximation).solve());
+         
+      }
+      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPGenericDistributionCutsSolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionCutsSolvedInstance[] solved = Arrays.stream(instances)
+                                                                .parallel()
+                                                                .map(instance -> {
+         try {
+            return new SKPGenericDistributionLazyCuts(instance, linearizationSamples, simulationRuns, normalApproximation).solve();
+         } catch (IloException e) {
+            e.printStackTrace();
+            return null;
+         }
+      }).toArray(SKPGenericDistributionCutsSolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionCutsSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   static SKPGenericDistributionSAASolvedInstance[] solveBatchMILPSAA(SKPGenericDistribution[] instances, String fileName, int Nsmall, int Nlarge, int M) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionSAASolvedInstance>solved = new ArrayList<SKPGenericDistributionSAASolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M, tolerance));
+         
+      }
+      GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionSAASolvedInstance[] solved = Arrays.stream(instances)
+                                                               .parallel()
+                                                               .map(instance -> new SKPGenericDistributionSAA(instance).solve(Nsmall, Nlarge, M))
+                                                               .toArray(SKPGenericDistributionSAASolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionSAASolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   static SKPGenericDistributionSAA_LDSolvedInstance[] solveBatchMILPSAA_LD(SKPGenericDistribution[] instances, String fileName) throws IloException {
+      /*
+       * Sequential
+       *
+      ArrayList<SKPGenericDistributionSAA_LDSolvedInstance>solved = new ArrayList<SKPGenericDistributionSAA_LDSolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new SKPGenericDistributionSAA_LD(instance).solve());
+         
+      }
+      GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>saveInstanceToJSON(solved.toArray(new SKPGenericDistributionSAA_LDSolvedInstance[solved.size()]), fileName);
+      return solved.toArray(new SKPGenericDistributionSAASolvedInstance[solved.size()]);
+      */
+      
+      /*
+       * Parallel
+       */
+      SKPGenericDistributionSAA_LDSolvedInstance[] solved = Arrays.stream(instances)
+                                                                  .parallel()
+                                                                  .map(instance -> new SKPGenericDistributionSAA_LD(instance).solve())
+                                                                  .toArray(SKPGenericDistributionSAA_LDSolvedInstance[]::new);
+      GSONUtility.<SKPGenericDistributionSAA_LDSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+   
+   /*
+    * Batch cannot be retrieved because Distribution[] is not Serializable
+    *
+   private static SKPGenericDistributionMILPSolvedInstance[] retrieveSolvedBatchMILP(String fileName) {
+      SKPGenericDistributionMILPSolvedInstance[] solvedInstances = GSONUtility.<SKPGenericDistributionMILPSolvedInstance[]>retrieveJSONInstance(fileName, SKPGenericDistributionMILPSolvedInstance[].class);
+      return solvedInstances;
+   }*/
+   
+   static void storeSolvedBatchToCSV(SKPGenericDistributionCutsSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "simulationRuns, milpSolutionValue, milpOptimalityGap, cuts, "
+            + "piecewiseSamples, milpMaxLinearizationError, simulatedLinearizationError,"
+            + "cplexSolutionTimeMs, simplexIterations, exploredNodes\n";
+      String body = "";
+      
+      for(SKPGenericDistributionCutsSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.simulationRuns + ", " +
+                 s.milpSolutionValue + ", " +
+                 s.milpOptimalityGap + ", " +
+                 s.cuts + ", " +
+                 s.piecewiseSamples  + ", " +
+                 s.milpMaxLinearizationError + ", " +
+                 s.simulatedLinearizationError + ", " +
+                 s.cplexSolutionTimeMs + ", " +
+                 s.simplexIterations + ", " +
+                 s.exploredNodes +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPGenericDistributionSAASolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "solutionTimeMs, optGap1, optGap2, N, N', M\n";
+      String body = "";
+      
+      for(SKPGenericDistributionSAASolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.optGap1 + ", " +
+                 s.optGap2 + ", " +
+                 s.Nsmall + ", " +
+                 s.Nlarge + ", " +
+                 s.M + "\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   static void storeSolvedBatchToCSV(SKPGenericDistributionSAA_LDSolvedInstance[] instances, String fileName) {
+      String header = 
+            "instanceID, expectedValues, expectedWeights, "
+            + "capacity, shortageCost, optimalKnapsack, simulatedSolutionValue, "
+            + "N_LD_initial, N_LD_final, N_LD_max, " // Phase 0
+            + "N_start, N_last, N_attempts, phase0StopReason, " // Phase 0
+            + "N_phase1, Mfinal, relGap1, relGap2, phase1StopReason, " // Phase 1
+            + "solutionTimeMs\n";
+      String body = "";
+      
+      for(SKPGenericDistributionSAA_LDSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 Arrays.toString(s.optimalKnapsack).replace(",", "\t")+ ", " +
+                 s.simulatedSolutionValue + ", " +
+                 s.N_LD_initial + ", " +
+                 s.N_LD_final + ", " +
+                 s.N_LD_max + ", " +
+                 s.N_start + ", " +
+                 s.N_last + ", " +
+                 s.N_attempts + ", " +
+                 s.phase0StopReason + ", " +
+                 s.N_phase1 + ", " +
+                 s.Mfinal + ", " +
+                 s.relGap1 + ", " +
+                 s.relGap2 + ", " +
+                 s.phase1StopReason + ", " +
+                 s.solutionTimeMs + "\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   /*
+    * DSKP
+    */
+   
+   public static void solveDSKP(SKPGenericDistribution[] batch, String folder) {
+      // SKPNormal[] batch = retrieveBatch(fileName); // Batch cannot be retrieved because Distribution[] is not Serializable
+      
+      String fileNameSolved = folder+"/solved_generic_distribution_instances_DSKP.json";
+      DSKPGenericDistributionSolvedInstance[] solvedBatch = solveBatchDSKP(batch, fileNameSolved);
+      
+      // solvedBatch = retrieveSolvedBatchDSKP(fileNameSolved); // Batch cannot be retrieved because Distribution[] is not Serializable
+      System.out.println(GSONUtility.<DSKPGenericDistributionSolvedInstance[]>printInstanceAsJSON(solvedBatch));
+      
+      String fileNameSolvedCSV = folder+"/solved_generic_distribution_instances_DSKP.csv";
+      storeSolvedBatchToCSV(solvedBatch, fileNameSolvedCSV);
+   }
+   
+   private static DSKPGenericDistributionSolvedInstance[] solveBatchDSKP(SKPGenericDistribution[] instances, String fileName) {
+      /*
+       * Sequential
+       * 
+      double truncationQuantile = 0.999999999999999;
+      ArrayList<DSKPGenericDistributionSolvedInstance>solved = new ArrayList<DSKPGenericDistributionSolvedInstance>();
+      for(SKPGenericDistribution instance : instances) {
+         solved.add(new DSKPGenericDistribution(instance, truncationQuantile).solve());
+         System.out.println("Solved DSKP instance number "+solved.size());
+         GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]), fileName);
+      }
+      return solved.toArray(new DSKPGenericDistributionSolvedInstance[solved.size()]);*/
+      
+      /*
+       * Parallel
+       */
+      double truncationQuantile = 0.999999999999999;
+      DSKPGenericDistributionSolvedInstance[] solved = Arrays.stream(instances)
+                                                             .parallel()
+                                                             .map(instance -> new DSKPGenericDistribution(instance, truncationQuantile).solve())
+                                                             .toArray(DSKPGenericDistributionSolvedInstance[]::new);
+      GSONUtility.<DSKPGenericDistributionSolvedInstance[]>saveInstanceToJSON(solved, fileName);
+      return solved;
+   }
+
+   private static void storeSolvedBatchToCSV(DSKPGenericDistributionSolvedInstance[] instances, String fileName) {
+      String header = "instanceID, expectedValues, expectedWeights, capacity, shortageCost, solutionValue, solutionTimeMs, statesExplored\n";
+      String body = "";
+      
+      for(DSKPGenericDistributionSolvedInstance s : instances) {
+         body += s.instance.getInstanceID() + ", " +
+                 Arrays.toString(s.instance.getExpectedValues()).replace(",", "\t")+ ", " +
+                 Arrays.toString(Arrays.stream(s.instance.getWeights()).map(d -> d.toString()).toArray()).replace(",", "\t")+ ", " +
+                 s.instance.getCapacity()+ ", " +
+                 s.instance.getShortageCost()+ ", " +
+                 s.solutionValue + ", " +
+                 s.solutionTimeMs + ", " +
+                 s.statesExplored +"\n";
+      }
+      PrintWriter pw;
+      try {
+         pw = new PrintWriter(new File(fileName));
+         pw.print(header+body);
+         pw.close();
+      } catch (FileNotFoundException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   /*
+    * Batch cannot be retrieved because Distribution[] is not Serializable
+    *
+   private static DSKPGenericDistributionSolvedInstance[] retrieveSolvedBatchDSKP(String fileName) {
+      DSKPGenericDistributionSolvedInstance[] solvedInstances = GSONUtility.<DSKPGenericDistributionSolvedInstance[]>retrieveJSONInstance(fileName, DSKPGenericDistributionSolvedInstance[].class);
+      return solvedInstances;
+   }*/
+   
+}
