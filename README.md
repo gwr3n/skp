@@ -8,9 +8,11 @@ R. Rossi, S. Prestwich, S. A. Tarim, "Mixed-Integer Linear Programming Approxima
 
 ### Static
 
-- Normal: Piecewise-linear MILP, Lazy-Cuts warm-start, SAA/SAA-LD, SDP baseline, Merzifonluoğlu et al. (2012) exact B&B and heuristic baselines
+- Normal: Piecewise-linear MILP, Lazy-Cuts warm-start, SAA/SAA-LD, SDP baseline, Merzifonluoğlu et al. (2012) exact B&B and heuristic baselines,
+Range et al. (2018) heuristic baseline,
 	- Batch driver: [src/main/java/skp/batch/SKPNormalBatch.java](src/main/java/skp/batch/SKPNormalBatch.java)
-	- Batch driver: [src/main/python/skp_batch.py](src/main/python/skp_batch.py)
+	- Batch driver: [src/main/python/sskp_merzifonluoglu/skp_batch.py](src/main/python/sskp_merzifonluoglu/skp_batch.py)
+	- Batch driver: [src/main/python/sskp_range/skp_batch.py](src/main/python/sskp_range/skp_batch.py)
 	- Curated results: [results/normal_results](results/normal_results)
 
 - Multivariate Normal (correlated): PWLA MILP, Lazy-Cuts, SAA/SAA-LD, SDP (special covariance structure)
@@ -49,11 +51,11 @@ You can run batch drivers from your IDE (recommended) or from CLI with a full ru
 ## Baselines (Python)
 - Run the heuristic/B&B over generated normal instances:
 	1) Generate normal instances via [SKPNormalBatch](src/main/java/skp/batch/SKPNormalBatch.java) (it creates normal_instances.json under batch/...)
-	2) From repo root or src/main/python, run one of:
+	2) From repo root or src/main/python/..., run one of:
 
 ```bash
-python src/main/python/skp_batch.py    # solve normal_instances.json in the current directory
-							           # or call recursive_solve() inside the script to traverse a root directory
+python src/main/python/.../skp_batch.py    # solve normal_instances.json in the current directory
+							               # or call recursive_solve() inside the script to traverse a root directory
 ```
 
 ## Where outputs are written
