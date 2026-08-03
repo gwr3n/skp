@@ -35,6 +35,7 @@ public abstract class DSKP {
    
    public ImmediateValueFunction<State, Double, Double, Double> immediateValueFunction;
    
+   @SuppressWarnings("unused")
    public void initialiseFunctionalInterfaces(SKP instance) {
       /**
        * This function returns the set of actions associated with a given state
