@@ -2,7 +2,10 @@
 
 This repository contains Java and Python code to reproduce the computational elements described in the work:
 
-R. Rossi, S. Prestwich, S. A. Tarim, "Mixed-Integer Linear Programming Approximations for the Stochastic Knapsack Problem," [arXiv:2512.14912](https://arxiv.org/abs/2512.14912), 2025
+R. Rossi, S. Prestwich, and S. A. Tarim, 
+"[Mixed-Integer Linear Programming Approximations for the Stochastic Knapsack](https://arxiv.org/abs/2512.14912),"
+*[Computers & Operations Research](https://doi.org/10.1016/j.cor.2026.107571)*,
+Elsevier, vol. 194, 107571, 2026.
 
 ## What's Implemented
 
