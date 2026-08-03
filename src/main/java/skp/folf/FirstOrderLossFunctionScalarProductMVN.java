@@ -27,7 +27,7 @@ public class FirstOrderLossFunctionScalarProductMVN {
       double variance = 0;
       if(independentDemand) {
          for(int j = 0; j < distribution.getMean().length; j++) 
-            variance += x[j]*distribution.getCovariance()[j][j];
+            variance += x[j]*x[j]*distribution.getCovariance()[j][j];
       }else {
          for(int j = 0; j < distribution.getMean().length; j++) {
             double acc = 0;
