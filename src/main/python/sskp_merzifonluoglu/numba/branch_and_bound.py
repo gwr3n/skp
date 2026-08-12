@@ -21,7 +21,7 @@ Reference:
   “The static stochastic knapsack problem with normally distributed item sizes”,
   Mathematical Programming A, 134:459-489.
 
-Author :  Roberto Rossi
+Author : Roberto Rossi
 First  : 12-Aug-2026
 """
 
