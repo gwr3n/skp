@@ -20,16 +20,21 @@ Scope and assumptions:
   • Under these conditions, at most one fractional item arises in any KKT
     candidate; multi-fractional patterns with deterministic items are excluded.
 
+This is a Numba implementation of the original code in binary_heuristic.py 
+optimized for performance using Numba's Just-In-Time (JIT) compilation.
+
 Reference:
   Merzifonluoğlu, Geunes & Romeijn (2012),
   “The static stochastic knapsack problem with normally distributed item sizes”,
   Mathematical Programming A, 134:459-489.
 
 Author : Roberto Rossi
-First  : 20-Jun-2025
+First  : 12-Aug-2026
 """
 
+import math
 import numpy as np
+from numba import njit
 from scipy.stats import norm
 from scipy.optimize import brentq
 import json
@@ -37,6 +42,51 @@ import json
 # ════════════════════════════════════════════════════════════════════════════
 # Utility mathematics                                                      ══
 # ════════════════════════════════════════════════════════════════════════════
+
+@njit(cache=True)
+def _normal_cdf(z):
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+@njit(cache=True)
+def _attractiveness_values(z, r, mu, v, p):
+    """Compute all attractiveness values for a service level."""
+    rho = np.empty(r.size, dtype=np.float64)
+    tail_probability = 1.0 - _normal_cdf(z)
+
+    for i in range(r.size):
+        if v[i] > 0.0:
+            rho[i] = (r[i] - p * mu[i] * tail_probability) / v[i]
+        elif r[i] < p * mu[i] * tail_probability:
+            rho[i] = -np.inf
+        else:
+            rho[i] = np.inf
+
+    return rho
+
+
+@njit(cache=True)
+def _binary_objective(x, r, mu, v, C, p):
+    """Compute the expected profit of a binary solution."""
+    mean = 0.0
+    variance = 0.0
+    revenue = 0.0
+
+    for i in range(x.size):
+        mean += mu[i] * x[i]
+        variance += v[i] * x[i]
+        revenue += r[i] * x[i]
+
+    if variance > 1e-10:
+        standard_deviation = math.sqrt(variance)
+        z = (C - mean) / standard_deviation
+        phi = math.exp(-0.5 * z * z) / math.sqrt(2.0 * math.pi)
+        loss = phi - z * (1.0 - _normal_cdf(z))
+        penalty = p * standard_deviation * loss
+    else:
+        penalty = p * max(0.0, mean - C)
+
+    return revenue - penalty
 
 def L_func(z):
     """
@@ -106,13 +156,7 @@ def binary_objective(x, r, mu, v, C, p):
     The overflow expectation uses the closed form with L if V>0,
     else reverts to the deterministic expression.
     """
-    m = np.dot(mu, x)
-    V = np.dot(v, x)
-    if V > 1e-10:
-        penalty = p * np.sqrt(V) * L_func((C - m) / np.sqrt(V))
-    else:
-        penalty = p * max(0, m - C)
-    return np.dot(r, x) - penalty
+    return _binary_objective(x, r, mu, v, C, p)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -182,7 +226,7 @@ def generate_candidate_solutions(r, mu, v, C, p):
     candidates = []
 
     for z in z_vals:
-        rho   = np.array([attractiveness(i, z, r, mu, v, p) for i in range(n)])
+        rho   = _attractiveness_values(z, r, mu, v, p)
         order = np.argsort(rho)                  # σ(1)…σ(n) non-decreasing
 
         pos = 0
