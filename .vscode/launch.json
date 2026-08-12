@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "SimulateNormal (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateNormal",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    }
+  ]
+}

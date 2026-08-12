@@ -5,6 +5,9 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Stochastic Knapsack</name>
   <description>Static and Dynamic Stochastic Knapsack</description>
+	<properties>
+		<maven.compiler.release>21</maven.compiler.release>
+	</properties>
   <dependencies>
 	<dependency>
 		<groupId>com.ibm.ilog</groupId>
