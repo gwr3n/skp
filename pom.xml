@@ -6,6 +6,13 @@
   <name>Stochastic Knapsack</name>
   <description>Static and Dynamic Stochastic Knapsack</description>
   <dependencies>
+	<dependency>
+		<groupId>com.ibm.ilog</groupId>
+		<artifactId>oplall</artifactId>
+		<version>local</version>
+		<scope>system</scope>
+		<systemPath>${project.basedir}/lib/oplall.jar</systemPath>
+	</dependency>
   	<dependency>
   		<groupId>ca.umontreal.iro.simul</groupId>
   		<artifactId>ssj</artifactId>
