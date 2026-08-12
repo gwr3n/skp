@@ -594,11 +594,17 @@ def solve_instance(problem_data, logging = False):
         print(f"{id[:10]}: {bb_sol['obj']}\t{bb_sol['x']}")
 
 def solve_batch():
-
+    """
+    Iterate over all instances in the JSON file *normal_instances.json*
+    and solve each with the branch-and-bound solver.
+    """
+    import time
     problem_data_list = load_problem_data('normal_instances_25.json')
-    
     for problem_data in problem_data_list:
+        start_time = time.time() * 1000
         solve_instance(problem_data)
+        end_time = time.time() * 1000
+        print(f"Execution time: {end_time - start_time:.4f} milliseconds")
 
 if __name__ == '__main__':
     solve_batch()

@@ -413,9 +413,13 @@ def solve_batch():
     Iterate over all instances in the JSON file *normal_instances.json*
     and solve each with the heuristic.
     """
+    import time
     problem_set = load_problem_data('normal_instances_25.json')
     for problem in problem_set:
+        start_time = time.time() * 1000
         solve_instance(problem)
+        end_time = time.time() * 1000
+        print(f"Execution time: {end_time - start_time:.4f} milliseconds")
 
 
 # ════════════════════════════════════════════════════════════════════════════
