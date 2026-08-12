@@ -7,6 +7,83 @@
       "request": "launch",
       "mainClass": "skp.sim.SimulateNormal",
       "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SimulateNormalReceding (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateNormalReceding",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SimulateMultinormal (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateMultinormal",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SimulateMultinormalReceding (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateMultinormalReceding",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SimulateGenericDistribution (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateGenericDistribution",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SimulateGenericDistributionReceding (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.sim.SimulateGenericDistributionReceding",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPNormalBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPNormalBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPNormalRecedingBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPNormalRecedingBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPMultinormalBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPMultinormalBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPMultinormalRecedingBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPMultinormalRecedingBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPGenericDistributionBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPGenericDistributionBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
+    },
+    {
+      "type": "java",
+      "name": "SKPGenericDistributionRecedingBatch (CPLEX ARM64)",
+      "request": "launch",
+      "mainClass": "skp.batch.SKPGenericDistributionRecedingBatch",
+      "vmArgs": "-Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx"
     }
   ]
 }
