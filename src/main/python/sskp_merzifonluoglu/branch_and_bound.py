@@ -18,7 +18,9 @@ Date   :  20-Jun-2025
 """
 
 import json
+import math
 import numpy as np
+from numba import njit
 from scipy.stats import norm
 from scipy.optimize import brentq
 import time
@@ -26,6 +28,38 @@ import time
 # =============================================================================
 # Helper functions
 # =============================================================================
+
+@njit(cache=True)
+def _normal_cdf(z):
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+@njit(cache=True)
+def _attractiveness_values(z, r, mu, v, p):
+    rho = np.empty(r.size, dtype=np.float64)
+    tail_probability = 1.0 - _normal_cdf(z)
+
+    for i in range(r.size):
+        if v[i] > 0.0:
+            rho[i] = (r[i] - p * mu[i] * tail_probability) / v[i]
+        elif r[i] < p * mu[i] * tail_probability:
+            rho[i] = -np.inf
+        else:
+            rho[i] = np.inf
+
+    return rho
+
+
+@njit(cache=True)
+def _compute_objective(r, x, p, z, V):
+    revenue = 0.0
+    for i in range(r.size):
+        revenue += r[i] * x[i]
+
+    phi = math.exp(-0.5 * z * z) / math.sqrt(2.0 * math.pi)
+    loss = phi - z * (1.0 - _normal_cdf(z))
+    return revenue - p * loss * math.sqrt(V)
+
 
 def L_func(z):
     """
@@ -43,15 +77,7 @@ def attractiveness(i, z, r, mu, v, p):
         ρ_i(z) = [ r_i - p*μ_i*(1 - Φ(z)) ] / v_i.
     For deterministic items (v[i]==0): returns -∞ (if item is unattractive) or +∞.
     """
-    Phi = norm.cdf(z)
-    if v[i] > 0:
-        return (r[i] - p * mu[i] * (1 - Phi)) / v[i]
-    else:
-        # Deterministic item.
-        if r[i] < p * mu[i] * (1 - Phi):
-            return -np.inf
-        else:
-            return np.inf
+    return _attractiveness_values(z, r, mu, v, p)[i]
 
 def solve_fractional_value(z, mu_k, v_k, S_mu_free, S_v_free, S_mu_fixed, S_v_fixed, C):
     """
@@ -106,7 +132,7 @@ def compute_objective(r, x, p, z, V):
     Compute the objective value:
          Obj = r^T x - p * L(z)* sqrt(V)
     """
-    return np.dot(r, x) - p * L_func(z) * np.sqrt(V)
+    return _compute_objective(r, x, p, z, V)
 
 # =============================================================================
 # Main algorithm for continuous relaxation (with fixed variables)
@@ -249,9 +275,8 @@ def continuous_knapsack_solver(r, mu, v, C, p, fixed=None, tol=1e-5):
     # Loop over each candidate z value.
     for z_val in candidate_z:
         # Compute attractiveness ρ_i(z) for each free item.
-        rho = {}
-        for i in free_indices:
-            rho[i] = attractiveness(i, z_val, r, mu, v, p)
+        rho_values = _attractiveness_values(z_val, r, mu, v, p)
+        rho = {i: rho_values[i] for i in free_indices}
         # Order free indices in increasing order of rho.
         free_order = np.array(sorted(rho.keys(), key=lambda i: rho[i]))
         
@@ -448,8 +473,9 @@ def branch_and_bound_solver(r, mu, v, C, p, branch_rule="fractional", tol=1e-5, 
             # Use the attractiveness measure computed at the node with the obtained z value.
             z_val = sol['z']
             best_attr = -np.inf
+            rho_values = _attractiveness_values(z_val, r, mu, v, p)
             for i in free_indices:
-                attr = attractiveness(i, z_val, r, mu, v, p)
+                attr = rho_values[i]
                 if attr > best_attr:
                     best_attr = attr
                     branch_var = i
