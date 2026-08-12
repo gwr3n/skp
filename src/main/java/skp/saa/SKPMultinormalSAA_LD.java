@@ -75,7 +75,7 @@ public final class SKPMultinormalSAA_LD {
             try {
                makeReplication(N);
             } catch (IloException e) {
-               // TODO Auto-generated catch block
+               
                e.printStackTrace();
             }
 
@@ -193,7 +193,7 @@ public final class SKPMultinormalSAA_LD {
                try {
                makeReplication(N);
                } catch (IloException e) {
-                  // TODO Auto-generated catch block
+                  
                   e.printStackTrace();
                } 
                continue; 
@@ -274,7 +274,7 @@ public final class SKPMultinormalSAA_LD {
             try {
                makeReplication(N);
             } catch (IloException e) {
-               // TODO Auto-generated catch block
+               
                e.printStackTrace();
             }
         }

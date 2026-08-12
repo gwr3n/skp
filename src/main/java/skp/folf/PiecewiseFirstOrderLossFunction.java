@@ -201,7 +201,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
             file.write(lc.toLatex(8, 5));
             file.close();
          } catch (IOException e) {
-            // TODO Auto-generated catch block
+            
             e.printStackTrace();
          }
       }
@@ -239,7 +239,7 @@ public class PiecewiseFirstOrderLossFunction extends FirstOrderLossFunction{
             file.write(lc.toLatex(8, 5));
             file.close();
          } catch (IOException e) {
-            // TODO Auto-generated catch block
+            
             e.printStackTrace();
          }
       }

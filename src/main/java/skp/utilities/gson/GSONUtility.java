@@ -23,10 +23,10 @@ public class GSONUtility<T> {
          gson.toJson(instance, fw);
          fw.close();
       } catch (JsonIOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
    }

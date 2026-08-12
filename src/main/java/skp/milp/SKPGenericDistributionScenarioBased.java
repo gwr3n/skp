@@ -165,7 +165,7 @@ public class SKPGenericDistributionScenarioBased {
       try {
          isModel.close();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
       cplex.end();
@@ -231,7 +231,7 @@ public class SKPGenericDistributionScenarioBased {
          int simulationRuns = 10000;
          System.out.println(GSONUtility.<SKPGenericDistributionScenarioBasedSolvedInstance>printInstanceAsJSON(sskp.solve(simulationRuns)));
       } catch (IloException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
    }

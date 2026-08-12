@@ -77,7 +77,7 @@ public class SKPMultinormalSAA {
                bestSoFar = m;
             }
          } catch (IloException e) {
-            // TODO Auto-generated catch block
+            
             e.printStackTrace();
          }
          

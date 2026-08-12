@@ -445,7 +445,7 @@ public class SKPMultinormalLazyCuts {
          SKPMultinormalCutsSolvedInstance solvedInstance = sskp.solve();
          System.out.println(GSONUtility.<SKPMultinormalCutsSolvedInstance>printInstanceAsJSON(solvedInstance));
       } catch (Exception e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
    }

@@ -4,11 +4,11 @@
  * <h3>CPLEX native library notes</h3>
  * The IBM CPLEX native library must be visible to the JVM. Recommended startup option:
  * <pre>
- *   -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
+ *   -Djava.library.path=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx/
  * </pre>
  * Historically `DYLD_LIBRARY_PATH` could also be used:
  * <pre>
- *   DYLD_LIBRARY_PATH=/Applications/CPLEX_Studio2211/opl/bin/x86-64_osx/
+ *   DYLD_LIBRARY_PATH=/Applications/CPLEX_Studio2211/opl/bin/arm64_osx/
  * </pre>
  *
  * <h3>Dependencies</h3>
@@ -498,7 +498,7 @@ public class SKPNormalBatch extends SKPBatch {
                                                     	 System.out.println("Processed instance " + instance.toString() + "("+solvedInstance.cplexSolutionTimeMs+" ms)");
                                                          return solvedInstance;
                                                       } catch (IloException e) {
-                                                         // TODO Auto-generated catch block
+                                                         
                                                          e.printStackTrace();
                                                          return null;
                                                       }

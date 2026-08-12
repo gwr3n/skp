@@ -129,7 +129,7 @@ public abstract class SKPMILP {
       try {
          isModel.close();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
       cplex.end();

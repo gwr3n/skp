@@ -309,7 +309,7 @@ public class SKPGenericDistributionLazyCuts {
          SKPGenericDistributionCutsSolvedInstance solvedInstance = sskp.solve();
          System.out.println(GSONUtility.<SKPGenericDistributionCutsSolvedInstance>printInstanceAsJSON(solvedInstance));
       } catch (Exception e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
    }

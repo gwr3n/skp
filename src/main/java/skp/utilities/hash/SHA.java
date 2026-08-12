@@ -22,7 +22,7 @@ public class SHA {
          byte[] encodedhash = digest.digest(msg.getBytes(StandardCharsets.UTF_8));
          return bytesToHex(encodedhash);
       } catch (NoSuchAlgorithmException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
       return null;

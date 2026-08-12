@@ -50,7 +50,6 @@ public class DSKPMultinormal{
    
    public ImmediateValueFunction<State, Double, Double, Double> immediateValueFunction;
    
-   @SuppressWarnings("unused")
    public void initialiseFunctionalInterfaces(SKP instance) {
       /**
        * This function returns the set of actions associated with a given state
@@ -161,7 +160,7 @@ public class DSKPMultinormal{
                ManagementFactory.getPlatformMBeanServer(), ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          nanoBefore = System.nanoTime();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
       

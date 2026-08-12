@@ -43,7 +43,7 @@ public class DSKPPoisson extends DSKP{
                ManagementFactory.getPlatformMBeanServer(), ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          nanoBefore = System.nanoTime();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
       }
       

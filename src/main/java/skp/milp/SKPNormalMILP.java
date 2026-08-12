@@ -271,7 +271,7 @@ public class SKPNormalMILP extends SKPMILP{
                System.out.println("Difference exceeds allowed epsilon!");
          }
       } catch (IloException e) {
-         // TODO Auto-generated catch block
+         
          e.printStackTrace();
          System.exit(-1);
       }

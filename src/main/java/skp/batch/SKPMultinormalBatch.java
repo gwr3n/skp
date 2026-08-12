@@ -522,7 +522,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                            try {
                                                               return SKPMultinormalMILP.solve(instance, partitions, s, simulationRuns);
                                                            } catch (IloException e) {
-                                                              // TODO Auto-generated catch block
+                                                              
                                                               e.printStackTrace();
                                                               return null;
                                                            }
@@ -552,7 +552,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                        try {
                                                                           return new SKPMultinormalLazyCuts(instance, simulationRuns).solve();
                                                                        } catch (IloException e) {
-                                                                          // TODO Auto-generated catch block
+                                                                          
                                                                           e.printStackTrace();
                                                                           return null;
                                                                        }
@@ -582,7 +582,7 @@ public class SKPMultinormalBatch extends SKPBatch {
                                                                        try {
                                                                           return new SKPMultinormalLazyCuts(instance, simulationRuns, warmStartPartitions, s).solve();
                                                                        } catch (IloException e) {
-                                                                          // TODO Auto-generated catch block
+                                                                          
                                                                           e.printStackTrace();
                                                                           return null;
                                                                        }
