@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.gwr3n</groupId>
   <artifactId>skp</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Stochastic Knapsack</name>
   <description>Static and Dynamic Stochastic Knapsack</description>
 	<properties>

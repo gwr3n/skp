@@ -45,7 +45,7 @@ Range et al. (2018) heuristic baseline,
 	- Lognormal/Gamma: [SKPGenericDistributionBatch](src/main/java/skp/batch/SKPGenericDistributionBatch.java)
 
 ## Prerequisites
-- Java (JDK 11+), Maven, and Python 3.10+
+- Java (JDK 21+), Maven, and Python 3.10+
 - IBM ILOG CPLEX Optimization Studio (OPL/Concert) with a valid license. The Java MILP code uses the OPL/Concert APIs (`ilog.opl.*`, `ilog.concert.*`, `IloCplex`) to build/solve models and callbacks. 
 
 ## Running Experiments (Java)
