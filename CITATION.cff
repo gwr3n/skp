@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below."
+title: "Stochastic Knapsack Problem (SKP)"
+type: software
+authors:
+  - family-names: Rossi
+    given-names: Roberto
+    orcid: "https://orcid.org/0000-0001-7247-1010"
+version: "1.0.0"
+license: MIT
+repository-code: "https://github.com/gwr3n/skp"
+url: "https://github.com/gwr3n/skp"
+abstract: >-
+  Research code and reproducibility materials for static and dynamic
+  stochastic knapsack algorithms under normal, correlated multivariate-normal,
+  lognormal, and gamma demand distributions.
+keywords:
+  - stochastic knapsack problem
+  - mixed-integer linear programming
+  - stochastic programming
+  - sample average approximation
+  - dynamic programming
+  - reproducible research
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Rossi
+      given-names: Roberto
+      orcid: "https://orcid.org/0000-0001-7247-1010"
+    - family-names: Prestwich
+      given-names: "Steven D."
+    - family-names: Tarim
+      given-names: "S. Armagan"
+  title: "Mixed-integer linear programming approximations for the stochastic knapsack"
+  doi: "10.1016/j.cor.2026.107571"
+  journal: "Computers & Operations Research"
+  volume: "194"
+  year: 2026
+  month: 10

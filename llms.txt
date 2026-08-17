@@ -1,0 +1,46 @@
+# Stochastic Knapsack Problem (SKP)
+
+> Research code and reproducibility materials for static and dynamic stochastic knapsack algorithms, accompanying the 2026 paper by Rossi, Prestwich, and Tarim.
+
+This repository implements optimization methods for normal, correlated multivariate-normal, lognormal, and gamma demand distributions. The main implementation is Java 21, with Python 3.10+ implementations of selected normal-distribution baselines. Running the Java optimization models requires IBM ILOG CPLEX Optimization Studio and a valid license.
+
+## Start Here
+
+- [Project overview and reproducibility guide](README.md): Implemented methods, experiment entry points, prerequisites, and output layout.
+- [Maven project definition](pom.xml): Java version and dependencies, including the local CPLEX OPL JAR.
+- [License](LICENSE): Repository licensing terms.
+
+## Source Code
+
+- [Java source](src/main/java/skp/): Core stochastic-knapsack implementation.
+- [Batch drivers](src/main/java/skp/batch/): Main entry points for generating instances and running static or receding-horizon experiments.
+- [Problem instances](src/main/java/skp/instance/): Deterministic and stochastic instance models.
+- [MILP methods](src/main/java/skp/milp/): Piecewise-linear, lazy-cut, and scenario-based formulations.
+- [SAA methods](src/main/java/skp/saa/): Sample Average Approximation and lower-bound variants.
+- [SDP methods](src/main/java/skp/sdp/): Stochastic dynamic-programming baselines.
+- [Loss-function approximations](src/main/java/skp/folf/): First-order loss functions, linearization, and partitioning.
+- [Simulation](src/main/java/skp/sim/): Static and receding-horizon simulation code.
+- [Python baselines](src/main/python/): Merzifonluoglu and Range normal-distribution baselines.
+- [OPL models](src/main/resources/opl_models/): IBM OPL model resources used by Java solvers.
+- [Java tests](src/test/java/): Automated tests.
+
+## Experiment Entry Points
+
+- [Normal static experiments](src/main/java/skp/batch/SKPNormalBatch.java)
+- [Multivariate-normal static experiments](src/main/java/skp/batch/SKPMultinormalBatch.java)
+- [Generic-distribution static experiments](src/main/java/skp/batch/SKPGenericDistributionBatch.java)
+- [Normal receding-horizon experiments](src/main/java/skp/batch/SKPNormalRecedingBatch.java)
+- [Multivariate-normal receding-horizon experiments](src/main/java/skp/batch/SKPMultinormalRecedingBatch.java)
+- [Generic-distribution receding-horizon experiments](src/main/java/skp/batch/SKPGenericDistributionRecedingBatch.java)
+
+## Data and Dependencies
+
+- [Curated computational results](results/): CSV outputs corresponding to the reported experiments; treat these as data, not source code.
+- [Results notes](results/README.md)
+- [Local OPL library setup](lib/README.md): Place `oplall.jar` from CPLEX Optimization Studio in `lib/` before building or running CPLEX-backed code.
+
+## Working Notes
+
+- Batch runs write generated instances and solutions below `batch/`, as described in the project guide.
+- Use the batch classes as the clearest map from experiment configurations to solver implementations.
+- A plain Maven build may fail when `lib/oplall.jar`, native CPLEX libraries, or a CPLEX license are unavailable.
